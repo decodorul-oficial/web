@@ -18,4 +18,17 @@ export const GET_STIRI = gql`
   }
 `;
 
+export const GET_STIRE_BY_ID = gql`
+  query GetStireById($id: ID!) {
+    getStireById(id: $id) {
+      id
+      title
+      publicationDate
+      createdAt
+      updatedAt
+      content
+    }
+  }
+`;
+
 

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { fetchLatestNews } from '@/features/news/services/newsService';
 
 export async function LatestNewsSection() {
@@ -23,7 +24,11 @@ export async function LatestNewsSection() {
             <article className="grid grid-cols-5 gap-6">
               <div className="col-span-2 h-48 rounded-md bg-gradient-to-br from-brand to-brand-highlight" />
               <div className="col-span-3">
-                <h2 className="text-2xl font-bold leading-tight">{featured.title}</h2>
+                <h2 className="text-2xl font-bold leading-tight">
+                  <Link href={`/stiri/${featured.id}`} className="hover:underline">
+                    {featured.title}
+                  </Link>
+                </h2>
                 <p className="mt-2 line-clamp-3 text-gray-600">{getSummary(featured.content)?.slice(0, 160)}</p>
                 <div className="mt-3 text-xs text-gray-500">{new Date(featured.publicationDate).toLocaleDateString('ro-RO')}</div>
               </div>
@@ -40,7 +45,11 @@ export async function LatestNewsSection() {
               <li key={n.id} className="flex items-start gap-3">
                 <div className="h-12 w-12 shrink-0 rounded bg-gradient-to-br from-brand-accent to-brand-info/60" />
                 <div>
-                  <p className="line-clamp-2 text-sm font-medium">{n.title}</p>
+                  <p className="line-clamp-2 text-sm font-medium">
+                    <Link href={`/stiri/${n.id}`} className="hover:underline">
+                      {n.title}
+                    </Link>
+                  </p>
                   <p className="line-clamp-2 text-xs text-gray-500">{getSummary(n.content)?.slice(0, 90)}</p>
                 </div>
               </li>
@@ -58,7 +67,11 @@ export async function LatestNewsSection() {
                 {new Date(n.publicationDate).toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' })}
               </div>
               <div className="col-span-4">
-                <h4 className="font-semibold">{n.title}</h4>
+                <h4 className="font-semibold">
+                  <Link href={`/stiri/${n.id}`} className="hover:underline">
+                    {n.title}
+                  </Link>
+                </h4>
                 <p className="line-clamp-2 text-sm text-gray-600">{getSummary(n.content)?.slice(0, 180)}</p>
               </div>
             </article>
