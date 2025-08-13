@@ -3,6 +3,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { fetchNewsById } from '@/features/news/services/newsService';
 import { Citation } from '@/components/legal/Citation';
+import { sanitizeRichText } from '@/lib/html/sanitize';
 
 type PageProps = { params: { id: string } };
 
@@ -65,9 +66,13 @@ export default async function NewsDetailPage(props: PageProps) {
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
               <div className="lg:col-span-2 space-y-4">
                 <div className="h-60 rounded-md bg-gradient-to-br from-brand to-brand-highlight" />
-                <section className="prose max-w-none">
-                  <p>{extractField<string>(news.content, 'summary')}</p>
-                  <p>{extractField<string>(news.content, 'body')}</p>
+                <section className="prose prose-lg max-w-none">
+                  {extractField<string>(news.content, 'summary') && (
+                    <p>{extractField<string>(news.content, 'summary')}</p>
+                  )}
+                  {extractField<string>(news.content, 'body') && (
+                    <div dangerouslySetInnerHTML={{ __html: sanitizeRichText(extractField<string>(news.content, 'body')!) }} />
+                  )}
                   {typeof news.content === 'string' && <p>{news.content}</p>}
                 </section>
                 <div>

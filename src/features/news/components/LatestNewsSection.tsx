@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { fetchLatestNews } from '@/features/news/services/newsService';
 import { Citation } from '@/components/legal/Citation';
+import { stripHtml } from '@/lib/html/sanitize';
 
 export async function LatestNewsSection() {
   const { stiri } = await fetchLatestNews({ limit: 10 });
@@ -11,7 +12,8 @@ export async function LatestNewsSection() {
     if (!content) return undefined;
     try {
       const c = content as any;
-      return c.summary || c.body || c.text || (typeof c === 'string' ? c : undefined);
+      const raw = c.summary || c.body || c.text || (typeof c === 'string' ? c : undefined);
+      return typeof raw === 'string' ? stripHtml(raw) : raw;
     } catch {
       return undefined;
     }

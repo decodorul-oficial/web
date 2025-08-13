@@ -18,12 +18,15 @@
     "graphql-request": "^7.1.0",
     "next": "^14.2.5",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "sanitize-html": "^2.13.0"
   },
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.12",
     "@types/node": "^20.14.11",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "@types/sanitize-html": "^2.16.0",
     "autoprefixer": "^10.4.19",
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.5",
@@ -32,5 +35,3 @@
     "typescript": "^5.5.3"
   }
 }
-
-
