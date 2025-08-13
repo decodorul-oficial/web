@@ -11,50 +11,50 @@ export type FetchNewsParams = {
 };
 
 export async function fetchLatestNews(params: FetchNewsParams = {}) {
-  const { limit = 10, offset = 0 } = params;
+  const { limit = 10, offset = 0, orderBy = 'publicationDate', orderDirection = 'desc' } = params;
 
-  const orderCandidates = [
-    params.orderBy,
-    'publicationDate',
-    'publication_date',
-    'id',
-    'createdAt'
-  ].filter(Boolean) as string[];
-
-  const directionCandidates = [params.orderDirection, 'desc', 'DESC'].filter(Boolean) as Array<'asc' | 'desc' | 'ASC' | 'DESC'>;
-
-  const client = getGraphQLClient();
-
-  for (const ob of orderCandidates) {
-    for (const od of directionCandidates) {
+  try {
+    const client = getGraphQLClient();
+    const data = await client.request<GetStiriResponse>(GET_STIRI, {
+      limit,
+      offset,
+      orderBy,
+      orderDirection
+    });
+    return data.getStiri;
+  } catch (primaryError: any) {
+    // Dacă serverul încă nu normalizează `publicationDate`, reîncearcă cu `publication_date`
+    const serverValidation = primaryError?.response?.errors?.[0]?.code === 'VALIDATION_ERROR';
+    if (serverValidation && orderBy === 'publicationDate') {
       try {
+        const client = getGraphQLClient();
         const data = await client.request<GetStiriResponse>(GET_STIRI, {
           limit,
           offset,
-          orderBy: ob,
-          orderDirection: od
+          orderBy: 'publication_date',
+          orderDirection
         });
         return data.getStiri;
-      } catch (attemptError) {
-        // try next combo
+      } catch (retryError) {
+        console.warn('Retry with publication_date failed', retryError);
       }
     }
-  }
 
-  // Fallback: try endpoint alternatives too
-  try {
-    const { data } = await requestWithEndpointFallback<GetStiriResponse>(
-      GET_STIRI,
-      { limit, offset, orderBy: orderCandidates[0] ?? 'id', orderDirection: directionCandidates[0] ?? 'desc' },
-      process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT
-    );
-    return data.getStiri;
-  } catch (fallbackError) {
-    console.error('fallback request failed', fallbackError);
-    return {
-      stiri: [],
-      pagination: { totalCount: 0, currentPage: 1, totalPages: 1 }
-    };
+    console.warn('fetchLatestNews primary request failed, trying endpoint fallback', primaryError);
+    try {
+      const { data } = await requestWithEndpointFallback<GetStiriResponse>(
+        GET_STIRI,
+        { limit, offset, orderBy: serverValidation ? 'publication_date' : orderBy, orderDirection },
+        process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT
+      );
+      return data.getStiri;
+    } catch (fallbackError) {
+      console.error('fallback request failed', fallbackError);
+      return {
+        stiri: [],
+        pagination: { totalCount: 0, currentPage: 1, totalPages: 1 }
+      };
+    }
   }
 }
 

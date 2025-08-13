@@ -4,7 +4,7 @@ import { Citation } from '@/components/legal/Citation';
 import { stripHtml } from '@/lib/html/sanitize';
 
 export async function LatestNewsSection() {
-  const { stiri } = await fetchLatestNews({ limit: 10 });
+  const { stiri } = await fetchLatestNews({ limit: 10, orderBy: 'publicationDate', orderDirection: 'desc' });
 
   const [featured, ...rest] = stiri;
 
