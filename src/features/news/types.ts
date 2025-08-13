@@ -1,16 +1,9 @@
-export type NewsItemContent = {
-  body: string;
-  author?: string | null;
-  summary?: string | null;
-  category?: string | null;
-  keywords?: string[] | null;
-};
-
 export type NewsItem = {
   id: string;
   title: string;
   publicationDate: string;
-  content: NewsItemContent;
+  // Field returned as JSON from the API. Structure can vary per source.
+  content: unknown;
 };
 
 export type GetStiriResponse = {

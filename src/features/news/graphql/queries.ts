@@ -7,13 +7,7 @@ export const GET_STIRI = gql`
         id
         title
         publicationDate
-        content {
-          body
-          author
-          summary
-          category
-          keywords
-        }
+        content
       }
       pagination {
         totalCount
