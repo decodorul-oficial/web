@@ -7,7 +7,7 @@ import { CookieBanner } from '@/components/cookies/CookieBanner';
 export const metadata: Metadata = {
   title: 'Decodorul Oficial',
   description:
-    'Decodorul Oficial – știri și sumarizări oficiale. Aplicație Next.js + Tailwind care consumă un API GraphQL.'
+    'Decodorul Oficial – știri și sumarizări oficiale.'
 };
 
 export default function RootLayout({

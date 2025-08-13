@@ -2,7 +2,7 @@
   "name": "decodorul-oficial",
   "private": true,
   "version": "0.1.0",
-  "description": "Decodorul Oficial – aplicație web Next.js + TailwindCSS care consumă un API GraphQL.",
+  "description": "Decodorul Oficial - știri și sumarizări oficiale",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
