@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { fetchNewsById } from '@/features/news/services/newsService';
+import { Citation } from '@/components/legal/Citation';
 
 type PageProps = { params: { id: string } };
 
@@ -11,6 +12,16 @@ function extractField<T = string>(content: unknown, key: string): T | undefined 
   if (!content || typeof content !== 'object') return undefined;
   const c: any = content;
   return c?.[key] as T | undefined;
+}
+
+function getCitationFields(content: unknown) {
+  const c = (content ?? {}) as any;
+  return {
+    act: c?.act || c?.actName || undefined,
+    partea: c?.partea || 'Partea I',
+    numarSiData: c?.monitorulOficial || c?.moNumberDate || undefined,
+    sourceUrl: c?.sourceUrl || c?.url || undefined
+  } as const;
 }
 
 export default async function NewsDetailPage(props: PageProps) {
@@ -59,6 +70,9 @@ export default async function NewsDetailPage(props: PageProps) {
                   <p>{extractField<string>(news.content, 'body')}</p>
                   {typeof news.content === 'string' && <p>{news.content}</p>}
                 </section>
+                <div>
+                  <Citation {...getCitationFields(news.content)} />
+                </div>
               </div>
               <aside className="space-y-4">
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Meta</h3>

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { fetchLatestNews } from '@/features/news/services/newsService';
+import { Citation } from '@/components/legal/Citation';
 
 export async function LatestNewsSection() {
   const { stiri } = await fetchLatestNews({ limit: 10 });
@@ -14,6 +15,16 @@ export async function LatestNewsSection() {
     } catch {
       return undefined;
     }
+  }
+
+  function getCitationFields(content: unknown) {
+    const c = (content ?? {}) as any;
+    return {
+      act: c?.act || c?.actName || undefined,
+      partea: c?.partea || 'Partea I',
+      numarSiData: c?.monitorulOficial || c?.moNumberDate || undefined,
+      sourceUrl: c?.sourceUrl || c?.url || undefined
+    } as const;
   }
 
   return (
@@ -31,6 +42,9 @@ export async function LatestNewsSection() {
                 </h2>
                 <p className="mt-2 line-clamp-3 text-gray-600">{getSummary(featured.content)?.slice(0, 160)}</p>
                 <div className="mt-3 text-xs text-gray-500">{new Date(featured.publicationDate).toLocaleDateString('ro-RO')}</div>
+                <div className="mt-2">
+                  <Citation {...getCitationFields(featured.content)} />
+                </div>
               </div>
             </article>
           ) : (
@@ -73,6 +87,9 @@ export async function LatestNewsSection() {
                   </Link>
                 </h4>
                 <p className="line-clamp-2 text-sm text-gray-600">{getSummary(n.content)?.slice(0, 180)}</p>
+                <div className="mt-1">
+                  <Citation {...getCitationFields(n.content)} />
+                </div>
               </div>
             </article>
           ))}
