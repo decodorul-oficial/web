@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { fetchNewsById } from '@/features/news/services/newsService';
+import { fetchNewsById, fetchNewsByDate } from '@/features/news/services/newsService';
 import { Citation } from '@/components/legal/Citation';
 import { sanitizeRichText } from '@/lib/html/sanitize';
 import { NavigationEndBeacon } from '@/components/ui/NavigationEndBeacon';
 import { generateMonitorulOficialUrl } from '@/lib/utils/monitorulOficial';
+import { SameDayNewsSection } from '@/features/news/components/SameDayNewsSection';
 
 type PageProps = { params: { id: string } };
 
@@ -30,6 +31,12 @@ function getCitationFields(content: unknown) {
 export default async function NewsDetailPage(props: PageProps) {
   const { id } = props.params;
   const news = await fetchNewsById(id);
+  
+  // Obținem știrile din aceeași zi
+  let sameDayNews: any[] = [];
+  if (news) {
+    sameDayNews = await fetchNewsByDate(news.publicationDate, id, 5);
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -83,33 +90,38 @@ export default async function NewsDetailPage(props: PageProps) {
                   <Citation {...getCitationFields(news.content)} />
                 </div>
               </div>
-              <aside className="space-y-4">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Meta</h3>
-                <div className="rounded border p-4 text-sm text-gray-700">
-                  <div><span className="text-gray-500">ID:</span> {news.id}</div>
-                  <div><span className="text-gray-500">Publicat:</span> {new Date(news.publicationDate).toLocaleDateString('ro-RO')}</div>
-                  {news.createdAt && (
-                    <div><span className="text-gray-500">Creat:</span> {new Date(news.createdAt).toLocaleString('ro-RO')}</div>
-                  )}
-                  {news.updatedAt && (
-                    <div><span className="text-gray-500">Actualizat:</span> {new Date(news.updatedAt).toLocaleString('ro-RO')}</div>
-                  )}
-                  {news.filename && generateMonitorulOficialUrl(news.filename) && (
-                    <div className="mt-3 pt-3 border-t border-gray-200">
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-gray-500">Document oficial:</span>
-                        <a 
-                          href={generateMonitorulOficialUrl(news.filename)!}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-brand-info hover:underline text-sm"
-                        >
-                          Monitorul Oficial →
-                        </a>
+              <aside className="space-y-6">
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Meta</h3>
+                  <div className="rounded border p-4 text-sm text-gray-700">
+                    <div><span className="text-gray-500">ID:</span> {news.id}</div>
+                    <div><span className="text-gray-500">Publicat:</span> {new Date(news.publicationDate).toLocaleDateString('ro-RO')}</div>
+                    {news.createdAt && (
+                      <div><span className="text-gray-500">Creat:</span> {new Date(news.createdAt).toLocaleString('ro-RO')}</div>
+                    )}
+                    {news.updatedAt && (
+                      <div><span className="text-gray-500">Actualizat:</span> {new Date(news.updatedAt).toLocaleString('ro-RO')}</div>
+                    )}
+                    {news.filename && generateMonitorulOficialUrl(news.filename) && (
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-gray-500">Document oficial:</span>
+                          <a 
+                            href={generateMonitorulOficialUrl(news.filename)!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-brand-info hover:underline text-sm"
+                          >
+                            Monitorul Oficial →
+                          </a>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
+                
+                {/* Secțiunea cu știrile din aceeași zi */}
+                <SameDayNewsSection news={sameDayNews} currentDate={news.publicationDate} />
               </aside>
             </div>
           </article>

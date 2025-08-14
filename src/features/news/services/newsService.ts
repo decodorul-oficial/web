@@ -61,4 +61,27 @@ export async function fetchNewsById(id: string): Promise<NewsItem | null> {
   }
 }
 
+export async function fetchNewsByDate(date: string, excludeId?: string, limit: number = 5): Promise<NewsItem[]> {
+  try {
+    const client = getGraphQLClient();
+    // Obținem toate știrile și le filtrăm pe client pentru a găsi cele din aceeași zi
+    const { stiri } = await fetchLatestNews({ limit: 100, offset: 0, orderBy: 'publicationDate', orderDirection: 'desc' });
+    
+    // Filtrăm știrile din aceeași zi, excluzând știrea curentă
+    const targetDate = new Date(date);
+    const sameDayNews = stiri.filter(stire => {
+      const stireDate = new Date(stire.publicationDate);
+      const isSameDay = stireDate.toDateString() === targetDate.toDateString();
+      const isNotCurrent = stire.id !== excludeId;
+      return isSameDay && isNotCurrent;
+    });
+    
+    // Returnăm primele 5 știri
+    return sameDayNews.slice(0, limit);
+  } catch (error) {
+    console.error('fetchNewsByDate failed', error);
+    return [];
+  }
+}
+
 
