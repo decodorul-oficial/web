@@ -80,7 +80,7 @@ export async function LatestNewsSection() {
           {rest.map((n) => (
             <article key={n.id} className="grid grid-cols-5 gap-4 py-4">
               <div className="col-span-1 text-xs text-gray-500">
-                {new Date(n.publicationDate).toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' })}
+                {new Date(n.publicationDate).toLocaleDateString('ro-RO', { day: 'numeric', month: 'short', year: 'numeric' })}
               </div>
               <div className="col-span-4">
                 <h4 className="font-semibold">

@@ -2,16 +2,18 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+import { SearchSpotlight } from '@/components/search/SearchSpotlight';
+import { MobileMenu } from '@/components/layout/MobileMenu';
 import { usePathname } from 'next/navigation';
 
 const navItems: { href: string; label: string }[] = [
   { href: '/', label: 'Acasă' },
   // slot for dropdown "Category"
-  { href: '/categorii/administratie', label: 'Category' },
-  { href: '/categorii/economie', label: 'Category 2' },
-  { href: '/categorii/legislatie', label: 'Category 3' },
-  { href: '/join', label: 'Join' },
-  { href: '/login', label: 'Login' }
+  //{ href: '/categorii/administratie', label: 'Category' },
+  //{ href: '/categorii/economie', label: 'Category 2' },
+  //{ href: '/categorii/legislatie', label: 'Category 3' },
+  //{ href: '/join', label: 'Join' },
+  //{ href: '/login', label: 'Login' }
 ];
 
 const categories = [
@@ -93,7 +95,7 @@ export function Header() {
             {navItems[0].label}
           </Link>
 
-          {/* Category Dropdown */}
+          {/* Category Dropdown 
           <div className="relative" ref={dropdownRef} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
             <button
               type="button"
@@ -123,6 +125,9 @@ export function Header() {
               </div>
             )}
           </div>
+          */}
+          {/* Search */}
+          <SearchSpotlight />
 
           {/* Keep other links */}
           {navItems.slice(2).map((item) => {
@@ -138,6 +143,10 @@ export function Header() {
             );
           })}
         </nav>
+        <div className="md:hidden flex items-center gap-2">
+          <SearchSpotlight />
+          <MobileMenu />
+        </div>
       </div>
     </header>
   );

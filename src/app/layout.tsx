@@ -3,6 +3,7 @@ import './globals.css';
 import { DisclaimerBanner } from '@/components/legal/DisclaimerBanner';
 import { ConsentProvider } from '@/components/cookies/ConsentProvider';
 import { CookieBanner } from '@/components/cookies/CookieBanner';
+import { ScrollToTop } from '@/components/ui/ScrollToTop';
 
 export const metadata: Metadata = {
   title: 'Decodorul Oficial',
@@ -22,6 +23,7 @@ export default function RootLayout({
           <DisclaimerBanner />
           {children}
           <CookieBanner />
+          <ScrollToTop />
         </ConsentProvider>
       </body>
     </html>
