@@ -8,6 +8,7 @@ export const GET_STIRI = gql`
         title
         publicationDate
         content
+        filename
       }
       pagination {
         totalCount
@@ -27,6 +28,7 @@ export const GET_STIRE_BY_ID = gql`
       createdAt
       updatedAt
       content
+      filename
     }
   }
 `;
@@ -45,6 +47,7 @@ export const SEARCH_STIRI = gql`
         title
         publicationDate
         content
+        filename
       }
       pagination {
         totalCount

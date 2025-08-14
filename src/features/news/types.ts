@@ -4,6 +4,7 @@ export type NewsItem = {
   publicationDate: string;
   createdAt?: string;
   updatedAt?: string;
+  filename?: string;
   // Field returned as JSON from the API. Structure can vary per source.
   content: unknown;
 };

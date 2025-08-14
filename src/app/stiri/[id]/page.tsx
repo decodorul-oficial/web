@@ -5,6 +5,7 @@ import { fetchNewsById } from '@/features/news/services/newsService';
 import { Citation } from '@/components/legal/Citation';
 import { sanitizeRichText } from '@/lib/html/sanitize';
 import { NavigationEndBeacon } from '@/components/ui/NavigationEndBeacon';
+import { generateMonitorulOficialUrl } from '@/lib/utils/monitorulOficial';
 
 type PageProps = { params: { id: string } };
 
@@ -92,6 +93,21 @@ export default async function NewsDetailPage(props: PageProps) {
                   )}
                   {news.updatedAt && (
                     <div><span className="text-gray-500">Actualizat:</span> {new Date(news.updatedAt).toLocaleString('ro-RO')}</div>
+                  )}
+                  {news.filename && generateMonitorulOficialUrl(news.filename) && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-gray-500">Document oficial:</span>
+                        <a 
+                          href={generateMonitorulOficialUrl(news.filename)!}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-brand-info hover:underline text-sm"
+                        >
+                          Monitorul Oficial →
+                        </a>
+                      </div>
+                    </div>
                   )}
                 </div>
               </aside>
