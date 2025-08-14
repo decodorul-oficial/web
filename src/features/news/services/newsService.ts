@@ -7,49 +7,33 @@ export type FetchNewsParams = {
   limit?: number;
   offset?: number;
   orderBy?: string;
-  orderDirection?: 'asc' | 'desc' | 'ASC' | 'DESC';
+  orderDirection?: 'asc' | 'desc';
 };
 
 export async function fetchLatestNews(params: FetchNewsParams = {}) {
   const { limit = 10, offset = 0, orderBy = 'publicationDate', orderDirection = 'desc' } = params;
+  const limitClamped = Math.max(1, Math.min(100, limit));
 
   try {
     const client = getGraphQLClient();
     const data = await client.request<GetStiriResponse>(GET_STIRI, {
-      limit,
+      limit: limitClamped,
       offset,
       orderBy,
       orderDirection
     });
     return data.getStiri;
   } catch (primaryError: any) {
-    // Dacă serverul încă nu normalizează `publicationDate`, reîncearcă cu `publication_date`
-    const serverValidation = primaryError?.response?.errors?.[0]?.code === 'VALIDATION_ERROR';
-    if (serverValidation && orderBy === 'publicationDate') {
-      try {
-        const client = getGraphQLClient();
-        const data = await client.request<GetStiriResponse>(GET_STIRI, {
-          limit,
-          offset,
-          orderBy: 'publication_date',
-          orderDirection
-        });
-        return data.getStiri;
-      } catch (retryError) {
-        console.warn('Retry with publication_date failed', retryError);
-      }
-    }
-
-    console.warn('fetchLatestNews primary request failed, trying endpoint fallback', primaryError);
+    if (process.env.NODE_ENV !== 'production') console.debug('fetchLatestNews primary failed; retrying endpoint', primaryError);
     try {
       const { data } = await requestWithEndpointFallback<GetStiriResponse>(
         GET_STIRI,
-        { limit, offset, orderBy: serverValidation ? 'publication_date' : orderBy, orderDirection },
+        { limit: limitClamped, offset, orderBy, orderDirection },
         process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT
       );
       return data.getStiri;
     } catch (fallbackError) {
-      console.error('fallback request failed', fallbackError);
+      if (process.env.NODE_ENV !== 'production') console.debug('endpoint fallback failed', fallbackError);
       return {
         stiri: [],
         pagination: { totalCount: 0, currentPage: 1, totalPages: 1 }
