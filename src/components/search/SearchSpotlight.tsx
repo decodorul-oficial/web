@@ -1,48 +1,104 @@
 "use client";
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import Fuse from 'fuse.js';
 import Link from 'next/link';
-import { fetchLatestNews } from '@/features/news/services/newsService';
+import { getGraphQLClient } from '@/lib/graphql/client';
+import { SEARCH_STIRI } from '@/features/news/graphql/queries';
 
 type SpotlightItem = {
   id: string;
   title: string;
   publicationDate: string;
-  content: unknown;
+  content?: any;
 };
 
 export function SearchSpotlight() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [items, setItems] = useState<SpotlightItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const [offset, setOffset] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+  // Simple LRU-like cache with TTL
+  const cacheRef = useRef<Map<string, { ts: number; data: { items: SpotlightItem[]; total: number } }>>(new Map());
+  const abortRef = useRef<AbortController | null>(null);
+  const lastCompletedRef = useRef<string>('');
+
+  const keyFor = (q: string, lim: number, off: number, ob: string, od: 'asc' | 'desc') => `${q}|${lim}|${off}|${ob}|${od}`;
+
+  async function runSearch(q: string, lim: number, off: number, ob: string, od: 'asc' | 'desc') {
+    if (q.length < 2) {
+      setItems([]);
+      setTotal(0);
+      setOffset(0);
+      setError(null);
+      return;
+    }
+
+    const clampedLimit = Math.max(1, Math.min(100, lim));
+    const cacheKey = keyFor(q, clampedLimit, off, ob, od);
+
+    // Cache hit with TTL 45s
+    const now = Date.now();
+    const cached = cacheRef.current.get(cacheKey);
+    if (cached && now - cached.ts < 45_000) {
+      setItems(cached.data.items);
+      setTotal(cached.data.total);
+      lastCompletedRef.current = cacheKey;
+      setError(null);
+      return;
+    }
+
+    // Same as last completed → skip
+    if (lastCompletedRef.current === cacheKey) return;
+
+    // Cancel previous
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setBusy(true);
+    setError(null);
+    try {
+      const client = getGraphQLClient({
+        getAuthToken: () => (typeof window !== 'undefined' ? localStorage.getItem('DO_TOKEN') ?? undefined : undefined)
+      });
+      // graphql-request nu primește AbortSignal direct; folosim fetch polyfill prin setHeader + abort manual
+      (client as any).setHeader('Authorization', `Bearer ${typeof window !== 'undefined' ? localStorage.getItem('DO_TOKEN') ?? '' : ''}`);
+      (client as any).setHeader('Content-Type', 'application/json');
+
+      const dataPromise = client.request<{ searchStiri: { stiri: SpotlightItem[]; pagination: { totalCount: number } } }>(
+        SEARCH_STIRI,
+        { query: q, limit: clampedLimit, offset: off, orderBy: 'publicationDate', orderDirection: 'desc' }
+      );
+      const data = (await Promise.race([
+        dataPromise,
+        new Promise((_, reject) => controller.signal.addEventListener('abort', () => reject(new Error('aborted'))))
+      ])) as { searchStiri: { stiri: SpotlightItem[]; pagination: { totalCount: number } } };
+      const itemsNew = data.searchStiri.stiri;
+      const totalNew = data.searchStiri.pagination?.totalCount ?? itemsNew.length;
+      setItems(itemsNew);
+      setTotal(totalNew);
+      cacheRef.current.set(cacheKey, { ts: now, data: { items: itemsNew, total: totalNew } });
+      lastCompletedRef.current = cacheKey;
+    } catch (e: any) {
+      const code = e?.response?.errors?.[0]?.code;
+      if (code === 'VALIDATION_ERROR') setError('Limita nu poate depăși 100 sau parametrii nu sunt validați.');
+      else if (code === 'RATE_LIMIT_EXCEEDED') setError('Ai atins limita de rată. Te rugăm să încerci din nou în scurt timp.');
+      else setError('A apărut o eroare. Încearcă din nou.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Debounce 500ms
   useEffect(() => {
-    // preload some items for client-side fuzzy search; can be replaced by server API later
-    fetchLatestNews({ limit: 200, orderBy: 'publicationDate', orderDirection: 'desc' })
-      .then(({ stiri }) => setItems(stiri))
-      .catch(() => setItems([]));
-  }, []);
-
-  const fuse = useMemo(() => {
-    return new Fuse(items, {
-      includeScore: true,
-      threshold: 0.35,
-      keys: [
-        'title',
-        'publicationDate',
-        'content.summary',
-        'content.body',
-        'content.category',
-        'content.keywords'
-      ] as any
-    });
-  }, [items]);
-
-  const results = useMemo(() => {
-    if (!query) return [] as SpotlightItem[];
-    return fuse.search(query).slice(0, 8).map((r) => r.item as SpotlightItem);
-  }, [fuse, query]);
+    const id = setTimeout(() => {
+      runSearch(query.trim(), 10, 0, 'publicationDate', 'desc');
+    }, 500);
+    return () => clearTimeout(id);
+  }, [query]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -94,20 +150,57 @@ export function SearchSpotlight() {
                 />
               </div>
               <div className="max-h-[60vh] overflow-y-auto">
-                {query && results.length === 0 && (
-                  <div className="p-4 text-sm text-gray-500">Niciun rezultat.</div>
+                {error && <div className="p-4 text-sm text-red-600">{error}</div>}
+                {!error && query && total === 0 && !busy && (
+                  <div className="p-4 text-sm text-gray-500">Nicio știre găsită.</div>
                 )}
-                {results.map((r) => (
+                {items.map((r) => (
                   <Link
                     key={r.id}
                     href={`/stiri/${r.id}`}
                     className="block border-b p-4 hover:bg-gray-50"
-                    onClick={() => setOpen(false)}
+                    onClick={() => {
+                      setOpen(false);
+                      // start via central store; end va fi declanșat la mount-ul paginii (beacon) sau interceptor
+                      import('../ui/navigationLoader').then(({ navigationLoader }) => navigationLoader.start());
+                      // let Next.js handle transition; our interceptor will reset on pathname change
+                    }}
                   >
                     <div className="text-sm font-medium">{r.title}</div>
                     <div className="text-xs text-gray-500">{new Date(r.publicationDate).toLocaleString('ro-RO')}</div>
+                    {(r as any).content && (
+                      <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-600">
+                        {((r as any).content?.summary || (r as any).content?.body) && (
+                          <span className="line-clamp-1 max-w-full text-gray-700">
+                            {(r as any).content?.summary || String((r as any).content?.body ?? '').replace(/<[^>]+>/g, '').slice(0, 140)}
+                          </span>
+                        )}
+                        {(r as any).content?.category && (
+                          <span className="rounded bg-gray-100 px-2 py-0.5">{(r as any).content.category}</span>
+                        )}
+                        {Array.isArray((r as any).content?.keywords) && (r as any).content.keywords.slice(0, 3).map((k: string) => (
+                          <span key={k} className="rounded bg-gray-100 px-2 py-0.5">{k}</span>
+                        ))}
+                        {(r as any).content?.author && (
+                          <span className="ml-auto text-gray-500">Autor: {(r as any).content.author}</span>
+                        )}
+                      </div>
+                    )}
                   </Link>
                 ))}
+                {busy && <div className="p-4 text-sm text-gray-500">Se caută…</div>}
+                {!busy && items.length >= 10 && items.length < total && (
+                  <button
+                    className="block w-full p-3 text-center text-sm text-brand-info hover:bg-gray-50"
+                    onClick={() => {
+                      const nextOffset = offset + 10;
+                      setOffset(nextOffset);
+                      runSearch(query.trim(), 10, nextOffset, 'publicationDate', 'desc');
+                    }}
+                  >
+                    Încarcă mai multe
+                  </button>
+                )}
               </div>
             </div>
           </div>,

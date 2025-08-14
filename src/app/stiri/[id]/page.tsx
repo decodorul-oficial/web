@@ -4,6 +4,7 @@ import { Footer } from '@/components/layout/Footer';
 import { fetchNewsById } from '@/features/news/services/newsService';
 import { Citation } from '@/components/legal/Citation';
 import { sanitizeRichText } from '@/lib/html/sanitize';
+import { NavigationEndBeacon } from '@/components/ui/NavigationEndBeacon';
 
 type PageProps = { params: { id: string } };
 
@@ -32,6 +33,8 @@ export default async function NewsDetailPage(props: PageProps) {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
+      {/* ensure we always end overlay on the client when this page is rendered */}
+      <NavigationEndBeacon />
       <main className="container-responsive flex-1 py-8">
         <div className="mb-6 text-sm">
           <Link href="/" className="text-brand-info hover:underline">

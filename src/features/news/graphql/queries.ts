@@ -31,4 +31,30 @@ export const GET_STIRE_BY_ID = gql`
   }
 `;
 
+export const SEARCH_STIRI = gql`
+  query SearchStiri($query: String!, $limit: Int, $offset: Int, $orderBy: String, $orderDirection: String) {
+    searchStiri(
+      query: $query
+      limit: $limit
+      offset: $offset
+      orderBy: $orderBy
+      orderDirection: $orderDirection
+    ) {
+      stiri {
+        id
+        title
+        publicationDate
+        content
+      }
+      pagination {
+        totalCount
+        currentPage
+        totalPages
+        hasNextPage
+        hasPreviousPage
+      }
+    }
+  }
+`;
+
 
