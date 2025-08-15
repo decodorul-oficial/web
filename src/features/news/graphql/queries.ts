@@ -9,6 +9,7 @@ export const GET_STIRI = gql`
         publicationDate
         content
         filename
+        viewCount
       }
       pagination {
         totalCount
@@ -29,6 +30,7 @@ export const GET_STIRE_BY_ID = gql`
       updatedAt
       content
       filename
+      viewCount
     }
   }
 `;
@@ -48,6 +50,7 @@ export const SEARCH_STIRI = gql`
         publicationDate
         content
         filename
+        viewCount
       }
       pagination {
         totalCount
@@ -59,5 +62,24 @@ export const SEARCH_STIRI = gql`
     }
   }
 `;
+
+// Updated query for most read news to match API implementation
+export const GET_MOST_READ_STIRI = gql`
+  query GetMostReadStiri($period: String, $limit: Int) {
+    getMostReadStiri(period: $period, limit: $limit) {
+      stiri {
+        id
+        title
+        publicationDate
+        content
+        filename
+        viewCount
+      }
+    }
+  }
+`;
+
+// Note: trackNewsView mutation is no longer needed as it's handled automatically
+// by the getStireById query
 
 

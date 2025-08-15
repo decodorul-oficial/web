@@ -2,9 +2,11 @@ import Link from 'next/link';
 import { fetchLatestNews } from '@/features/news/services/newsService';
 import { Citation } from '@/components/legal/Citation';
 import { stripHtml } from '@/lib/html/sanitize';
+import { MostReadNewsSection } from './MostReadNewsSection';
+import { Gavel, Landmark } from 'lucide-react';
 
 export async function LatestNewsSection() {
-  const { stiri } = await fetchLatestNews({ limit: 10, orderBy: 'publicationDate', orderDirection: 'desc' });
+  const { stiri } = await fetchLatestNews({ limit: 10, orderBy: 'id', orderDirection: 'desc' });
 
   const [featured, ...rest] = stiri;
 
@@ -33,63 +35,55 @@ export async function LatestNewsSection() {
     <section className="space-y-8">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          {featured ? (
-            <article className="grid grid-cols-5 gap-6">
-              <div className="col-span-2 h-48 rounded-md bg-gradient-to-br from-brand to-brand-highlight" />
-              <div className="col-span-3">
-                <h2 className="text-2xl font-bold leading-tight">
-                  <Link href={`/stiri/${featured.id}`} className="hover:underline">
-                    {featured.title}
-                  </Link>
-                </h2>
-                <p className="mt-2 line-clamp-3 text-gray-600">{getSummary(featured.content)?.slice(0, 160)}</p>
-                <div className="mt-3 text-xs text-gray-500">{new Date(featured.publicationDate).toLocaleDateString('ro-RO')}</div>
-                <div className="mt-2">
+          {featured && (
+            <article className="mb-8">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <div className="h-48 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 md:h-full flex items-center justify-center">
+                  <Landmark className="h-16 w-16 text-white" />
+                </div>
+                <div className="md:col-span-2">
+                  <h2 className="mb-3 text-xl font-bold">
+                    <Link href={`/stiri/${featured.id}`} className="hover:underline">
+                      {featured.title}
+                    </Link>
+                  </h2>
+                  <p className="mb-4 text-gray-600">{getSummary(featured.content)?.slice(0, 350)}...</p>
+                  <div className="mb-4 text-sm text-gray-500">
+                    {new Date(featured.publicationDate).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                  </div>
                   <Citation {...getCitationFields(featured.content)} />
                 </div>
               </div>
             </article>
-          ) : (
-            <div className="text-gray-500">Nu există știri momentan.</div>
           )}
         </div>
 
-        <div className="space-y-4">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Most reads</h3>
-          <ul className="space-y-4">
-            {rest.slice(0, 4).map((n) => (
-              <li key={n.id} className="flex items-start gap-3">
-                <div className="h-12 w-12 shrink-0 rounded bg-gradient-to-br from-brand-accent to-brand-info/60" />
-                <div>
-                  <p className="line-clamp-2 text-sm font-medium">
-                    <Link href={`/stiri/${n.id}`} className="hover:underline">
-                      {n.title}
-                    </Link>
-                  </p>
-                  <p className="line-clamp-2 text-xs text-gray-500">{getSummary(n.content)?.slice(0, 90)}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
+        <div className="space-y-6">
+          <MostReadNewsSection />
         </div>
       </div>
 
       <div className="space-y-6">
-        <h3 className="text-lg font-semibold">More news</h3>
+        <h3 className="text-lg font-semibold">Latest News</h3>
         <div className="divide-y">
           {rest.map((n) => (
-            <article key={n.id} className="grid grid-cols-5 gap-4 py-4">
-              <div className="col-span-1 text-xs text-gray-500">
-              {new Date(n.publicationDate).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+            <article key={n.id} className="flex gap-3 py-4">
+              <div className="flex-shrink-0">
+                <div className="h-16 w-16 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 flex items-center justify-center">
+                  <Gavel className="h-6 w-6 text-white" />
+                </div>
               </div>
-              <div className="col-span-4">
-                <h4 className="font-semibold">
+              <div className="flex-1 min-w-0">
+                <div className="mb-2 text-xs text-gray-500">
+                  {new Date(n.publicationDate).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                </div>
+                <h4 className="mb-2 font-semibold">
                   <Link href={`/stiri/${n.id}`} className="hover:underline">
                     {n.title}
                   </Link>
                 </h4>
-                <p className="line-clamp-2 text-sm text-gray-600">{getSummary(n.content)?.slice(0, 180)}</p>
-                <div className="mt-1">
+                <p className="line-clamp-2 text-sm text-gray-600 mb-2">{getSummary(n.content)?.slice(0, 180)}...</p>
+                <div>
                   <Citation {...getCitationFields(n.content)} />
                 </div>
               </div>

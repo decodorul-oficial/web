@@ -70,7 +70,7 @@ export function SearchSpotlight() {
 
       const dataPromise = client.request<{ searchStiri: { stiri: SpotlightItem[]; pagination: { totalCount: number } } }>(
         SEARCH_STIRI,
-        { query: q, limit: clampedLimit, offset: off, orderBy: 'publicationDate', orderDirection: 'desc' }
+        { query: q, limit: clampedLimit, offset: off, orderBy: 'id', orderDirection: 'desc' }
       );
       const data = (await Promise.race([
         dataPromise,
@@ -95,7 +95,7 @@ export function SearchSpotlight() {
   // Debounce 500ms
   useEffect(() => {
     const id = setTimeout(() => {
-      runSearch(query.trim(), 10, 0, 'publicationDate', 'desc');
+      runSearch(query.trim(), 10, 0, 'id', 'desc');
     }, 500);
     return () => clearTimeout(id);
   }, [query]);
@@ -195,7 +195,7 @@ export function SearchSpotlight() {
                     onClick={() => {
                       const nextOffset = offset + 10;
                       setOffset(nextOffset);
-                      runSearch(query.trim(), 10, nextOffset, 'publicationDate', 'desc');
+                      runSearch(query.trim(), 10, nextOffset, 'id', 'desc');
                     }}
                   >
                     Încarcă mai multe

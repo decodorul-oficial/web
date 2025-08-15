@@ -3,10 +3,10 @@ import { NewsItem } from '../types';
 
 interface SameDayNewsSectionProps {
   news: NewsItem[];
-  currentDate: string;
+  currentNewsId: string;
 }
 
-export function SameDayNewsSection({ news, currentDate }: SameDayNewsSectionProps) {
+export function SameDayNewsSection({ news, currentNewsId }: SameDayNewsSectionProps) {
   if (news.length === 0) {
     return null;
   }
@@ -41,6 +41,9 @@ export function SameDayNewsSection({ news, currentDate }: SameDayNewsSectionProp
     // Fallback la titlu dacă nu avem altceva
     return '';
   };
+
+  // Get the date from the first news item for the section title
+  const currentDate = news[0]?.publicationDate || '';
 
   return (
     <div className="space-y-4">

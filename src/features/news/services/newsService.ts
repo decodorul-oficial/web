@@ -1,7 +1,7 @@
 import { getGraphQLClient } from '@/lib/graphql/client';
 import { requestWithEndpointFallback } from '@/lib/graphql/utils';
-import { GET_STIRI, GET_STIRE_BY_ID } from '@/features/news/graphql/queries';
-import type { GetStiriResponse, NewsItem } from '@/features/news/types';
+import { GET_STIRI, GET_STIRE_BY_ID, GET_MOST_READ_STIRI } from '@/features/news/graphql/queries';
+import type { GetStiriResponse, NewsItem, MostReadStiriResponse, MostReadStiriParams } from '@/features/news/types';
 
 export type FetchNewsParams = {
   limit?: number;
@@ -65,7 +65,7 @@ export async function fetchNewsByDate(date: string, excludeId?: string, limit: n
   try {
     const client = getGraphQLClient();
     // Obținem toate știrile și le filtrăm pe client pentru a găsi cele din aceeași zi
-    const { stiri } = await fetchLatestNews({ limit: 100, offset: 0, orderBy: 'publicationDate', orderDirection: 'desc' });
+    const { stiri } = await fetchLatestNews({ limit: 100, offset: 0, orderBy: 'id', orderDirection: 'desc' });
     
     // Filtrăm știrile din aceeași zi, excluzând știrea curentă
     const targetDate = new Date(date);
@@ -83,5 +83,38 @@ export async function fetchNewsByDate(date: string, excludeId?: string, limit: n
     return [];
   }
 }
+
+// Updated function for most read news
+export async function fetchMostReadStiri(params: MostReadStiriParams = {}) {
+  const { limit = 10, period = '7d' } = params;
+  const limitClamped = Math.max(1, Math.min(100, limit));
+
+  try {
+    const client = getGraphQLClient();
+    const data = await client.request<MostReadStiriResponse>(GET_MOST_READ_STIRI, {
+      limit: limitClamped,
+      period
+    });
+    return data.getMostReadStiri;
+  } catch (primaryError: any) {
+    if (process.env.NODE_ENV !== 'production') console.debug('fetchMostReadStiri primary failed; retrying endpoint', primaryError);
+    try {
+      const { data } = await requestWithEndpointFallback<MostReadStiriResponse>(
+        GET_MOST_READ_STIRI,
+        { limit: limitClamped, period },
+        process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT
+      );
+      return data.getMostReadStiri;
+    } catch (fallbackError) {
+      if (process.env.NODE_ENV !== 'production') console.debug('endpoint fallback failed', fallbackError);
+      return {
+        stiri: []
+      };
+    }
+  }
+}
+
+// Note: trackNewsView is no longer needed as it's handled automatically by the API
+// when calling getStireById
 
 

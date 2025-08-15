@@ -5,8 +5,10 @@ import { fetchNewsById, fetchNewsByDate } from '@/features/news/services/newsSer
 import { Citation } from '@/components/legal/Citation';
 import { sanitizeRichText } from '@/lib/html/sanitize';
 import { NavigationEndBeacon } from '@/components/ui/NavigationEndBeacon';
-import { generateMonitorulOficialUrl } from '@/lib/utils/monitorulOficial';
 import { SameDayNewsSection } from '@/features/news/components/SameDayNewsSection';
+import { NewsViewTracker } from '@/features/news/components/NewsViewTracker';
+import { NewsViewStats } from '@/features/news/components/NewsViewStats';
+import { Rss } from 'lucide-react';
 
 type PageProps = { params: { id: string } };
 
@@ -53,78 +55,65 @@ export default async function NewsDetailPage(props: PageProps) {
         {!news ? (
           <div className="text-gray-500">Știrea nu a fost găsită.</div>
         ) : (
-          <article className="space-y-6">
-            <header className="space-y-2">
-              <h1 className="text-3xl font-bold leading-tight">{news.title}</h1>
-              <div className="text-sm text-gray-500">
-                {new Date(news.publicationDate).toLocaleString('ro-RO')}
-              </div>
-              {extractField<string>(news.content, 'author') && (
-                <div className="text-sm text-gray-600">Autor: {extractField<string>(news.content, 'author')}</div>
-              )}
-              {extractField<string>(news.content, 'category') && (
-                <div className="text-sm text-gray-600">Categoria: {extractField<string>(news.content, 'category')}</div>
-              )}
-              {Array.isArray(extractField<string[]>(news.content, 'keywords')) && (
-                <div className="flex flex-wrap gap-2 text-xs text-gray-600">
-                  {extractField<string[]>(news.content, 'keywords')!.map((k) => (
-                    <span key={k} className="rounded bg-gray-100 px-2 py-0.5">{k}</span>
-                  ))}
+          <>
+            {/* Track news view */}
+            <NewsViewTracker newsId={id} />
+            
+            <article className="space-y-6">
+              <header className="space-y-2">
+                <h1 className="text-3xl font-bold leading-tight">{news.title}</h1>
+                <div className="text-sm text-gray-500">
+                  {new Date(news.publicationDate).toLocaleString('ro-RO')}
                 </div>
-              )}
-            </header>
+                {extractField<string>(news.content, 'author') && (
+                  <div className="text-sm text-gray-600">Autor: {extractField<string>(news.content, 'author')}</div>
+                )}
+                {extractField<string>(news.content, 'category') && (
+                  <div className="text-sm text-gray-600">Categoria: {extractField<string>(news.content, 'category')}</div>
+                )}
+                {Array.isArray(extractField<string[]>(news.content, 'keywords')) && (
+                  <div className="flex flex-wrap gap-2 text-xs text-gray-600">
+                    {extractField<string[]>(news.content, 'keywords')!.map((k) => (
+                      <span key={k} className="rounded bg-gray-100 px-2 py-0.5">{k}</span>
+                    ))}
+                  </div>
+                )}
+              </header>
 
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-              <div className="lg:col-span-2 space-y-4">
-                <div className="h-60 rounded-md bg-gradient-to-br from-brand to-brand-highlight" />
-                <section className="prose prose-lg max-w-none">
-                  {extractField<string>(news.content, 'summary') && (
-                    <p>{extractField<string>(news.content, 'summary')}</p>
-                  )}
-                  {extractField<string>(news.content, 'body') && (
-                    <div dangerouslySetInnerHTML={{ __html: sanitizeRichText(extractField<string>(news.content, 'body')!) }} />
-                  )}
-                  {typeof news.content === 'string' && <p>{news.content}</p>}
-                </section>
-                <div>
-                  <Citation {...getCitationFields(news.content)} />
-                </div>
-              </div>
-              <aside className="space-y-6">
-                <div className="space-y-4">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Meta</h3>
-                  <div className="rounded border p-4 text-sm text-gray-700">
-                    <div><span className="text-gray-500">ID:</span> {news.id}</div>
-                    <div><span className="text-gray-500">Publicat:</span> {new Date(news.publicationDate).toLocaleDateString('ro-RO')}</div>
-                    {news.createdAt && (
-                      <div><span className="text-gray-500">Creat:</span> {new Date(news.createdAt).toLocaleString('ro-RO')}</div>
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+                <div className="lg:col-span-2 space-y-4">
+                  <div className="h-60 rounded-md bg-gradient-to-br from-brand to-brand-highlight">
+                    <div className="flex items-center justify-center h-full">
+                      <Rss className="h-16 w-16 text-white" />
+                    </div>
+                  </div>
+                  <section className="prose prose-lg max-w-none">
+                    {extractField<string>(news.content, 'summary') && (
+                      <p>{extractField<string>(news.content, 'summary')}</p>
                     )}
-                    {news.updatedAt && (
-                      <div><span className="text-gray-500">Actualizat:</span> {new Date(news.updatedAt).toLocaleString('ro-RO')}</div>
+                    {extractField<string>(news.content, 'body') && (
+                      <div dangerouslySetInnerHTML={{ __html: sanitizeRichText(extractField<string>(news.content, 'body')!) }} />
                     )}
-                    {news.filename && generateMonitorulOficialUrl(news.filename) && (
-                      <div className="mt-3 pt-3 border-t border-gray-200">
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-gray-500">Document oficial:</span>
-                          <a 
-                            href={generateMonitorulOficialUrl(news.filename)!}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-brand-info hover:underline text-sm"
-                          >
-                            Monitorul Oficial →
-                          </a>
-                        </div>
-                      </div>
-                    )}
+                    {typeof news.content === 'string' && <p>{news.content}</p>}
+                  </section>
+                  <div>
+                    <Citation {...getCitationFields(news.content)} />
                   </div>
                 </div>
-                
-                {/* Secțiunea cu știrile din aceeași zi */}
-                <SameDayNewsSection news={sameDayNews} currentDate={news.publicationDate} />
-              </aside>
-            </div>
-          </article>
+                <aside className="space-y-6">
+                  {/* Statistics section */}
+                  <NewsViewStats news={news} />
+                  
+                  {/* Secțiunea cu știrile din aceeași zi */}
+                  {sameDayNews.length > 0 && (
+                    <div className="mt-12">
+                      <SameDayNewsSection news={sameDayNews} currentNewsId={id} />
+                    </div>
+                  )}
+                </aside>
+              </div>
+            </article>
+          </>
         )}
       </main>
       <Footer />
