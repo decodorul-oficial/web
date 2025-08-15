@@ -62,7 +62,7 @@ export function MostReadNewsSection() {
   const currentConfig = NEWS_VIEW_PERIODS[currentPeriod];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-4 bg-gray-50/50 rounded-lg border border-gray-200/40">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
           Most reads

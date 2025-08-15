@@ -103,7 +103,7 @@ export default async function NewsDetailPage(props: PageProps) {
           <header className="space-y-2">
             <h1 className="text-3xl font-bold leading-tight">{news.title}</h1>
             <div className="text-sm text-gray-500">
-              {new Date(news.publicationDate).toLocaleString('ro-RO')}
+              {new Date(news.publicationDate).toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' })}
             </div>
             {extractField<string>(news.content, 'author') && (
               <div className="text-sm text-gray-600">Autor: {extractField<string>(news.content, 'author')}</div>
