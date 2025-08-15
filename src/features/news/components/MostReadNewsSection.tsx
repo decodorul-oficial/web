@@ -8,6 +8,7 @@ import { stripHtml } from '@/lib/html/sanitize';
 import { PeriodSelector } from './PeriodSelector';
 import { NEWS_VIEW_PERIODS, type NewsViewPeriod } from '../config/periods';
 import { NewsItem } from '../types';
+import { createNewsSlug } from '@/lib/utils/slugify';
 
 export function MostReadNewsSection() {
   const [currentPeriod, setCurrentPeriod] = useState<NewsViewPeriod>('7d');
@@ -125,7 +126,7 @@ export function MostReadNewsSection() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="line-clamp-2 text-sm font-medium">
-                  <Link href={`/stiri/${n.id}`} className="hover:underline">
+                  <Link href={`/stiri/${createNewsSlug(n.title, n.id)}`} className="hover:underline">
                     {n.title}
                   </Link>
                 </p>

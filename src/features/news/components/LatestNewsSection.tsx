@@ -4,6 +4,7 @@ import { Citation } from '@/components/legal/Citation';
 import { stripHtml } from '@/lib/html/sanitize';
 import { MostReadNewsSection } from './MostReadNewsSection';
 import { Gavel, Landmark } from 'lucide-react';
+import { createNewsSlug } from '@/lib/utils/slugify';
 
 export async function LatestNewsSection() {
   const { stiri } = await fetchLatestNews({ limit: 10, orderBy: 'id', orderDirection: 'desc' });
@@ -43,7 +44,7 @@ export async function LatestNewsSection() {
                 </div>
                 <div className="md:col-span-2">
                   <h2 className="mb-3 text-xl font-bold">
-                    <Link href={`/stiri/${featured.id}`} className="hover:underline">
+                    <Link href={`/stiri/${createNewsSlug(featured.title, featured.id)}`} className="hover:underline">
                       {featured.title}
                     </Link>
                   </h2>
@@ -78,7 +79,7 @@ export async function LatestNewsSection() {
                   {new Date(n.publicationDate).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                 </div>
                 <h4 className="mb-2 font-semibold">
-                  <Link href={`/stiri/${n.id}`} className="hover:underline">
+                  <Link href={`/stiri/${createNewsSlug(n.title, n.id)}`} className="hover:underline">
                     {n.title}
                   </Link>
                 </h4>

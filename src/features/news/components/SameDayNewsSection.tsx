@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { NewsItem } from '../types';
+import { createNewsSlug } from '@/lib/utils/slugify';
 
 interface SameDayNewsSectionProps {
   news: NewsItem[];
@@ -53,7 +54,7 @@ export function SameDayNewsSection({ news, currentNewsId }: SameDayNewsSectionPr
       <div className="space-y-3">
         {news.map((stire) => (
           <article key={stire.id} className="rounded border border-gray-200 p-3 hover:border-gray-300 transition-colors">
-            <Link href={`/stiri/${stire.id}`} className="block space-y-2">
+            <Link href={`/stiri/${createNewsSlug(stire.title, stire.id)}`} className="block space-y-2">
               <h4 className="text-sm font-medium text-gray-900 line-clamp-2 hover:text-brand-info">
                 {stire.title}
               </h4>
