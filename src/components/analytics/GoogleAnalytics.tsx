@@ -40,6 +40,25 @@ export default function GoogleAnalytics() {
       originalConsoleError.apply(console, args);
     };
 
+    // Monitor network requests to Google Analytics
+    const originalFetch = window.fetch;
+    window.fetch = function(...args) {
+      const url = args[0];
+      if (typeof url === 'string' && url.includes('google-analytics.com')) {
+        console.log('🔍 GoogleAnalytics: Fetch request to GA detected:', url);
+      }
+      return originalFetch.apply(this, args);
+    };
+
+    // Monitor XMLHttpRequest to Google Analytics
+    const originalXHROpen = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function(method: string, url: string | URL, async: boolean = true, username?: string | null, password?: string | null) {
+      if (typeof url === 'string' && url.includes('google-analytics.com')) {
+        console.log('🔍 GoogleAnalytics: XHR request to GA detected:', url);
+      }
+      return originalXHROpen.call(this, method, url, async, username, password);
+    };
+
     // Load Google Analytics script
     const script = document.createElement('script');
     script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`;
@@ -133,6 +152,22 @@ export default function GoogleAnalytics() {
       });
     }, 5000);
 
+    // Monitor dataLayer for actual GA requests
+    const originalPush = window.dataLayer.push;
+    window.dataLayer.push = function(...args) {
+      console.log('📊 GoogleAnalytics: dataLayer.push called with:', args);
+      
+      // Check if this is a config or event that should trigger a collect request
+      if (args[0] && Array.isArray(args[0])) {
+        const [command, ...params] = args[0];
+        if (command === 'config' || command === 'event') {
+          console.log('🔍 GoogleAnalytics: This should trigger a collect request:', { command, params });
+        }
+      }
+      
+      return originalPush.apply(this, args);
+    };
+
     return () => {
       console.log('🧹 GoogleAnalytics: Cleaning up analytics');
       const existingScript = document.querySelector(`script[src*="${GA_TRACKING_ID}"]`);
@@ -141,8 +176,11 @@ export default function GoogleAnalytics() {
       }
       (window as any).gtag = undefined;
       
-      // Restore original console.error
+      // Restore original functions
       console.error = originalConsoleError;
+      window.fetch = originalFetch;
+      XMLHttpRequest.prototype.open = originalXHROpen;
+      window.dataLayer.push = originalPush;
     };
   }, [hasAnalyticsConsent]);
 
