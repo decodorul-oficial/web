@@ -202,8 +202,9 @@ export function LatestNewsSection() {
       <div className="border-t border-gray-200/60 pt-8"></div>
 
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
+          {/* Header și informații despre filtrare */}
+          <div className="space-y-2 sm:space-y-0 sm:flex sm:items-center sm:gap-3">
             <h3 className="text-lg font-semibold">
               {isFiltered ? 'Știri după dată' : 'Latest News'}
             </h3>
@@ -217,12 +218,13 @@ export function LatestNewsSection() {
             )}
           </div>
           
+          {/* Controale pentru dată */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               {!showDateInput ? (
                 <button
                   onClick={openDateInput}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-transparent"
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-transparent w-full sm:w-auto justify-center sm:justify-start"
                   title="Selectează o dată"
                 >
                   <Calendar className="h-4 w-4 text-gray-500" />
@@ -231,13 +233,13 @@ export function LatestNewsSection() {
                   </span>
                 </button>
               ) : (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                   <Calendar className="h-4 w-4 text-gray-500" />
                   <input
                     type="date"
                     value={selectedDate}
                     onChange={handleDateChange}
-                    className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-transparent"
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-transparent w-full sm:w-auto"
                     max={new Date().toISOString().split('T')[0]}
                     autoFocus
                   />
@@ -247,7 +249,7 @@ export function LatestNewsSection() {
             {isFiltered && (
               <button
                 onClick={clearDateFilter}
-                className="p-1 text-gray-500 hover:text-gray-700 transition-colors"
+                className="p-2 text-gray-500 hover:text-gray-700 transition-colors border border-gray-300 rounded-md hover:bg-gray-50 sm:p-1 sm:border-0 sm:hover:bg-transparent"
                 title="Anulează filtrarea"
               >
                 <X className="h-4 w-4" />
