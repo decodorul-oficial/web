@@ -2,6 +2,7 @@ import { getGraphQLClient } from '@/lib/graphql/client';
 import { requestWithEndpointFallback } from '@/lib/graphql/utils';
 import { GET_STIRI, GET_STIRE_BY_ID, GET_MOST_READ_STIRI } from '@/features/news/graphql/queries';
 import type { GetStiriResponse, NewsItem, MostReadStiriResponse, MostReadStiriParams } from '@/features/news/types';
+import { ensureSessionCookie } from '@/lib/utils/sessionCookie';
 
 export type FetchNewsParams = {
   limit?: number;
@@ -13,6 +14,9 @@ export type FetchNewsParams = {
 export async function fetchLatestNews(params: FetchNewsParams = {}) {
   const { limit = 10, offset = 0, orderBy = 'publicationDate', orderDirection = 'desc' } = params;
   const limitClamped = Math.max(1, Math.min(100, limit));
+
+  // Asigură că cookie-ul mo_session este setat pentru analytics
+  ensureSessionCookie();
 
   try {
     const client = getGraphQLClient();
@@ -43,6 +47,9 @@ export async function fetchLatestNews(params: FetchNewsParams = {}) {
 }
 
 export async function fetchNewsById(id: string): Promise<NewsItem | null> {
+  // Asigură că cookie-ul mo_session este setat pentru analytics
+  ensureSessionCookie();
+  
   try {
     const client = getGraphQLClient();
     const data = await client.request<{ getStireById?: NewsItem }>(GET_STIRE_BY_ID, { id });
@@ -62,6 +69,9 @@ export async function fetchNewsById(id: string): Promise<NewsItem | null> {
 }
 
 export async function fetchNewsByDate(date: string, excludeId?: string, limit: number = 5): Promise<NewsItem[]> {
+  // Asigură că cookie-ul mo_session este setat pentru analytics
+  ensureSessionCookie();
+  
   try {
     const client = getGraphQLClient();
     // Obținem toate știrile și le filtrăm pe client pentru a găsi cele din aceeași zi
@@ -89,6 +99,9 @@ export async function fetchNewsByDate(date: string, excludeId?: string, limit: n
 export async function fetchMostReadStiri(params: MostReadStiriParams = {}) {
   const { limit = 10, period = '7d' } = params;
   const limitClamped = Math.max(1, Math.min(100, limit));
+
+  // Asigură că cookie-ul mo_session este setat pentru analytics
+  ensureSessionCookie();
 
   try {
     const client = getGraphQLClient();

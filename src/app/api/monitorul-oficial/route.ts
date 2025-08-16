@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ensureServerSessionCookie } from '@/lib/utils/serverSessionCookie';
 
 export async function GET(request: NextRequest) {
+  // Asigură că cookie-ul mo_session este setat pentru analytics
+  ensureServerSessionCookie();
+  
   const { searchParams } = new URL(request.url);
   const url = searchParams.get('url');
   

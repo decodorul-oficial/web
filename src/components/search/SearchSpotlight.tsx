@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { getGraphQLClient } from '@/lib/graphql/client';
 import { SEARCH_STIRI } from '@/features/news/graphql/queries';
+import { ensureSessionCookie } from '@/lib/utils/sessionCookie';
 
 type SpotlightItem = {
   id: string;
@@ -71,6 +72,10 @@ export function SearchSpotlight() {
     abortRef.current = controller;
     setBusy(true);
     setError(null);
+    
+    // Asigură că cookie-ul mo_session este setat pentru analytics
+    ensureSessionCookie();
+    
     try {
       const client = getGraphQLClient({
         getAuthToken: () => (typeof window !== 'undefined' ? localStorage.getItem('DO_TOKEN') ?? undefined : undefined)

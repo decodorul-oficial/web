@@ -11,6 +11,7 @@ import { NewsViewStats } from '@/features/news/components/NewsViewStats';
 import { extractIdFromSlug, isValidNewsSlug, slugify, createNewsSlug } from '@/lib/utils/slugify';
 import { Rss } from 'lucide-react';
 import { notFound, redirect } from 'next/navigation';
+import { SessionCookieInitializer } from '@/components/session/SessionCookieInitializer';
 
 type PageProps = { params: { slug: string } };
 
@@ -93,6 +94,7 @@ export default async function NewsDetailPage(props: PageProps) {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
+      <SessionCookieInitializer />
       {/* NavigationEndBeacon va reseta loader-ul imediat când pagina se montează */}
       <NavigationEndBeacon />
       <main className="container-responsive flex-1 py-8">

@@ -1,10 +1,12 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { SessionCookieInitializer } from '@/components/session/SessionCookieInitializer';
 
 export default function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
+      <SessionCookieInitializer />
       <main className="flex-1">
         <div className="container-responsive py-10">
           <h1 className="text-2xl font-bold">Login</h1>

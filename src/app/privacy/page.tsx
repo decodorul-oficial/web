@@ -1,5 +1,6 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { SessionCookieInitializer } from '@/components/session/SessionCookieInitializer';
 
 export const metadata = { title: 'Politica de Confidențialitate – Decodorul Oficial' };
 
@@ -7,6 +8,7 @@ export default function PrivacyPolicyPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
+      <SessionCookieInitializer />
       <main className="flex-1">
         <div className="container-responsive prose max-w-none py-10">
           <h1>Politica de Confidențialitate</h1>

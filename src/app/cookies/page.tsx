@@ -1,5 +1,6 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { SessionCookieInitializer } from '@/components/session/SessionCookieInitializer';
 
 export const metadata = { title: 'Politica de Cookies – Decodorul Oficial' };
 
@@ -7,12 +8,13 @@ export default function CookiesPolicyPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
+      <SessionCookieInitializer />
       <main className="flex-1">
         <div className="container-responsive prose max-w-none py-10">
           <h1>Politica de Cookie-uri</h1>
           
           <p className="text-sm text-gray-600 mb-6">
-            <strong>Ultima actualizare:</strong> {new Date().toLocaleDateString('ro-RO')}
+            <strong>Ultima actualizare:</strong> {new Date().toLocaleDateString('ro-RO')} - Adăugat cookie-ul mo_session pentru analytics
           </p>
 
           <h2>1. Ce sunt cookie-urile?</h2>
@@ -42,6 +44,7 @@ export default function CookiesPolicyPage() {
             <li><strong>Cookie-uri de sesiune:</strong> mențin sesiunea ta activă pe site</li>
             <li><strong>Cookie-uri de securitate:</strong> protejează împotriva atacurilor și fraudelor</li>
             <li><strong>Cookie-uri de funcționalitate:</strong> permit funcționarea corectă a formularelor și navigării</li>
+            <li><strong>Cookie-ul mo_session:</strong> identificator unic persistent pentru analytics și îmbunătățirea serviciului (UUID v4, expirare 1 an)</li>
           </ul>
 
           <h3>3.2 Cookie-uri de performanță (analitice)</h3>
@@ -77,6 +80,7 @@ export default function CookiesPolicyPage() {
           <ul>
             <li><strong>Cookie-uri de sesiune:</strong> se șterg automat când închizi browserul</li>
             <li><strong>Cookie-uri persistente:</strong> rămân pe dispozitivul tău pentru o perioadă specificată</li>
+            <li><strong>Cookie-ul mo_session:</strong> rămâne pe dispozitivul tău timp de 1 an (365 zile) pentru analytics îmbunătățite</li>
             <li><strong>Cookie-uri de terțe părți:</strong> respectă politicile de confidențialitate ale furnizorilor respectivi</li>
           </ul>
 
@@ -103,6 +107,9 @@ export default function CookiesPolicyPage() {
             <li>Personaliza setările cookie-urilor</li>
             <li>Modifica preferințele oricând din footer-ul site-ului</li>
           </ul>
+          <p className="text-sm text-gray-600 mt-2">
+            <strong>Notă:</strong> Cookie-ul mo_session este setat automat și este esențial pentru funcționarea site-ului. Nu poate fi dezactivat prin banner-ul de consimțământ.
+          </p>
 
           <h2>7. Impactul dezactivării cookie-urilor</h2>
           <p>
@@ -118,6 +125,18 @@ export default function CookiesPolicyPage() {
           <h2>8. Cookie-uri și confidențialitatea</h2>
           <p>
             Cookie-urile pe care le folosim <strong>nu conțin informații personale identificabile</strong> precum numele, adresa sau numărul de telefon. Ele stochează doar informații tehnice și de utilizare pentru a îmbunătăți serviciul nostru.
+          </p>
+          <p>
+            <strong>Cookie-ul mo_session:</strong> Este un identificator unic generat automat (UUID v4) care nu conține informații personale. Este folosit exclusiv pentru:
+          </p>
+          <ul>
+            <li>Analiza comportamentului utilizatorilor pentru îmbunătățirea serviciului</li>
+            <li>Identificarea unică a sesiunilor de navigare</li>
+            <li>Statistici agregate despre utilizarea site-ului</li>
+            <li>Personalizarea experienței de navigare</li>
+          </ul>
+          <p>
+            Acest cookie este setat automat și nu poate fi folosit pentru a te identifica personal. Poți să îl ștergi oricând din setările browserului tău.
           </p>
 
           <h2>9. Actualizări ale politicii de cookie-uri</h2>
