@@ -25,58 +25,43 @@ export function ConsentProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      console.log('🔍 ConsentProvider: Loading from localStorage:', raw);
       if (raw) {
         const parsed = JSON.parse(raw);
-        console.log('✅ ConsentProvider: Parsed consent:', parsed);
         setConsentState(parsed);
-      } else {
-        console.log('❌ ConsentProvider: No consent found in localStorage');
       }
     } catch (error) {
-      console.error('❌ ConsentProvider: Error loading consent:', error);
+      // Silent error handling for production
     }
   }, []);
 
   const setConsent = (c: ConsentCategories) => {
-    console.log('🔍 ConsentProvider: Setting consent to:', c);
     setConsentState(c);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(c));
-      console.log('✅ ConsentProvider: Consent saved to localStorage');
       
       // Dacă utilizatorul revocă consimțământul pentru analytics,
       // elimină cookie-ul mo_session
       if (consent?.analytics && !c.analytics) {
-        console.log('🔄 ConsentProvider: Revoking analytics consent, removing mo_session cookie');
         removeSessionCookie();
       }
     } catch (error) {
-      console.error('❌ ConsentProvider: Error saving consent:', error);
+      // Silent error handling for production
     }
   };
 
   const resetConsent = () => {
-    console.log('🔄 ConsentProvider: Resetting consent');
     setConsentState(null);
     try {
       localStorage.removeItem(STORAGE_KEY);
-      console.log('✅ ConsentProvider: Consent removed from localStorage');
       // Elimină cookie-ul mo_session când se resetează consimțământul
       removeSessionCookie();
     } catch (error) {
-      console.error('❌ ConsentProvider: Error resetting consent:', error);
+      // Silent error handling for production
     }
   };
 
   const hasAnalyticsConsent = consent?.analytics ?? false;
   const hasEssentialConsent = consent?.essential ?? true;
-
-  console.log('🔍 ConsentProvider: Current state:', {
-    consent,
-    hasAnalyticsConsent,
-    hasEssentialConsent
-  });
 
   const value = useMemo(() => ({ 
     consent, 
