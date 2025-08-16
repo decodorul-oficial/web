@@ -10,10 +10,14 @@ export const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_ID;
 
 // Track page views
 export const pageview = (url: string) => {
+  console.log('🔍 Analytics: pageview called with URL:', url);
   if (typeof window !== 'undefined' && window.gtag) {
+    console.log('✅ Analytics: gtag available, sending pageview');
     window.gtag('config', GA_TRACKING_ID, {
       page_path: url,
     });
+  } else {
+    console.log('❌ Analytics: gtag not available for pageview');
   }
 };
 
@@ -29,17 +33,22 @@ export const event = ({
   label?: string;
   value?: number;
 }) => {
+  console.log('🔍 Analytics: event called:', { action, category, label, value });
   if (typeof window !== 'undefined' && window.gtag) {
+    console.log('✅ Analytics: gtag available, sending event');
     window.gtag('event', action, {
       event_category: category,
       event_label: label,
       value: value,
     });
+  } else {
+    console.log('❌ Analytics: gtag not available for event');
   }
 };
 
 // Track news interactions
 export const trackNewsClick = (newsId: string, newsTitle: string, section: string) => {
+  console.log('🔍 Analytics: trackNewsClick called:', { newsId, newsTitle, section });
   event({
     action: 'news_click',
     category: 'news_interaction',
@@ -49,6 +58,7 @@ export const trackNewsClick = (newsId: string, newsTitle: string, section: strin
 
 // Track search usage
 export const trackSearch = (searchTerm: string, resultsCount: number) => {
+  console.log('🔍 Analytics: trackSearch called:', { searchTerm, resultsCount });
   event({
     action: 'search',
     category: 'user_interaction',
@@ -59,6 +69,7 @@ export const trackSearch = (searchTerm: string, resultsCount: number) => {
 
 // Track period selection
 export const trackPeriodSelection = (period: string) => {
+  console.log('🔍 Analytics: trackPeriodSelection called:', { period });
   event({
     action: 'period_selection',
     category: 'user_interaction',
@@ -68,6 +79,7 @@ export const trackPeriodSelection = (period: string) => {
 
 // Track section engagement
 export const trackSectionView = (sectionName: string) => {
+  console.log('🔍 Analytics: trackSectionView called:', { sectionName });
   event({
     action: 'section_view',
     category: 'content_engagement',
@@ -77,6 +89,7 @@ export const trackSectionView = (sectionName: string) => {
 
 // Track cookie consent
 export const trackConsent = (consentType: string, granted: boolean) => {
+  console.log('🔍 Analytics: trackConsent called:', { consentType, granted });
   event({
     action: 'cookie_consent',
     category: 'privacy',
