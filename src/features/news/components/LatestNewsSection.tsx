@@ -134,7 +134,29 @@ export function LatestNewsSection() {
     <section className="space-y-8">
       <div className="relative grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          {featured && (
+          {isLoading ? (
+            // Skeleton loader pentru știrea principală
+            <article className="mb-8 animate-pulse">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <div className="h-48 rounded bg-gray-200 md:h-full" />
+                <div className="md:col-span-2 space-y-4">
+                  <div className="h-6 bg-gray-200 rounded w-full" />
+                  <div className="h-6 bg-gray-200 rounded w-3/4" />
+                  <div className="h-6 bg-gray-200 rounded w-1/2" />
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-2/3" />
+                    <div className="h-4 bg-gray-200 rounded w-1/2" />
+                    <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  </div>
+                  <div className="h-4 bg-gray-200 rounded w-24" />
+                  <div className="space-y-2">
+                    <div className="h-3 bg-gray-200 rounded w-32" />
+                    <div className="h-3 bg-gray-200 rounded w-28" />
+                  </div>
+                </div>
+              </div>
+            </article>
+          ) : featured ? (
             <article className="mb-8">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 <div className="h-48 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 md:h-full flex items-center justify-center">
@@ -154,7 +176,7 @@ export function LatestNewsSection() {
                 </div>
               </div>
             </article>
-          )}
+          ) : null}
         </div>
 
         {/* Separator vertical subtil între stirea principală și Most Reads */}

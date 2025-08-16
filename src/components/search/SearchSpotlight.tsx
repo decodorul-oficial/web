@@ -28,6 +28,17 @@ export function SearchSpotlight() {
 
   const keyFor = (q: string, lim: number, off: number, ob: string, od: 'asc' | 'desc') => `${q}|${lim}|${off}|${ob}|${od}`;
 
+  // Reset query when panel closes
+  useEffect(() => {
+    if (!open) {
+      setQuery('');
+      setItems([]);
+      setTotal(0);
+      setOffset(0);
+      setError(null);
+    }
+  }, [open]);
+
   async function runSearch(q: string, lim: number, off: number, ob: string, od: 'asc' | 'desc') {
     if (q.length < 2) {
       setItems([]);
@@ -112,6 +123,10 @@ export function SearchSpotlight() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  const handleClearQuery = () => {
+    setQuery('');
+  };
+
   return (
     <div className="relative">
       <button
@@ -138,16 +153,29 @@ export function SearchSpotlight() {
                 <svg className="h-5 w-5 text-gray-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M21 20l-5.8-5.8a7 7 0 10-1.4 1.4L20 21l1-1zM5 10a5 5 0 1110 0A5 5 0 015 10z" />
                 </svg>
-                <input
-                  autoFocus
-                  placeholder="Caută în știri (⌘K)"
-                  className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') setOpen(false);
-                  }}
-                />
+                <div className="relative flex-1">
+                  <input
+                    autoFocus
+                    placeholder="Caută în știri (⌘K)"
+                    className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400 pr-8"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') setOpen(false);
+                    }}
+                  />
+                  {query && (
+                    <button
+                      onClick={handleClearQuery}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                      aria-label="Șterge căutarea"
+                    >
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="max-h-[60vh] overflow-y-auto">
                 {error && <div className="p-4 text-sm text-red-600">{error}</div>}
@@ -166,7 +194,9 @@ export function SearchSpotlight() {
                     }}
                   >
                     <div className="text-sm font-medium">{r.title}</div>
-                    <div className="text-xs text-gray-500">{new Date(r.publicationDate).toLocaleString('ro-RO')}</div>
+                    <div className="text-xs text-gray-500">
+                      {new Date(r.publicationDate).toLocaleDateString('ro-RO')}
+                    </div>
                     {(r as any).content && (
                       <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-600">
                         {((r as any).content?.summary || (r as any).content?.body) && (
