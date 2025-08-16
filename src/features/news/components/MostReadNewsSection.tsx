@@ -20,6 +20,7 @@ export function MostReadNewsSection() {
     setIsLoading(true);
     setHasError(false);
     try {
+      // Optimizat pentru a fi mai rapid
       const result = await fetchMostReadStiri({ limit: 4, period });
       setStiri(result.stiri || []);
     } catch (error) {

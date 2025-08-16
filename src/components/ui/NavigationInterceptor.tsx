@@ -47,8 +47,8 @@ export function NavigationInterceptor() {
 
   // When the pathname changes on client, end overlay (page-level beacons can extend it if needed)
   useEffect(() => {
-    // Small defer to allow route transition to mount and beacon to run as well
-    setTimeout(() => navigationLoader.reset(), 100);
+    // Reduc defer-ul de la 100ms la 50ms pentru o experiență mai rapidă
+    setTimeout(() => navigationLoader.reset(), 50);
   }, [pathname]);
 
   return null;

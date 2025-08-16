@@ -161,9 +161,8 @@ export function SearchSpotlight() {
                     className="block border-b p-4 hover:bg-gray-50"
                     onClick={() => {
                       setOpen(false);
-                      // start via central store; end va fi declanșat la mount-ul paginii (beacon) sau interceptor
-                      import('../ui/navigationLoader').then(({ navigationLoader }) => navigationLoader.start());
-                      // let Next.js handle transition; our interceptor will reset on pathname change
+                      // Nu mai pornim manual loader-ul - NavigationInterceptor se va ocupa de asta
+                      // Lăsăm Next.js să gestioneze tranziția; interceptor-ul va reseta la schimbarea pathname-ului
                     }}
                   >
                     <div className="text-sm font-medium">{r.title}</div>

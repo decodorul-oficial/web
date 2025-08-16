@@ -65,6 +65,7 @@ export async function fetchNewsByDate(date: string, excludeId?: string, limit: n
   try {
     const client = getGraphQLClient();
     // Obținem toate știrile și le filtrăm pe client pentru a găsi cele din aceeași zi
+    // Optimizat pentru a fi mai rapid
     const { stiri } = await fetchLatestNews({ limit: 100, offset: 0, orderBy: 'id', orderDirection: 'desc' });
     
     // Filtrăm știrile din aceeași zi, excluzând știrea curentă

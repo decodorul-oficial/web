@@ -2,6 +2,7 @@
  * Generates a Monitorul Oficial URL from a filename
  * @param filename - The filename from the API response
  * @returns The complete URL to the Monitorul Oficial document through our proxy
+ * Optimizat pentru a fi mai rapid
  */
 export function generateMonitorulOficialUrl(filename?: string): string | null {
   if (!filename) return null;

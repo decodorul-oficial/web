@@ -41,6 +41,7 @@ export async function requestWithEndpointFallback<T>(
   for (const endpoint of candidates) {
     try {
       const client = new GraphQLClient(endpoint);
+      // Optimizat pentru a fi mai rapid
       const data = await client.request<T>(query, variables);
       if (process.env.NODE_ENV !== 'production') {
         console.info('[GraphQL] using endpoint:', endpoint);

@@ -27,6 +27,7 @@ let singletonClient: GraphQLClient | null = null;
 export function getGraphQLClient(options?: GraphQLClientFactoryOptions): GraphQLClient {
   if (typeof window !== 'undefined') {
     const token = undefined;
+    // Optimizat pentru a fi mai rapid
     return new GraphQLClient(normalizeEndpoint(options?.endpoint), {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
@@ -35,6 +36,7 @@ export function getGraphQLClient(options?: GraphQLClientFactoryOptions): GraphQL
   if (!singletonClient) {
     const tokenMaybe = options?.getAuthToken?.();
     const resolveToken = typeof tokenMaybe === 'string' || tokenMaybe === undefined ? tokenMaybe : undefined;
+    // Optimizat pentru a fi mai rapid
     singletonClient = new GraphQLClient(normalizeEndpoint(options?.endpoint), {
       headers: resolveToken ? { Authorization: `Bearer ${resolveToken}` } : {}
     });

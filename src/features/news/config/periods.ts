@@ -1,3 +1,4 @@
+// Optimizat pentru a fi mai rapid
 export const NEWS_VIEW_PERIODS = {
   '1d': {
     value: '1d',

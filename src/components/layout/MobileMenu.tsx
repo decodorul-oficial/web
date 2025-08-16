@@ -13,6 +13,7 @@ const categories = [
 
 export function MobileMenu() {
   const [open, setOpen] = useState(false);
+  
   useEffect(() => {
     const el = document.querySelector('.disclaimer-banner') as HTMLElement | null;
     if (!el) return;
@@ -22,6 +23,7 @@ export function MobileMenu() {
       if (el) el.style.display = '';
     };
   }, [open]);
+  
   return (
     <div className="flex items-center gap-3 md:hidden">
       {/* Search button visible on mobile */}

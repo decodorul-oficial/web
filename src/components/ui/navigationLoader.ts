@@ -15,8 +15,8 @@ class NavigationLoaderStore {
 
   start() {
     const now = Date.now();
-    if (now - this.lastStartAt < 500) {
-      // Deduplicate rapid multiple starts (click + pushState etc.)
+    if (now - this.lastStartAt < 100) {
+      // Reduc deduplicarea de la 500ms la 100ms pentru o experiență mai fluidă
       return;
     }
     this.lastStartAt = now;
@@ -48,9 +48,9 @@ class NavigationLoaderStore {
   private armSafetyTimer() {
     this.disarmSafetyTimer();
     this.safetyTimer = setTimeout(() => {
-      // Auto-clear in cazul unor navigări întrerupte/edge-cases
+      // Reduc timer-ul de siguranță de la 8 secunde la 3 secunde
       this.reset();
-    }, 8000);
+    }, 3000);
   }
 
   private disarmSafetyTimer() {

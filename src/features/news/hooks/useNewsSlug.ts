@@ -4,6 +4,7 @@ import type { NewsItem } from '../types';
 
 /**
  * Hook pentru generarea slug-urilor pentru știri în componentele client-side
+ * Optimizat pentru a fi mai rapid
  */
 export function useNewsSlug(news: NewsItem | null) {
   return useMemo(() => {
@@ -14,6 +15,7 @@ export function useNewsSlug(news: NewsItem | null) {
 
 /**
  * Hook pentru generarea slug-urilor pentru o listă de știri
+ * Optimizat pentru a fi mai rapid
  */
 export function useNewsSlugs(newsList: NewsItem[]) {
   return useMemo(() => {

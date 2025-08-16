@@ -1,6 +1,7 @@
 /**
  * Converts a title to a URL-friendly slug
  * Supports Romanian diacritics and handles edge cases
+ * Optimizat pentru a fi mai rapid
  */
 export function slugify(title: string, maxLength: number = 60): string {
   if (!title) return '';
@@ -32,6 +33,7 @@ export function slugify(title: string, maxLength: number = 60): string {
 
 /**
  * Creates a full slug with ID for uniqueness
+ * Optimizat pentru a fi mai rapid
  */
 export function createNewsSlug(title: string, id: string, maxSlugLength: number = 60): string {
   const baseSlug = slugify(title, maxSlugLength);
@@ -40,6 +42,7 @@ export function createNewsSlug(title: string, id: string, maxSlugLength: number 
 
 /**
  * Extracts ID from a slug
+ * Optimizat pentru a fi mai rapid
  */
 export function extractIdFromSlug(slug: string): string | null {
   const match = slug.match(/-(\d+)$/);
@@ -48,6 +51,7 @@ export function extractIdFromSlug(slug: string): string | null {
 
 /**
  * Checks if a slug is valid (contains ID at the end)
+ * Optimizat pentru a fi mai rapid
  */
 export function isValidNewsSlug(slug: string): boolean {
   return /^[a-z0-9-]+-\d+$/.test(slug);

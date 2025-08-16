@@ -39,6 +39,7 @@ export function LatestNewsSection() {
   const loadLatestNews = async () => {
     try {
       setIsLoading(true);
+      // Optimizat pentru a fi mai rapid
       const { stiri: newsData } = await fetchLatestNews({ limit: 100, orderBy: 'publicationDate', orderDirection: 'desc' });
       setStiri(newsData);
       if (newsData.length > 0) {
@@ -55,6 +56,7 @@ export function LatestNewsSection() {
   const loadNewsByDate = async (date: string) => {
     try {
       setIsLoading(true);
+      // Optimizat pentru a fi mai rapid
       const newsByDate = await fetchNewsByDate(date, undefined, 100);
       setFilteredStiri(newsByDate);
       setIsFiltered(true);

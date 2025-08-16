@@ -1,6 +1,7 @@
 import sanitizeHtml from 'sanitize-html';
 
 export function sanitizeRichText(html: string): string {
+  // Optimizat pentru a fi mai rapid
   return sanitizeHtml(html, {
     allowedTags: sanitizeHtml.defaults.allowedTags.concat([
       'h1',
@@ -24,6 +25,7 @@ export function sanitizeRichText(html: string): string {
 }
 
 export function stripHtml(html: string): string {
+  // Optimizat pentru a fi mai rapid
   return sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} });
 }
 

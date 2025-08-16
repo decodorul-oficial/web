@@ -79,6 +79,7 @@ export function Header() {
     document.addEventListener('click', onDocClick);
     return () => document.removeEventListener('click', onDocClick);
   }, []);
+  
   return (
     <header className="sticky top-0 z-40 border-b bg-white/80 backdrop-blur">
       <div className="container-responsive flex h-[var(--header-height)] items-center justify-between">

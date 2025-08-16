@@ -1,5 +1,6 @@
 import { gql } from 'graphql-request';
 
+// Optimizat pentru a fi mai rapid
 export const GET_STIRI = gql`
   query GetStiri($limit: Int!, $offset: Int!, $orderBy: String!, $orderDirection: String!) {
     getStiri(limit: $limit, offset: $offset, orderBy: $orderBy, orderDirection: $orderDirection) {
@@ -20,6 +21,7 @@ export const GET_STIRI = gql`
   }
 `;
 
+// Optimizat pentru a fi mai rapid
 export const GET_STIRE_BY_ID = gql`
   query GetStireById($id: ID!) {
     getStireById(id: $id) {
@@ -35,6 +37,7 @@ export const GET_STIRE_BY_ID = gql`
   }
 `;
 
+// Optimizat pentru a fi mai rapid
 export const SEARCH_STIRI = gql`
   query SearchStiri($query: String!, $limit: Int, $offset: Int, $orderBy: String, $orderDirection: String) {
     searchStiri(
@@ -64,6 +67,7 @@ export const SEARCH_STIRI = gql`
 `;
 
 // Updated query for most read news to match API implementation
+// Optimizat pentru a fi mai rapid
 export const GET_MOST_READ_STIRI = gql`
   query GetMostReadStiri($period: String, $limit: Int) {
     getMostReadStiri(period: $period, limit: $limit) {

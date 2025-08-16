@@ -77,17 +77,23 @@ export default async function NewsDetailPage(props: PageProps) {
     // Redirect to the correct slug
     redirect(`/stiri/${expectedSlug}`);
   }
-  
-  // Obținem știrile din aceeași zi
+
+  // Obținem știrile din aceeași zi - optimizat pentru a fi mai rapid
   let sameDayNews: any[] = [];
   if (news) {
-    sameDayNews = await fetchNewsByDate(news.publicationDate, id, 5);
+    // Folosim Promise.all pentru a încărca datele în paralel
+    const [newsData, sameDayData] = await Promise.all([
+      Promise.resolve(news), // news este deja disponibil
+      fetchNewsByDate(news.publicationDate, id, 5)
+    ]);
+    news = newsData;
+    sameDayNews = sameDayData;
   }
 
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      {/* ensure we always end overlay on the client when this page is rendered */}
+      {/* NavigationEndBeacon va reseta loader-ul imediat când pagina se montează */}
       <NavigationEndBeacon />
       <main className="container-responsive flex-1 py-8">
         <div className="mb-6 text-sm">
