@@ -19,6 +19,7 @@ export function LatestNewsSection() {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [featured, setFeatured] = useState<NewsItem | null>(null);
+  const [showDateInput, setShowDateInput] = useState(false);
   
   const itemsPerPage = 10;
 
@@ -71,6 +72,7 @@ export function LatestNewsSection() {
 
   const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedDate(event.target.value);
+    setShowDateInput(false); // Ascundem input-ul după selecție
   };
 
   const clearDateFilter = () => {
@@ -78,6 +80,15 @@ export function LatestNewsSection() {
     setIsFiltered(false);
     setCurrentPage(1);
     setFilteredStiri([]);
+    setShowDateInput(false);
+  };
+
+  const toggleDateInput = () => {
+    setShowDateInput(!showDateInput);
+  };
+
+  const openDateInput = () => {
+    setShowDateInput(true);
   };
 
   const getCurrentPageItems = () => {
@@ -208,14 +219,30 @@ export function LatestNewsSection() {
           
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-gray-500" />
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={handleDateChange}
-                className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-transparent"
-                max={new Date().toISOString().split('T')[0]}
-              />
+              {!showDateInput ? (
+                <button
+                  onClick={openDateInput}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-transparent"
+                  title="Selectează o dată"
+                >
+                  <Calendar className="h-4 w-4 text-gray-500" />
+                  <span className="text-gray-500">
+                    {selectedDate ? formatSelectedDate(selectedDate) : 'Selectează dată'}
+                  </span>
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-gray-500" />
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={handleDateChange}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-transparent"
+                    max={new Date().toISOString().split('T')[0]}
+                    autoFocus
+                  />
+                </div>
+              )}
             </div>
             {isFiltered && (
               <button
