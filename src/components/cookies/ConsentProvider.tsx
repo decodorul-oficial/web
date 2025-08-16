@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import { removeSessionCookie } from '../../lib/utils/sessionCookie';
 
 type ConsentCategories = {
@@ -34,7 +34,7 @@ export function ConsentProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const setConsent = (c: ConsentCategories) => {
+  const setConsent = useCallback((c: ConsentCategories) => {
     setConsentState(c);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(c));
@@ -47,9 +47,9 @@ export function ConsentProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       // Silent error handling for production
     }
-  };
+  }, [consent?.analytics]);
 
-  const resetConsent = () => {
+  const resetConsent = useCallback(() => {
     setConsentState(null);
     try {
       localStorage.removeItem(STORAGE_KEY);
@@ -58,7 +58,7 @@ export function ConsentProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       // Silent error handling for production
     }
-  };
+  }, []);
 
   const hasAnalyticsConsent = consent?.analytics ?? false;
   const hasEssentialConsent = consent?.essential ?? true;
@@ -69,7 +69,7 @@ export function ConsentProvider({ children }: { children: React.ReactNode }) {
     resetConsent, 
     hasAnalyticsConsent, 
     hasEssentialConsent 
-  }), [consent, hasAnalyticsConsent, hasEssentialConsent]);
+  }), [consent, hasAnalyticsConsent, hasEssentialConsent, setConsent, resetConsent]);
 
   return <ConsentContext.Provider value={value}>{children}</ConsentContext.Provider>;
 }
