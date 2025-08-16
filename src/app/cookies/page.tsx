@@ -14,7 +14,7 @@ export default function CookiesPolicyPage() {
           <h1>Politica de Cookie-uri</h1>
           
           <p className="text-sm text-gray-600 mb-6">
-            <strong>Ultima actualizare:</strong> {new Date().toLocaleDateString('ro-RO')} - Adăugat cookie-ul mo_session pentru analytics
+            <strong>Ultima actualizare:</strong> {new Date().toLocaleDateString('ro-RO')} - Actualizat implementarea cookie-urilor pentru respectarea GDPR
           </p>
 
           <h2>1. Ce sunt cookie-urile?</h2>
@@ -44,15 +44,15 @@ export default function CookiesPolicyPage() {
             <li><strong>Cookie-uri de sesiune:</strong> mențin sesiunea ta activă pe site</li>
             <li><strong>Cookie-uri de securitate:</strong> protejează împotriva atacurilor și fraudelor</li>
             <li><strong>Cookie-uri de funcționalitate:</strong> permit funcționarea corectă a formularelor și navigării</li>
-            <li><strong>Cookie-ul mo_session:</strong> identificator unic persistent pentru analytics și îmbunătățirea serviciului (UUID v4, expirare 1 an)</li>
           </ul>
 
           <h3>3.2 Cookie-uri de performanță (analitice)</h3>
           <p>
-            Aceste cookie-uri ne ajută să înțelegem cum interacționezi cu site-ul prin colectarea de informații anonime despre utilizare. Ele sunt activate doar cu consimțământul tău explicit.
+            Aceste cookie-uri ne ajută să înțelegem cum interacționezi cu site-ul prin colectarea de informații anonime despre utilizare. Ele sunt activate <strong>doar cu consimțământul tău explicit</strong> și pot fi revocate oricând.
           </p>
           <ul>
             <li><strong>Cookie-uri Google Analytics:</strong> măsoară traficul și comportamentul utilizatorilor</li>
+            <li><strong>Cookie-ul mo_session:</strong> identificator unic persistent pentru analytics îmbunătățite (UUID v4, expirare 1 an)</li>
             <li><strong>Cookie-uri de performanță:</strong> monitorizează timpul de încărcare și erorile</li>
             <li><strong>Cookie-uri de utilizare:</strong> analizează paginile cele mai populare</li>
           </ul>
@@ -80,7 +80,7 @@ export default function CookiesPolicyPage() {
           <ul>
             <li><strong>Cookie-uri de sesiune:</strong> se șterg automat când închizi browserul</li>
             <li><strong>Cookie-uri persistente:</strong> rămân pe dispozitivul tău pentru o perioadă specificată</li>
-            <li><strong>Cookie-ul mo_session:</strong> rămâne pe dispozitivul tău timp de 1 an (365 zile) pentru analytics îmbunătățite</li>
+            <li><strong>Cookie-ul mo_session:</strong> se setează doar cu consimțământul pentru analytics și se elimină automat când consimțământul este revocat</li>
             <li><strong>Cookie-uri de terțe părți:</strong> respectă politicile de confidențialitate ale furnizorilor respectivi</li>
           </ul>
 
@@ -102,13 +102,13 @@ export default function CookiesPolicyPage() {
             Site-ul nostru oferă un banner de consimțământ pentru cookie-urile non-esențiale. Poți:
           </p>
           <ul>
-            <li>Accepta toate cookie-urile</li>
-            <li>Respinge cookie-urile non-esențiale</li>
-            <li>Personaliza setările cookie-urilor</li>
+            <li>Accepta toate cookie-urile (inclusiv analytics și mo_session)</li>
+            <li>Respinge cookie-urile non-esențiale (analytics și mo_session nu se vor seta)</li>
             <li>Modifica preferințele oricând din footer-ul site-ului</li>
+            <li>Revoca consimțământul pentru analytics (cookie-ul mo_session se va elimina automat)</li>
           </ul>
           <p className="text-sm text-gray-600 mt-2">
-            <strong>Notă:</strong> Cookie-ul mo_session este setat automat și este esențial pentru funcționarea site-ului. Nu poate fi dezactivat prin banner-ul de consimțământ.
+            <strong>Notă importantă:</strong> Cookie-ul mo_session și Google Analytics sunt activate <strong>doar cu consimțământul tău explicit</strong>. Dacă respingi cookie-urile de analytics, acestea nu se vor seta deloc.
           </p>
 
           <h2>7. Impactul dezactivării cookie-urilor</h2>
@@ -120,6 +120,7 @@ export default function CookiesPolicyPage() {
             <li>Preferințele tale nu vor fi salvate</li>
             <li>Unele funcții avansate pot să nu fie disponibile</li>
             <li>Experiența de utilizare poate fi degradată</li>
+            <li><strong>Analytics și tracking-ul comportamentului nu vor funcționa</strong></li>
           </ul>
 
           <h2>8. Cookie-uri și confidențialitatea</h2>
@@ -136,15 +137,26 @@ export default function CookiesPolicyPage() {
             <li>Personalizarea experienței de navigare</li>
           </ul>
           <p>
-            Acest cookie este setat automat și nu poate fi folosit pentru a te identifica personal. Poți să îl ștergi oricând din setările browserului tău.
+            Acest cookie este setat <strong>doar cu consimțământul tău pentru analytics</strong> și se elimină automat când revoci consimțământul. Nu poate fi folosit pentru a te identifica personal.
           </p>
 
-          <h2>9. Actualizări ale politicii de cookie-uri</h2>
+          <h2>9. Controlul și revocarea consimțământului</h2>
+          <p>
+            Ai controlul total asupra cookie-urilor de analytics:
+          </p>
+          <ul>
+            <li><strong>Consimțământ inițial:</strong> Banner-ul de cookie-uri îți permite să accepti sau să respingi analytics</li>
+            <li><strong>Revocare:</strong> Poți revoca consimțământul oricând din footer-ul site-ului</li>
+            <li><strong>Eliminare automată:</strong> Când revoci consimțământul, cookie-ul mo_session se elimină automat</li>
+            <li><strong>Google Analytics:</strong> Script-ul se dezactivează complet când nu ai consimțământ</li>
+          </ul>
+
+          <h2>10. Actualizări ale politicii de cookie-uri</h2>
           <p>
             Această politică poate fi actualizată periodic pentru a reflecta schimbările în tehnologia de cookie-uri sau în legislația în vigoare. Modificările vor fi comunicate prin actualizarea datei de "Ultima actualizare".
           </p>
 
-          <h2>10. Contact pentru cookie-uri</h2>
+          <h2>11. Contact pentru cookie-uri</h2>
           <p>
             Pentru orice întrebări privind această politică de cookie-uri, ne poți contacta:
           </p>
@@ -153,10 +165,22 @@ export default function CookiesPolicyPage() {
             <li><strong>Pagina de contact:</strong> <a href="/contact" className="text-brand-info hover:underline">/contact</a></li>
           </ul>
 
-          <h2>11. Informații suplimentare</h2>
+          <h2>12. Informații suplimentare</h2>
           <p>
             Pentru informații complete despre cum protejăm confidențialitatea ta, consultă și <a href="/privacy" className="text-brand-info hover:underline">Politica noastră de Confidențialitate</a>.
           </p>
+
+          <h2>13. Conformitatea GDPR</h2>
+          <p>
+            Implementarea noastră de cookie-uri respectă complet Regulamentul General privind Protecția Datelor (GDPR):
+          </p>
+          <ul>
+            <li><strong>Consimțământ explicit:</strong> Cookie-urile de analytics se activează doar cu acordul tău</li>
+            <li><strong>Control total:</strong> Poți revoca consimțământul oricând</li>
+            <li><strong>Eliminare automată:</strong> Cookie-urile se elimină automat când revoci consimțământul</li>
+            <li><strong>Transparență:</strong> Toate informațiile despre cookie-uri sunt disponibile public</li>
+            <li><strong>Minimizarea datelor:</strong> Colectăm doar datele necesare pentru funcționalitatea site-ului</li>
+          </ul>
         </div>
       </main>
       <Footer />

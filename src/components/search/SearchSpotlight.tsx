@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { getGraphQLClient } from '@/lib/graphql/client';
 import { SEARCH_STIRI } from '@/features/news/graphql/queries';
 import { ensureSessionCookie } from '@/lib/utils/sessionCookie';
+import { trackSearch } from '@/lib/analytics';
 
 type SpotlightItem = {
   id: string;
@@ -98,6 +99,9 @@ export function SearchSpotlight() {
       setTotal(totalNew);
       cacheRef.current.set(cacheKey, { ts: now, data: { items: itemsNew, total: totalNew } });
       lastCompletedRef.current = cacheKey;
+      
+      // Track search event
+      trackSearch(q, totalNew);
     } catch (e: any) {
       const code = e?.response?.errors?.[0]?.code;
       if (code === 'VALIDATION_ERROR') setError('Limita nu poate depăși 100 sau parametrii nu sunt validați.');

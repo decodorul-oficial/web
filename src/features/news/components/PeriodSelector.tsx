@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { NEWS_VIEW_PERIODS, type NewsViewPeriod } from '../config/periods';
+import { trackPeriodSelection } from '../../../lib/analytics';
 
 interface PeriodSelectorProps {
   currentPeriod: NewsViewPeriod;
@@ -12,6 +13,14 @@ export function PeriodSelector({ currentPeriod, onPeriodChange }: PeriodSelector
   const [isOpen, setIsOpen] = useState(false);
 
   const currentConfig = NEWS_VIEW_PERIODS[currentPeriod];
+
+  const handlePeriodChange = (period: NewsViewPeriod) => {
+    onPeriodChange(period);
+    setIsOpen(false);
+    
+    // Track period selection
+    trackPeriodSelection(period);
+  };
 
   return (
     <div className="relative">
@@ -35,10 +44,7 @@ export function PeriodSelector({ currentPeriod, onPeriodChange }: PeriodSelector
           {Object.values(NEWS_VIEW_PERIODS).map((period) => (
             <button
               key={period.value}
-              onClick={() => {
-                onPeriodChange(period.value as NewsViewPeriod);
-                setIsOpen(false);
-              }}
+              onClick={() => handlePeriodChange(period.value as NewsViewPeriod)}
               className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 ${
                 currentPeriod === period.value
                   ? 'bg-brand-info/10 text-brand-info font-medium'

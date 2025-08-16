@@ -26,6 +26,18 @@ export function setSessionCookie(): void {
 }
 
 /**
+ * Elimină cookie-ul mo_session
+ */
+export function removeSessionCookie(): void {
+  if (typeof document === 'undefined') return; // Server-side rendering
+  
+  // Setăm cookie-ul să expire în trecut pentru a-l elimina
+  const expires = new Date(0);
+  const cookieValue = `${SESSION_COOKIE_NAME}=; expires=${expires.toUTCString()}; path=/; secure; samesite=lax`;
+  document.cookie = cookieValue;
+}
+
+/**
  * Verifică dacă cookie-ul mo_session există
  */
 export function hasSessionCookie(): boolean {

@@ -1,11 +1,14 @@
 'use client';
 
 import { useEffect } from 'react';
+import { trackNewsClick } from '../../../lib/analytics';
+import type { NewsItem } from '../types';
 
-export function useNewsViewTracking(newsId: string) {
+export function useNewsViewTracking(news: NewsItem | null) {
   useEffect(() => {
-    // Tracking is now handled automatically by the API when calling getStireById
-    // No manual tracking needed
-    // Optimizat pentru a fi mai rapid
-  }, [newsId]);
+    if (!news) return;
+
+    // Track news view with additional details
+    trackNewsClick(news.id, news.title, 'news_view');
+  }, [news]);
 }

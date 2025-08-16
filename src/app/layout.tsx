@@ -3,9 +3,13 @@ import './globals.css';
 import { DisclaimerBanner } from '@/components/legal/DisclaimerBanner';
 import { ConsentProvider } from '@/components/cookies/ConsentProvider';
 import { CookieBanner } from '@/components/cookies/CookieBanner';
+import { Header } from '@/components/layout/Header';
 import { ScrollToTop } from '@/components/ui/ScrollToTop';
 import { NavigationOverlay } from '@/components/ui/NavigationOverlay';
 import { NavigationInterceptor } from '@/components/ui/NavigationInterceptor';
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+import { SectionViewTracker } from '@/components/analytics/SectionViewTracker';
 
 export const metadata: Metadata = {
   title: 'Decodorul Oficial',
@@ -29,12 +33,17 @@ export default function RootLayout({
     <html lang="ro">
       <body className="min-h-screen bg-white text-gray-900 antialiased">
         <ConsentProvider>
-          <DisclaimerBanner />
-          <NavigationInterceptor />
-          {children}
-          <CookieBanner />
-          <ScrollToTop />
-          <NavigationOverlay />
+          <GoogleAnalytics />
+          <div className="flex flex-col min-h-screen">
+            <DisclaimerBanner />
+            <NavigationInterceptor />
+            {children}
+            <CookieBanner />
+            <ScrollToTop />
+            <NavigationOverlay />
+          </div>
+          <SpeedInsights />
+          <SectionViewTracker />
         </ConsentProvider>
       </body>
     </html>

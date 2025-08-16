@@ -9,6 +9,7 @@ import { PeriodSelector } from './PeriodSelector';
 import { NEWS_VIEW_PERIODS, type NewsViewPeriod } from '../config/periods';
 import { NewsItem } from '../types';
 import { createNewsSlug } from '@/lib/utils/slugify';
+import { trackNewsClick } from '../../../lib/analytics';
 
 export function MostReadNewsSection() {
   const [currentPeriod, setCurrentPeriod] = useState<NewsViewPeriod>('7d');
@@ -40,6 +41,10 @@ export function MostReadNewsSection() {
   const handlePeriodChange = (period: NewsViewPeriod) => {
     setCurrentPeriod(period);
     loadNews(period);
+  };
+
+  const handleNewsClick = (news: NewsItem) => {
+    trackNewsClick(news.id, news.title, 'most_read');
   };
 
   function getSummary(content: unknown): string | undefined {
@@ -127,7 +132,11 @@ export function MostReadNewsSection() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="line-clamp-2 text-sm font-medium">
-                  <Link href={`/stiri/${createNewsSlug(n.title, n.id)}`} className="hover:underline">
+                  <Link 
+                    href={`/stiri/${createNewsSlug(n.title, n.id)}`} 
+                    className="hover:underline"
+                    onClick={() => handleNewsClick(n)}
+                  >
                     {n.title}
                   </Link>
                 </p>

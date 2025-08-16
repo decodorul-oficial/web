@@ -1,9 +1,27 @@
 "use client";
 import { useConsent } from './ConsentProvider';
+import { trackConsent } from '../../lib/analytics';
 
 export function CookieBanner() {
   const { consent, setConsent } = useConsent();
-  if (consent) return null;
+  
+  if (consent) {
+    return null;
+  }
+
+  const handleReject = () => {
+    setConsent({ essential: true, analytics: false });
+    // Track consent rejection - this will only work if analytics is already loaded
+    // or will be ignored if gtag is not available
+    trackConsent('analytics', false);
+  };
+
+  const handleAcceptAll = () => {
+    setConsent({ essential: true, analytics: true });
+    // Track consent acceptance - this will only work if analytics is already loaded
+    // or will be ignored if gtag is not available
+    trackConsent('analytics', true);
+  };
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-white/95 shadow-lg">
@@ -15,13 +33,13 @@ export function CookieBanner() {
         <div className="flex flex-wrap gap-2">
           <button
             className="rounded bg-gray-200 px-3 py-1 text-gray-800 hover:bg-gray-300"
-            onClick={() => setConsent({ essential: true, analytics: false })}
+            onClick={handleReject}
           >
             Respinge
           </button>
           <button
             className="rounded bg-brand-info px-3 py-1 text-white hover:opacity-90"
-            onClick={() => setConsent({ essential: true, analytics: true })}
+            onClick={handleAcceptAll}
           >
             Acceptă toate
           </button>

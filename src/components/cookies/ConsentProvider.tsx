@@ -1,5 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { removeSessionCookie } from '../../lib/utils/sessionCookie';
 
 type ConsentCategories = {
   essential: true; // always true
@@ -10,6 +11,8 @@ type ConsentContextValue = {
   consent: ConsentCategories | null; // null = not decided
   setConsent: (c: ConsentCategories) => void;
   resetConsent: () => void;
+  hasAnalyticsConsent: boolean;
+  hasEssentialConsent: boolean;
 };
 
 const ConsentContext = createContext<ConsentContextValue | undefined>(undefined);
@@ -22,25 +25,51 @@ export function ConsentProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setConsentState(JSON.parse(raw));
-    } catch {}
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setConsentState(parsed);
+      }
+    } catch (error) {
+      // Silent error handling for production
+    }
   }, []);
 
   const setConsent = (c: ConsentCategories) => {
     setConsentState(c);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(c));
-    } catch {}
+      
+      // Dacă utilizatorul revocă consimțământul pentru analytics,
+      // elimină cookie-ul mo_session
+      if (consent?.analytics && !c.analytics) {
+        removeSessionCookie();
+      }
+    } catch (error) {
+      // Silent error handling for production
+    }
   };
 
   const resetConsent = () => {
     setConsentState(null);
     try {
       localStorage.removeItem(STORAGE_KEY);
-    } catch {}
+      // Elimină cookie-ul mo_session când se resetează consimțământul
+      removeSessionCookie();
+    } catch (error) {
+      // Silent error handling for production
+    }
   };
 
-  const value = useMemo(() => ({ consent, setConsent, resetConsent }), [consent]);
+  const hasAnalyticsConsent = consent?.analytics ?? false;
+  const hasEssentialConsent = consent?.essential ?? true;
+
+  const value = useMemo(() => ({ 
+    consent, 
+    setConsent, 
+    resetConsent, 
+    hasAnalyticsConsent, 
+    hasEssentialConsent 
+  }), [consent, hasAnalyticsConsent, hasEssentialConsent]);
 
   return <ConsentContext.Provider value={value}>{children}</ConsentContext.Provider>;
 }

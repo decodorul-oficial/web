@@ -8,6 +8,7 @@ import { stripHtml } from '@/lib/html/sanitize';
 import { MostReadNewsSection } from './MostReadNewsSection';
 import { Gavel, Landmark, Calendar, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { createNewsSlug } from '@/lib/utils/slugify';
+import { trackNewsClick } from '../../../lib/analytics';
 import type { NewsItem } from '@/features/news/types';
 
 export function LatestNewsSection() {
@@ -139,6 +140,10 @@ export function LatestNewsSection() {
     } as const;
   }
 
+  const handleNewsClick = (news: NewsItem, section: string) => {
+    trackNewsClick(news.id, news.title, section);
+  };
+
   const currentItems = getCurrentPageItems();
 
   return (
@@ -175,7 +180,11 @@ export function LatestNewsSection() {
                 </div>
                 <div className="md:col-span-2">
                   <h2 className="mb-3 text-xl font-bold">
-                    <Link href={`/stiri/${createNewsSlug(featured.title, featured.id)}`} className="hover:underline">
+                    <Link 
+                      href={`/stiri/${createNewsSlug(featured.title, featured.id)}`} 
+                      className="hover:underline"
+                      onClick={() => handleNewsClick(featured, 'featured')}
+                    >
                       {featured.title}
                     </Link>
                   </h2>
@@ -277,7 +286,11 @@ export function LatestNewsSection() {
                       {formatDate(n.publicationDate)}
                     </div>
                     <h4 className="mb-2 font-semibold">
-                      <Link href={`/stiri/${createNewsSlug(n.title, n.id)}`} className="hover:underline">
+                      <Link 
+                        href={`/stiri/${createNewsSlug(n.title, n.id)}`} 
+                        className="hover:underline"
+                        onClick={() => handleNewsClick(n, 'latest_news')}
+                      >
                         {n.title}
                       </Link>
                     </h4>

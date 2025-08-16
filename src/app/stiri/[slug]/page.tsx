@@ -6,12 +6,12 @@ import { Citation } from '@/components/legal/Citation';
 import { sanitizeRichText } from '@/lib/html/sanitize';
 import { NavigationEndBeacon } from '@/components/ui/NavigationEndBeacon';
 import { SameDayNewsSection } from '@/features/news/components/SameDayNewsSection';
-import { NewsViewTracker } from '@/features/news/components/NewsViewTracker';
 import { NewsViewStats } from '@/features/news/components/NewsViewStats';
-import { extractIdFromSlug, isValidNewsSlug, slugify, createNewsSlug } from '@/lib/utils/slugify';
+import { extractIdFromSlug, isValidNewsSlug, createNewsSlug } from '@/lib/utils/slugify';
 import { Rss } from 'lucide-react';
 import { notFound, redirect } from 'next/navigation';
 import { SessionCookieInitializer } from '@/components/session/SessionCookieInitializer';
+import { NewsViewTrackingWrapper } from '@/features/news/components/NewsViewTrackingWrapper';
 
 type PageProps = { params: { slug: string } };
 
@@ -106,7 +106,7 @@ export default async function NewsDetailPage(props: PageProps) {
 
         <article className="space-y-6">
           {/* Track news view */}
-          <NewsViewTracker newsId={id} />
+          <NewsViewTrackingWrapper news={news} />
           
           <header className="space-y-2">
             <h1 className="text-3xl font-bold leading-tight">{news.title}</h1>
