@@ -8,6 +8,7 @@ export function SectionViewTracker() {
   const pathname = usePathname();
 
   useEffect(() => {
+    // Ensure pathname is always defined before processing
     if (!pathname) return;
 
     // Map pathnames to section names
@@ -27,8 +28,10 @@ export function SectionViewTracker() {
       sectionName = 'home';
     }
 
-    // Track section view
-    trackSectionView(sectionName);
+    // Track section view only if we have a valid section name
+    if (sectionName) {
+      trackSectionView(sectionName);
+    }
   }, [pathname]);
 
   return null;

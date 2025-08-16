@@ -80,6 +80,9 @@ export function Header() {
     return () => document.removeEventListener('click', onDocClick);
   }, []);
   
+  // Ensure pathname is always defined before using it
+  const safePathname = pathname || '';
+  
   return (
     <header className="sticky top-0 z-40 border-b bg-white/80 backdrop-blur">
       <div className="container-responsive flex h-[var(--header-height)] items-center justify-between">
@@ -91,48 +94,17 @@ export function Header() {
           {/* Home */}
           <Link
             href={navItems[0].href as any}
-            className={`text-sm font-medium transition-colors hover:text-brand-info ${pathname === navItems[0].href ? 'text-brand-info' : 'text-gray-600'}`}
+            className={`text-sm font-medium transition-colors hover:text-brand-info ${safePathname === navItems[0].href ? 'text-brand-info' : 'text-gray-600'}`}
           >
             {navItems[0].label}
           </Link>
 
-          {/* Category Dropdown 
-          <div className="relative" ref={dropdownRef} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
-            <button
-              type="button"
-              className={`flex items-center gap-1 text-sm font-medium transition-colors hover:text-brand-info ${pathname?.startsWith('/categorii') ? 'text-brand-info' : 'text-gray-600'}`}
-              onClick={() => setOpen((v) => !v)}
-              aria-expanded={open}
-              aria-haspopup="menu"
-            >
-              Category
-              <svg className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clipRule="evenodd" />
-              </svg>
-            </button>
-            {open && (
-              <div className="absolute left-0 top-full z-50 w-56 rounded-md border bg-white p-2 shadow-lg">
-                {categories.map((cat) => (
-                  <Link
-                    key={cat.slug}
-                    href={`/categorii/${cat.slug}` as any}
-                    className="flex items-center gap-2 rounded px-2 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-brand-info"
-                    onClick={() => setOpen(false)}
-                  >
-                    <CategoryIcon slug={cat.slug} />
-                    {cat.name}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-          */}
           {/* Search */}
           <SearchSpotlight />
 
           {/* Keep other links */}
           {navItems.slice(2).map((item) => {
-            const active = pathname === item.href;
+            const active = safePathname === item.href;
             return (
               <Link
                 key={item.href}

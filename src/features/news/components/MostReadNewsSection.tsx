@@ -36,7 +36,7 @@ export function MostReadNewsSection() {
   // Load initial data
   useEffect(() => {
     loadNews(currentPeriod);
-  }, []);
+  }, [currentPeriod]);
 
   const handlePeriodChange = (period: NewsViewPeriod) => {
     setCurrentPeriod(period);

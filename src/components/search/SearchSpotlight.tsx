@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { getGraphQLClient } from '@/lib/graphql/client';
@@ -41,7 +41,7 @@ export function SearchSpotlight() {
     }
   }, [open]);
 
-  async function runSearch(q: string, lim: number, off: number, ob: string, od: 'asc' | 'desc') {
+  const runSearch = useCallback(async (q: string, lim: number, off: number, ob: string, od: 'asc' | 'desc') => {
     if (q.length < 2) {
       setItems([]);
       setTotal(0);
@@ -110,7 +110,7 @@ export function SearchSpotlight() {
     } finally {
       setBusy(false);
     }
-  }
+  }, []);
 
   // Debounce 500ms
   useEffect(() => {
@@ -118,7 +118,7 @@ export function SearchSpotlight() {
       runSearch(query.trim(), 10, 0, 'id', 'desc');
     }, 500);
     return () => clearTimeout(id);
-  }, [query]);
+  }, [query, runSearch]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
