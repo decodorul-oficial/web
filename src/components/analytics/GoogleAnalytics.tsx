@@ -31,20 +31,57 @@ export default function GoogleAnalytics() {
 
     console.log('✅ GoogleAnalytics: Starting initialization...');
 
+    // Check for CSP errors in console
+    const originalConsoleError = console.error;
+    console.error = function(...args) {
+      if (args[0] && typeof args[0] === 'string' && args[0].includes('Content Security Policy')) {
+        console.log('🚨 CSP ERROR DETECTED:', args);
+      }
+      originalConsoleError.apply(console, args);
+    };
+
     // Load Google Analytics script
     const script = document.createElement('script');
     script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`;
     script.async = true;
     
+    // Add real script loading verification
     script.onload = () => {
-      console.log('✅ GoogleAnalytics: Script loaded successfully');
+      console.log('✅ GoogleAnalytics: Script loaded successfully (onload fired)');
+      
+      // Verify that gtag is actually available after script loads
+      if (typeof window.gtag === 'function') {
+        console.log('✅ GoogleAnalytics: window.gtag is available after script load');
+      } else {
+        console.error('❌ GoogleAnalytics: window.gtag is NOT available after script load');
+      }
     };
     
     script.onerror = (error) => {
       console.error('❌ GoogleAnalytics: Script failed to load:', error);
     };
 
+    // Check if script already exists
+    const existingScript = document.querySelector(`script[src*="${GA_TRACKING_ID}"]`);
+    if (existingScript) {
+      console.log('⚠️ GoogleAnalytics: Script already exists, removing old one');
+      existingScript.remove();
+    }
+
     document.head.appendChild(script);
+    console.log('✅ GoogleAnalytics: Script element appended to head');
+
+    // Verify script is in DOM
+    setTimeout(() => {
+      const scriptInDOM = document.querySelector(`script[src*="${GA_TRACKING_ID}"]`);
+      if (scriptInDOM) {
+        console.log('✅ GoogleAnalytics: Script found in DOM:', scriptInDOM);
+        console.log('🔍 Script src:', scriptInDOM.getAttribute('src'));
+        console.log('🔍 Script parent:', scriptInDOM.parentElement);
+      } else {
+        console.error('❌ GoogleAnalytics: Script NOT found in DOM after append');
+      }
+    }, 100);
 
     // Initialize gtag
     window.dataLayer = window.dataLayer || [];
@@ -61,15 +98,51 @@ export default function GoogleAnalytics() {
 
     console.log('✅ GoogleAnalytics: Initialization complete');
 
+    // Add a delayed check to see if gtag is truly available after script execution
+    setTimeout(() => {
+      if (typeof window.gtag === 'function') {
+        console.log('✅ GoogleAnalytics: window.gtag is a function after delay');
+        
+        // Test if we can actually send a test event
+        try {
+          window.gtag('event', 'test_event', {
+            event_category: 'debug',
+            event_label: 'script_verification'
+          });
+          console.log('✅ GoogleAnalytics: Test event sent successfully');
+        } catch (error) {
+          console.error('❌ GoogleAnalytics: Failed to send test event:', error);
+        }
+      } else {
+        console.error('❌ GoogleAnalytics: window.gtag is NOT a function after delay. Script might be blocked or failed to load.');
+      }
+    }, 3000); // Check after 3 seconds
+
+    // Check for network requests to Google Analytics
+    setTimeout(() => {
+      console.log('🔍 GoogleAnalytics: Checking for network requests...');
+      
+      // Try to manually check if the script URL is accessible
+      fetch(`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`, { 
+        method: 'HEAD',
+        mode: 'no-cors'
+      }).then(() => {
+        console.log('✅ GoogleAnalytics: Script URL is accessible via fetch');
+      }).catch((error) => {
+        console.error('❌ GoogleAnalytics: Script URL is NOT accessible via fetch:', error);
+      });
+    }, 5000);
+
     return () => {
-      console.log('🧹 GoogleAnalytics: Cleaning up...');
-      // Cleanup script when component unmounts or consent changes
+      console.log('🧹 GoogleAnalytics: Cleaning up analytics');
       const existingScript = document.querySelector(`script[src*="${GA_TRACKING_ID}"]`);
       if (existingScript) {
         existingScript.remove();
       }
-      // Clear gtag function
       (window as any).gtag = undefined;
+      
+      // Restore original console.error
+      console.error = originalConsoleError;
     };
   }, [hasAnalyticsConsent]);
 
