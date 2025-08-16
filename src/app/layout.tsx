@@ -7,7 +7,6 @@ import { Header } from '@/components/layout/Header';
 import { ScrollToTop } from '@/components/ui/ScrollToTop';
 import { NavigationOverlay } from '@/components/ui/NavigationOverlay';
 import { NavigationInterceptor } from '@/components/ui/NavigationInterceptor';
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import { SectionViewTracker } from '@/components/analytics/SectionViewTracker';
 
@@ -42,7 +41,6 @@ export default function RootLayout({
             <ScrollToTop />
             <NavigationOverlay />
           </div>
-          <SpeedInsights />
           <SectionViewTracker />
         </ConsentProvider>
       </body>

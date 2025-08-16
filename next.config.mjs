@@ -10,6 +10,21 @@ const nextConfig = {
     ]
   },
   // SEO optimizations - redirects are now handled in the page component
+  
+  // Fix Permissions-Policy warning by removing browsing-topics
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()'
+          }
+        ]
+      }
+    ];
+  }
 };
 
 export default nextConfig;
