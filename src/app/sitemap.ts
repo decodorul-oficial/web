@@ -3,39 +3,46 @@ import { fetchLatestNews } from '@/features/news/services/newsService';
 import { createNewsSlug } from '@/lib/utils/slugify';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://decodoruloficial.ro';
+  const currentDate = new Date();
   
-  // Static pages
+  // Static pages with enhanced metadata
   const staticPages = [
     {
       url: baseUrl,
-      lastModified: new Date(),
+      lastModified: currentDate,
       changeFrequency: 'daily' as const,
-      priority: 1,
+      priority: 1.0,
     },
     {
       url: `${baseUrl}/contact`,
-      lastModified: new Date(),
+      lastModified: currentDate,
       changeFrequency: 'monthly' as const,
-      priority: 0.5,
+      priority: 0.7,
     },
     {
       url: `${baseUrl}/legal`,
-      lastModified: new Date(),
+      lastModified: currentDate,
       changeFrequency: 'monthly' as const,
-      priority: 0.5,
+      priority: 0.6,
     },
     {
       url: `${baseUrl}/privacy`,
-      lastModified: new Date(),
+      lastModified: currentDate,
       changeFrequency: 'monthly' as const,
-      priority: 0.5,
+      priority: 0.6,
     },
     {
       url: `${baseUrl}/cookies`,
-      lastModified: new Date(),
+      lastModified: currentDate,
       changeFrequency: 'monthly' as const,
-      priority: 0.5,
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/login`,
+      lastModified: currentDate,
+      changeFrequency: 'monthly' as const,
+      priority: 0.3,
     },
   ];
 
@@ -43,12 +50,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Fetch all news (with a reasonable limit for sitemap)
     const { stiri } = await fetchLatestNews({ limit: 1000, orderBy: 'publicationDate', orderDirection: 'desc' });
     
-    const newsPages = stiri.map((news) => ({
-      url: `${baseUrl}/stiri/${createNewsSlug(news.title, news.id)}`,
-      lastModified: new Date(news.publicationDate),
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    }));
+    const newsPages = stiri.map((news) => {
+      const publicationDate = new Date(news.publicationDate);
+      const daysSincePublication = Math.floor((currentDate.getTime() - publicationDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      // Adjust priority based on recency
+      let priority = 0.8;
+      if (daysSincePublication <= 7) priority = 0.9;
+      else if (daysSincePublication <= 30) priority = 0.85;
+      else if (daysSincePublication <= 90) priority = 0.8;
+      else priority = 0.7;
+      
+      // Adjust change frequency based on recency
+      let changeFrequency: 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never' = 'weekly';
+      if (daysSincePublication <= 7) changeFrequency = 'daily';
+      else if (daysSincePublication <= 30) changeFrequency = 'weekly';
+      else changeFrequency = 'monthly';
+      
+      return {
+        url: `${baseUrl}/stiri/${createNewsSlug(news.title, news.id)}`,
+        lastModified: publicationDate,
+        changeFrequency,
+        priority,
+      };
+    });
 
     return [...staticPages, ...newsPages];
   } catch (error) {

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Metadata } from 'next';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { fetchNewsById, fetchNewsByDate } from '@/features/news/services/newsService';
@@ -31,6 +32,120 @@ function getCitationFields(content: unknown) {
     numarSiData: c?.monitorulOficial || c?.moNumberDate || undefined,
     sourceUrl: c?.sourceUrl || c?.url || undefined
   } as const;
+}
+
+// Generate metadata for the page
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = params;
+  
+  let id: string;
+  let news: any;
+  
+  // Check if this is a numeric ID (old format)
+  if (/^\d+$/.test(slug)) {
+    id = slug;
+    news = await fetchNewsById(id);
+  } else if (isValidNewsSlug(slug)) {
+    const extractedId = extractIdFromSlug(slug);
+    if (extractedId) {
+      id = extractedId;
+      news = await fetchNewsById(id);
+    }
+  }
+  
+  if (!news) {
+    return {
+      title: 'Știrea nu a fost găsită | Decodorul Oficial',
+      description: 'Știrea căutată nu a fost găsită pe site-ul Decodorul Oficial.',
+    };
+  }
+
+  const title = news.title;
+  const summary = extractField<string>(news.content, 'summary') || news.title;
+  const publicationDate = new Date(news.publicationDate);
+  const formattedDate = publicationDate.toLocaleDateString('ro-RO', { 
+    day: '2-digit', 
+    month: '2-digit', 
+    year: 'numeric' 
+  });
+  
+  const keywords = [
+    'Monitorul Oficial',
+    'legislație română',
+    'acte normative',
+    'hotărâri de guvern',
+    'ordine ministeriale',
+    'legi românia',
+    'buletin oficial',
+    'publicații oficiale',
+    'decodor legislație',
+    'sinteze legislative',
+    'interpretări legale',
+    'actualizări legislative',
+    'coduri românia',
+    'regulamente românia',
+    'știri legislative',
+    'monitor oficial românia',
+    ...(Array.isArray(extractField<string[]>(news.content, 'keywords')) 
+      ? extractField<string[]>(news.content, 'keywords')! 
+      : [])
+  ];
+
+  return {
+    title: `${title} | Decodorul Oficial`,
+    description: summary,
+    keywords: keywords,
+    authors: [{ name: extractField<string>(news.content, 'author') || 'Decodorul Oficial' }],
+    openGraph: {
+      title: title,
+      description: summary,
+      type: 'article',
+      publishedTime: news.publicationDate,
+      modifiedTime: news.updatedAt || news.publicationDate,
+      authors: [extractField<string>(news.content, 'author') || 'Decodorul Oficial'],
+      section: extractField<string>(news.content, 'category') || 'Legislație',
+      tags: Array.isArray(extractField<string[]>(news.content, 'keywords')) 
+        ? extractField<string[]>(news.content, 'keywords')! 
+        : [],
+      images: [
+        {
+          url: '/logo_with_bg.png',
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: title,
+      description: summary,
+      images: ['/logo_with_bg.png'],
+    },
+    alternates: {
+      canonical: `/stiri/${createNewsSlug(news.title, news.id)}`,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
+    other: {
+      'article:published_time': news.publicationDate,
+      'article:modified_time': news.updatedAt || news.publicationDate,
+      'article:author': extractField<string>(news.content, 'author') || 'Decodorul Oficial',
+      'article:section': extractField<string>(news.content, 'category') || 'Legislație',
+      'article:tag': Array.isArray(extractField<string[]>(news.content, 'keywords')) 
+        ? extractField<string[]>(news.content, 'keywords')!.join(', ') 
+        : '',
+    },
+  };
 }
 
 export default async function NewsDetailPage(props: PageProps) {
@@ -91,64 +206,163 @@ export default async function NewsDetailPage(props: PageProps) {
     sameDayNews = sameDayData;
   }
 
+  const publicationDate = new Date(news.publicationDate);
+  const formattedDate = publicationDate.toLocaleDateString('ro-RO', { 
+    day: '2-digit', 
+    month: '2-digit', 
+    year: 'numeric' 
+  });
+
+  const citationFields = getCitationFields(news.content);
+  const summary = extractField<string>(news.content, 'summary');
+  const body = extractField<string>(news.content, 'body');
+  const author = extractField<string>(news.content, 'author');
+  const category = extractField<string>(news.content, 'category');
+  const keywords = extractField<string[]>(news.content, 'keywords');
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
       <SessionCookieInitializer />
       {/* NavigationEndBeacon va reseta loader-ul imediat când pagina se montează */}
       <NavigationEndBeacon />
-      <main className="container-responsive flex-1 py-8">
-        <div className="mb-6 text-sm">
-          <Link href="/" className="text-brand-info hover:underline">
-            ← Înapoi la listă
-          </Link>
-        </div>
+      
+      {/* Schema.org structured data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "NewsArticle",
+            "headline": news.title,
+            "description": summary || news.title,
+            "image": {
+              "@type": "ImageObject",
+              "url": `${process.env.NEXT_PUBLIC_BASE_URL || "https://decodoruloficial.ro"}/logo_with_bg.png`,
+              "width": 1200,
+              "height": 630
+            },
+            "datePublished": news.publicationDate,
+            "dateModified": news.updatedAt || news.publicationDate,
+            "author": {
+              "@type": "Organization",
+              "name": author || "Decodorul Oficial"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "Decodorul Oficial",
+              "logo": {
+                "@type": "ImageObject",
+                "url": `${process.env.NEXT_PUBLIC_BASE_URL || "https://decodoruloficial.ro"}/logo_with_bg.png`
+              }
+            },
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": `${process.env.NEXT_PUBLIC_BASE_URL || "https://decodoruloficial.ro"}/stiri/${createNewsSlug(news.title, news.id)}`
+            },
+            "articleSection": category || "Legislație",
+            "keywords": keywords ? keywords.join(", ") : "legislație română, acte normative, Monitorul Oficial",
+            "inLanguage": "ro",
+            "isAccessibleForFree": true
+          })
+        }}
+      />
 
-        <article className="space-y-6">
+      <main className="container-responsive flex-1 py-8" role="main">
+        {/* Breadcrumb: desktop shows full, mobile shows "Înapoi la listă" */}
+        <nav aria-label="Breadcrumb" className="mb-6">
+          {/* Desktop breadcrumb */}
+          <ol className="hidden sm:flex items-center space-x-2 text-sm">
+            <li>
+              <Link href="/" className="text-brand-info hover:underline">
+                Acasă
+              </Link>
+            </li>
+            {/*<li className="text-gray-400">/</li>
+            <li>
+              <Link href="/stiri" className="text-brand-info hover:underline">
+                Știri
+              </Link>
+            </li>*/}
+            <li className="text-gray-400">/</li>
+            <li className="text-gray-600" aria-current="page">
+              {news.title}
+            </li>
+          </ol>
+          {/* Mobile: show "Înapoi la listă" */}
+          <div className="sm:hidden">
+            <Link href="/" className="text-brand-info hover:underline flex items-center gap-1">
+              <span aria-hidden="true">←</span> Înapoi la Știri
+            </Link>
+          </div>
+        </nav>
+
+        <article className="space-y-6" itemScope itemType="https://schema.org/NewsArticle">
           {/* Track news view */}
           <NewsViewTrackingWrapper news={news} />
           
-          <header className="space-y-2">
-            <h1 className="text-3xl font-bold leading-tight">{news.title}</h1>
-            <div className="text-sm text-gray-500">
-              {new Date(news.publicationDate).toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+          <header className="space-y-4">
+            <h1 className="text-3xl font-bold leading-tight" itemProp="headline">{news.title}</h1>
+            
+            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+              <time dateTime={news.publicationDate} itemProp="datePublished">
+                <span className="font-medium">Data publicării:</span> {formattedDate}
+              </time>
+              
+              {author && (
+                <span itemProp="author" itemScope itemType="https://schema.org/Person">
+                  <span className="font-medium">Autor:</span> <span itemProp="name">{author}</span>
+                </span>
+              )}
+              
+              {category && (
+                <span>
+                  <span className="font-medium">Categoria:</span> {category}
+                </span>
+              )}
             </div>
-            {extractField<string>(news.content, 'author') && (
-              <div className="text-sm text-gray-600">Autor: {extractField<string>(news.content, 'author')}</div>
-            )}
-            {extractField<string>(news.content, 'category') && (
-              <div className="text-sm text-gray-600">Categoria: {extractField<string>(news.content, 'category')}</div>
-            )}
-            {Array.isArray(extractField<string[]>(news.content, 'keywords')) && (
-              <div className="flex flex-wrap gap-2 text-xs text-gray-600">
-                {extractField<string[]>(news.content, 'keywords')!.map((k) => (
-                  <span key={k} className="rounded bg-gray-100 px-2 py-0.5">{k}</span>
+
+            {Array.isArray(keywords) && keywords.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                <span className="text-sm font-medium text-gray-700">Cuvinte cheie:</span>
+                {keywords.map((keyword) => (
+                  <span key={keyword} className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600">
+                    {keyword}
+                  </span>
                 ))}
               </div>
             )}
           </header>
 
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-            <div className="lg:col-span-2 space-y-4">
+            <div className="lg:col-span-2 space-y-6">
               <div className="h-60 rounded-md bg-gradient-to-br from-brand to-brand-highlight">
                 <div className="flex items-center justify-center h-full">
                   <Rss className="h-16 w-16 text-white" />
                 </div>
               </div>
-              <section className="prose prose-lg max-w-none">
-                {extractField<string>(news.content, 'summary') && (
-                  <p>{extractField<string>(news.content, 'summary')}</p>
+              
+              <section className="prose prose-lg max-w-none" itemProp="articleBody">
+                {summary && (
+                  <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-400 rounded">
+                    <h2 className="text-lg font-semibold text-blue-900 mb-2">Sinteză</h2>
+                    <p className="text-blue-800" itemProp="description">{summary}</p>
+                  </div>
                 )}
-                {extractField<string>(news.content, 'body') && (
-                  <div dangerouslySetInnerHTML={{ __html: sanitizeRichText(extractField<string>(news.content, 'body')!) }} />
+                
+                {body && (
+                  <div dangerouslySetInnerHTML={{ __html: sanitizeRichText(body) }} />
                 )}
+                
                 {typeof news.content === 'string' && <p>{news.content}</p>}
               </section>
+              
               <div>
-                <Citation {...getCitationFields(news.content)} />
+                <Citation {...citationFields} />
               </div>
             </div>
-            <aside className="space-y-6">
+            
+            <aside className="space-y-6" role="complementary">
               {/* Statistics section */}
               <NewsViewStats news={news} />
               

@@ -280,11 +280,11 @@ export function LatestNewsSection() {
                     <div className="h-16 w-16 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 flex items-center justify-center">
                       <Gavel className="h-6 w-6 text-white" />
                     </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="mb-2 text-xs text-gray-500">
+                    <div className="mt-2 text-xs text-gray-500">
                       {formatDate(n.publicationDate)}
                     </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
                     <h4 className="mb-2 font-semibold">
                       <Link 
                         href={`/stiri/${createNewsSlug(n.title, n.id)}`} 

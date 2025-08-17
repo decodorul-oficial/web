@@ -1,0 +1,68 @@
+{
+  "name": "Decodorul Oficial - Știri și Sinteze din Monitorul Oficial al României",
+  "short_name": "Decodorul Oficial",
+  "description": "Decodorul Oficial oferă sinteze și interpretări neoficiale ale actelor normative publicate în Monitorul Oficial al României",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "ro",
+  "dir": "ltr",
+  "categories": ["legal", "news", "reference"],
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo_with_bg.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/logo_with_bg.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Pagina principală Decodorul Oficial"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ultimele Știri",
+      "short_name": "Știri",
+      "description": "Vezi ultimele știri legislative",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/logo.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Contact",
+      "short_name": "Contact",
+      "description": "Contactează Decodorul Oficial",
+      "url": "/contact",
+      "icons": [
+        {
+          "src": "/logo.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
+}
