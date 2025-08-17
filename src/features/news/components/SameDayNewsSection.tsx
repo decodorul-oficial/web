@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { NewsItem } from '../types';
 import { createNewsSlug } from '@/lib/utils/slugify';
+import { Eye } from 'lucide-react';
 
 interface SameDayNewsSectionProps {
   news: NewsItem[];
@@ -65,7 +66,10 @@ export function SameDayNewsSection({ news, currentNewsId }: SameDayNewsSectionPr
               )}
               <div className="flex items-center justify-between text-xs text-gray-500">
                 <span>{formatDate(stire.publicationDate)}</span>
-                <span>{formatTime(stire.publicationDate)}</span>
+                <span className="flex items-center gap-1">
+                  <Eye className="h-4 w-4 text-gray-400" />
+                  {stire.viewCount ?? 0}
+                </span>
               </div>
             </Link>
           </article>

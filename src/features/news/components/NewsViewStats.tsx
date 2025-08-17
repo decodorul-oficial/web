@@ -49,7 +49,7 @@ export function NewsViewStats({ news }: NewsViewStatsProps) {
         )}
         {news.filename && generateMonitorulOficialUrl(news.filename) && (
           <div className="flex items-center justify-between">
-            <span className="text-gray-500">Document oficial:</span>
+            <span className="text-gray-500 font-bold">Document oficial:</span>
             <span className="font-medium text-brand-info">
             <a 
                 href={generateMonitorulOficialUrl(news.filename)!}
