@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { trackSectionView } from '../../lib/analytics';
+import { pageview, trackSectionView } from '../../lib/analytics';
 
 export function SectionViewTracker() {
   const pathname = usePathname();
@@ -10,6 +10,9 @@ export function SectionViewTracker() {
   useEffect(() => {
     // Ensure pathname is always defined before processing
     if (!pathname) return;
+
+    // Track page view for every route change
+    pageview(pathname);
 
     // Map pathnames to section names
     let sectionName = 'home';

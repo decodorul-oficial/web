@@ -1,17 +1,12 @@
 // Analytics utility functions for Google Analytics
 
-declare global {
-  interface Window {
-    gtag: (...args: unknown[]) => void;
-  }
-}
-
 export const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_ID;
 
-// Track page views
+// Track page views - @next/third-parties handles this automatically
+// This function is kept for backward compatibility and manual page view tracking
 export const pageview = (url: string) => {
-  if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('config', GA_TRACKING_ID, {
+  if (typeof window !== 'undefined' && (window as any).gtag) {
+    (window as any).gtag('config', GA_TRACKING_ID, {
       page_path: url,
     });
   }
@@ -29,8 +24,8 @@ export const event = ({
   label?: string;
   value?: number;
 }) => {
-  if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', action, {
+  if (typeof window !== 'undefined' && (window as any).gtag) {
+    (window as any).gtag('event', action, {
       event_category: category,
       event_label: label,
       value: value,
