@@ -9,6 +9,7 @@ import { NavigationOverlay } from '@/components/ui/NavigationOverlay';
 import { NavigationInterceptor } from '@/components/ui/NavigationInterceptor';
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import { SectionViewTracker } from '@/components/analytics/SectionViewTracker';
+import { FontSizeControl } from '@/components/ui/FontSizeControl';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://decodoruloficial.ro'),
@@ -177,6 +178,7 @@ export default function RootLayout({
             <CookieBanner />
             <ScrollToTop />
             <NavigationOverlay />
+            <FontSizeControl />
           </div>
           <SectionViewTracker />
         </ConsentProvider>

@@ -1,0 +1,201 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Minus, Plus, Type } from 'lucide-react';
+
+const FONT_SIZE_KEY = 'mo-font-size';
+const MIN_FONT_SIZE = 0.8;
+const MAX_FONT_SIZE = 1.4;
+const FONT_SIZE_STEP = 0.1;
+
+export function FontSizeControl() {
+  const [fontSize, setFontSize] = useState(1);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isNearFooter, setIsNearFooter] = useState(false);
+
+  useEffect(() => {
+    // Încarcă dimensiunea fontului din localStorage
+    const savedFontSize = localStorage.getItem(FONT_SIZE_KEY);
+    if (savedFontSize) {
+      const size = parseFloat(savedFontSize);
+      if (size >= MIN_FONT_SIZE && size <= MAX_FONT_SIZE) {
+        setFontSize(size);
+        applyFontSize(size);
+      }
+    }
+
+    // Funcția pentru detectarea apropiării de footer
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      const footerHeight = 200; // Înălțimea aproximativă a footer-ului + padding
+      
+      // Verifică dacă utilizatorul este aproape de footer
+      const isNear = scrollTop + windowHeight >= documentHeight - footerHeight;
+      setIsNearFooter(isNear);
+    };
+
+    // Adaugă event listener pentru scroll
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Verifică poziția inițială
+    handleScroll();
+
+    // Cleanup
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const applyFontSize = (size: number) => {
+    // Rotunjește la 2 zecimale pentru a evita problemele de floating point
+    const roundedSize = Math.round(size * 100) / 100;
+    
+    // Aplică dimensiunea fontului la întregul document
+    document.documentElement.style.setProperty('--content-font-size', roundedSize.toString());
+    
+    // Aplică la toate elementele cu clasa article-content
+    const articleElements = document.querySelectorAll('.article-content');
+    articleElements.forEach((element) => {
+      (element as HTMLElement).style.fontSize = `${roundedSize}rem`;
+    });
+    
+    // Aplică la toate elementele prose pentru consistență
+    const proseElements = document.querySelectorAll('.prose');
+    proseElements.forEach((element) => {
+      (element as HTMLElement).style.fontSize = `${roundedSize}rem`;
+    });
+
+    // Aplică la toate elementele de heading pentru a menține proporțiile
+    const headingElements = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    headingElements.forEach((element) => {
+      const tagName = element.tagName.toLowerCase();
+      let baseSize = 1;
+      
+      switch (tagName) {
+        case 'h1': baseSize = 1.75; break;
+        case 'h2': baseSize = 1.5; break;
+        case 'h3': baseSize = 1.25; break;
+        case 'h4': baseSize = 1.125; break;
+        case 'h5': baseSize = 1; break;
+        case 'h6': baseSize = 0.875; break;
+        default: baseSize = 1;
+      }
+      
+      (element as HTMLElement).style.fontSize = `${(baseSize * roundedSize).toFixed(2)}rem`;
+    });
+
+    // Aplică la toate paragrafele
+    const paragraphElements = document.querySelectorAll('p');
+    paragraphElements.forEach((element) => {
+      (element as HTMLElement).style.fontSize = `${roundedSize}rem`;
+    });
+
+    // Aplică la toate listele
+    const listElements = document.querySelectorAll('ul, ol, li');
+    listElements.forEach((element) => {
+      (element as HTMLElement).style.fontSize = `${roundedSize}rem`;
+    });
+  };
+
+  const increaseFontSize = () => {
+    const newSize = Math.min(fontSize + FONT_SIZE_STEP, MAX_FONT_SIZE);
+    const roundedSize = Math.round(newSize * 100) / 100;
+    setFontSize(roundedSize);
+    localStorage.setItem(FONT_SIZE_KEY, roundedSize.toString());
+    applyFontSize(roundedSize);
+  };
+
+  const decreaseFontSize = () => {
+    const newSize = Math.max(fontSize - FONT_SIZE_STEP, MIN_FONT_SIZE);
+    const roundedSize = Math.round(newSize * 100) / 100;
+    setFontSize(roundedSize);
+    localStorage.setItem(FONT_SIZE_KEY, roundedSize.toString());
+    applyFontSize(roundedSize);
+  };
+
+  const resetFontSize = () => {
+    setFontSize(1);
+    localStorage.removeItem(FONT_SIZE_KEY);
+    document.documentElement.style.removeProperty('--content-font-size');
+    
+    // Resetează toate elementele
+    const allElements = document.querySelectorAll('.article-content, .prose, h1, h2, h3, h4, h5, h6, p, ul, ol, li');
+    allElements.forEach((element) => {
+      (element as HTMLElement).style.fontSize = '';
+    });
+  };
+
+  // Calculează poziționarea dinamică în funcție de apropierea de footer
+  const getPositionClasses = () => {
+    if (isNearFooter) {
+      // Când este aproape de footer, mută butoanele mai sus
+      return {
+        container: "fixed bottom-32 left-6 z-50",
+        popup: "absolute bottom-16 left-0"
+      };
+    } else {
+      // Poziționare normală
+      return {
+        container: "fixed bottom-6 left-6 z-50",
+        popup: "absolute bottom-16 left-0"
+      };
+    }
+  };
+
+  const positionClasses = getPositionClasses();
+
+  return (
+    <div className={`${positionClasses.container} transition-all duration-500 ease-in-out`}>
+      {/* Butonul principal pentru a afișa/ascunde controlul */}
+      <button
+        onClick={() => setIsVisible(!isVisible)}
+        className="w-12 h-12 rounded-full bg-brand-info hover:bg-brand-highlight text-white flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-xl"
+        aria-label="Control font"
+        title="Control dimensiune font"
+      >
+        <Type className="w-5 h-5 transition-transform duration-300 ease-in-out" />
+      </button>
+
+      {/* Controlul de font - afișat când este vizibil */}
+      {isVisible && (
+        <div className={`${positionClasses.popup} bg-white rounded-lg shadow-xl border border-gray-200 p-3 flex flex-col items-center space-y-2 min-w-[120px] transition-all duration-500 ease-in-out animate-in slide-in-from-bottom-2`}>
+          <div className="text-xs text-gray-600 font-medium text-center mb-2">
+            Dimensiune font
+          </div>
+          
+          <button
+            onClick={increaseFontSize}
+            disabled={fontSize >= MAX_FONT_SIZE}
+            className="w-8 h-8 rounded-md bg-brand-info hover:bg-brand-highlight disabled:bg-gray-300 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-105 active:scale-95"
+            aria-label="Mărește fontul"
+            title="Mărește fontul (A+)"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+          
+          <div className="text-xs text-gray-600 font-medium px-2 py-1 bg-gray-100 rounded min-w-[40px] text-center transition-all duration-200 ease-in-out">
+            {Math.round(fontSize * 100)}%
+          </div>
+          
+          <button
+            onClick={decreaseFontSize}
+            disabled={fontSize <= MIN_FONT_SIZE}
+            className="w-8 h-8 rounded-md bg-brand-info hover:bg-brand-highlight disabled:bg-gray-300 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-105 active:scale-95"
+            aria-label="Micșorează fontul"
+            title="Micșorează fontul (A-)"
+          >
+            <Minus className="w-4 h-4" />
+          </button>
+          
+          <button
+            onClick={resetFontSize}
+            className="text-xs text-gray-500 hover:text-gray-700 underline mt-2 transition-all duration-200 ease-in-out hover:text-brand-info"
+            title="Resetează la dimensiunea implicită"
+          >
+            Reset
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

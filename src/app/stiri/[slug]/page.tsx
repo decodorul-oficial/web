@@ -14,6 +14,7 @@ import { notFound, redirect } from 'next/navigation';
 import { SessionCookieInitializer } from '@/components/session/SessionCookieInitializer';
 import { NewsViewTrackingWrapper } from '@/features/news/components/NewsViewTrackingWrapper';
 
+
 type PageProps = { params: { slug: string } };
 
 export const dynamic = 'force-dynamic';
@@ -302,7 +303,7 @@ export default async function NewsDetailPage(props: PageProps) {
           <NewsViewTrackingWrapper news={news} />
           
           <header className="space-y-4">
-            <h1 className="text-3xl font-bold leading-tight" itemProp="headline">{news.title}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold leading-tight text-gray-900" itemProp="headline">{news.title}</h1>
             
             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
               <time dateTime={news.publicationDate} itemProp="datePublished">
@@ -342,7 +343,7 @@ export default async function NewsDetailPage(props: PageProps) {
                 </div>
               </div>
               
-              <section className="prose prose-lg max-w-none" itemProp="articleBody">
+              <section className="article-content prose prose-lg max-w-none" itemProp="articleBody">
                 {summary && (
                   <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-400 rounded">
                     <h2 className="text-lg font-semibold text-blue-900 mb-2">Sinteză</h2>
