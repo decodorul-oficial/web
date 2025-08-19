@@ -35,4 +35,26 @@ export type MostReadStiriParams = {
   limit?: number;
 };
 
+// New types for keyword search
+export type SearchStiriByKeywordsResponse = {
+  searchStiriByKeywords: {
+    stiri: NewsItem[];
+    pagination: {
+      totalCount: number;
+      currentPage: number;
+      totalPages: number;
+      hasNextPage: boolean;
+      hasPreviousPage: boolean;
+    };
+  };
+};
+
+export type SearchStiriByKeywordsParams = {
+  keywords: string[];
+  limit?: number;
+  offset?: number;
+  orderBy?: string;
+  orderDirection?: 'asc' | 'desc';
+};
+
 

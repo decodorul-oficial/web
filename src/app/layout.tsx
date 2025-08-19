@@ -111,8 +111,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 5,
-  userScalable: true,
+  maximumScale: 1,
+  userScalable: false,
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
     { media: '(prefers-color-scheme: dark)', color: '#1f2937' }
@@ -134,6 +134,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Decodorul Oficial" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta name="HandheldFriendly" content="true" />
+        <meta name="format-detection" content="telephone=no" />
         
         {/* Favicon configuration for better Google search results */}
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -157,6 +160,94 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="57x57" href="/logo.png" />
         
         <link rel="manifest" href="/manifest.json" />
+        
+        {/* Prevent zoom functionality */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Prevent zoom on input focus
+              document.addEventListener('DOMContentLoaded', function() {
+                const inputs = document.querySelectorAll('input, textarea, select');
+                inputs.forEach(function(input) {
+                  input.style.fontSize = '16px';
+                });
+                
+                // Also handle dynamically added inputs
+                const observer = new MutationObserver(function(mutations) {
+                  mutations.forEach(function(mutation) {
+                    mutation.addedNodes.forEach(function(node) {
+                      if (node.nodeType === 1) {
+                        const newInputs = node.querySelectorAll ? node.querySelectorAll('input, textarea, select') : [];
+                        newInputs.forEach(function(input) {
+                          input.style.fontSize = '16px';
+                        });
+                      }
+                    });
+                  });
+                });
+                
+                observer.observe(document.body, {
+                  childList: true,
+                  subtree: true
+                });
+              });
+              
+              // Prevent pinch-to-zoom
+              document.addEventListener('touchstart', function(event) {
+                if (event.touches.length > 1) {
+                  event.preventDefault();
+                }
+              }, { passive: false });
+              
+              // Prevent double-tap zoom
+              let lastTouchEnd = 0;
+              document.addEventListener('touchend', function(event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                  event.preventDefault();
+                }
+                lastTouchEnd = now;
+              }, false);
+              
+              // Prevent wheel zoom
+              document.addEventListener('wheel', function(event) {
+                if (event.ctrlKey) {
+                  event.preventDefault();
+                }
+              }, { passive: false });
+              
+              // Prevent keyboard zoom
+              document.addEventListener('keydown', function(event) {
+                if ((event.ctrlKey || event.metaKey) && (event.key === '+' || event.key === '-' || event.key === '=')) {
+                  event.preventDefault();
+                }
+              });
+              
+              // Prevent zoom on focus for all form elements
+              document.addEventListener('focusin', function(event) {
+                if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'SELECT') {
+                  event.target.style.fontSize = '16px';
+                }
+              });
+              
+              // Additional iOS zoom prevention
+              if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                document.addEventListener('gesturestart', function(event) {
+                  event.preventDefault();
+                });
+                
+                document.addEventListener('gesturechange', function(event) {
+                  event.preventDefault();
+                });
+                
+                document.addEventListener('gestureend', function(event) {
+                  event.preventDefault();
+                });
+              }
+            `
+          }}
+        />
+        
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

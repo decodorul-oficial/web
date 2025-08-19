@@ -86,4 +86,39 @@ export const GET_MOST_READ_STIRI = gql`
 // Note: trackNewsView mutation is no longer needed as it's handled automatically
 // by the getStireById query
 
+// New query for searching news by keywords
+export const SEARCH_STIRI_BY_KEYWORDS = gql`
+  query SearchStiriByKeywords(
+    $keywords: [String!]!
+    $limit: Int
+    $offset: Int
+    $orderBy: String
+    $orderDirection: String
+  ) {
+    searchStiriByKeywords(
+      keywords: $keywords
+      limit: $limit
+      offset: $offset
+      orderBy: $orderBy
+      orderDirection: $orderDirection
+    ) {
+      stiri {
+        id
+        title
+        publicationDate
+        content
+        filename
+        viewCount
+      }
+      pagination {
+        totalCount
+        currentPage
+        totalPages
+        hasNextPage
+        hasPreviousPage
+      }
+    }
+  }
+`;
+
 

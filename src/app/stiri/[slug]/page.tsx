@@ -327,9 +327,13 @@ export default async function NewsDetailPage(props: PageProps) {
               <div className="flex flex-wrap gap-2">
                 <span className="text-sm font-medium text-gray-700">Cuvinte cheie:</span>
                 {keywords.map((keyword) => (
-                  <span key={keyword} className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600">
+                  <Link
+                    key={keyword}
+                    href={`/stiri?keywords=${encodeURIComponent(keyword)}`}
+                    className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors cursor-pointer"
+                  >
                     {keyword}
-                  </span>
+                  </Link>
                 ))}
               </div>
             )}
