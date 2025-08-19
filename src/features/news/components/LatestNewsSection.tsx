@@ -144,12 +144,113 @@ export function LatestNewsSection() {
     trackNewsClick(news.id, news.title, section);
   };
 
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+    
+    return (
+      <div className="flex items-center justify-center gap-2">
+        <button
+          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+          disabled={currentPage === 1}
+          className="p-2 text-gray-500 hover:text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
+          title="Pagina anterioară"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+
+        <div className="flex items-center gap-1">
+          {(() => {
+            const pages = [];
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            // Ajustăm startPage dacă nu avem suficiente pagini la sfârșit
+            if (endPage - startPage + 1 < maxVisiblePages) {
+              startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            // Prima pagină
+            if (startPage > 1) {
+              pages.push(
+                <button
+                  key={1}
+                  onClick={() => setCurrentPage(1)}
+                  className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                >
+                  1
+                </button>
+              );
+              
+              if (startPage > 2) {
+                pages.push(
+                  <span key="ellipsis1" className="px-2 text-gray-400">
+                    ...
+                  </span>
+                );
+              }
+            }
+
+            // Paginile vizibile
+            for (let i = startPage; i <= endPage; i++) {
+              pages.push(
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i)}
+                  className={`px-3 py-1 text-sm rounded transition-colors ${
+                    i === currentPage
+                      ? 'bg-brand-accent text-white font-medium'
+                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                  }`}
+                >
+                  {i}
+                </button>
+              );
+            }
+
+            // Ultima pagină
+            if (endPage < totalPages) {
+              if (endPage < totalPages - 1) {
+                pages.push(
+                  <span key="ellipsis2" className="px-2 text-gray-400">
+                    ...
+                  </span>
+                );
+              }
+              
+              pages.push(
+                <button
+                  key={totalPages}
+                  onClick={() => setCurrentPage(totalPages)}
+                  className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                >
+                  {totalPages}
+                </button>
+              );
+            }
+
+            return pages;
+          })()}
+        </div>
+        
+        <button
+          onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+          disabled={currentPage === totalPages}
+          className="p-2 text-gray-500 hover:text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
+          title="Pagina următoare"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+    );
+  };
+
   const currentItems = getCurrentPageItems();
 
   return (
     <section className="space-y-8">
       <div className="relative grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 order-1">
           {isLoading ? (
             // Skeleton loader pentru știrea principală
             <article className="mb-8 animate-pulse">
@@ -202,7 +303,7 @@ export function LatestNewsSection() {
         {/* Separator vertical subtil între stirea principală și Most Reads */}
         <div className="hidden lg:block absolute left-[calc(66.666667%-1px)] top-0 bottom-0 w-px bg-gray-200/60"></div>
 
-        <div className="space-y-6">
+        <div className="space-y-6 order-3 lg:order-2 hidden lg:block">
           <MostReadNewsSection />
         </div>
       </div>
@@ -210,7 +311,7 @@ export function LatestNewsSection() {
       {/* Separator orizontal subtil sub secțiunile principale */}
       <div className="border-t border-gray-200/60 pt-8"></div>
 
-      <div className="space-y-6">
+      <div className="space-y-6 order-2 lg:order-3">
         <div className="space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
           {/* Header și informații despre filtrare */}
           <div className="space-y-2 sm:space-y-0 sm:flex sm:items-center sm:gap-3">
@@ -273,6 +374,9 @@ export function LatestNewsSection() {
           </div>
         ) : (
           <>
+            {/* Paginare în partea de sus */}
+            {renderPagination()}
+            
             <div className="divide-y">
               {currentItems.map((n) => (
                 <article key={n.id} className="flex gap-3 py-4">
@@ -303,102 +407,10 @@ export function LatestNewsSection() {
               ))}
             </div>
 
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6">
-                <button
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                  className="p-2 text-gray-500 hover:text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
-                  title="Pagina anterioară"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-
-                <div className="flex items-center gap-1">
-                  {(() => {
-                    const pages = [];
-                    const maxVisiblePages = 5;
-                    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-                    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-                    
-                    // Ajustăm startPage dacă nu avem suficiente pagini la sfârșit
-                    if (endPage - startPage + 1 < maxVisiblePages) {
-                      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-                    }
-
-                    // Prima pagină
-                    if (startPage > 1) {
-                      pages.push(
-                        <button
-                          key={1}
-                          onClick={() => setCurrentPage(1)}
-                          className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
-                        >
-                          1
-                        </button>
-                      );
-                      
-                      if (startPage > 2) {
-                        pages.push(
-                          <span key="ellipsis1" className="px-2 text-gray-400">
-                            ...
-                          </span>
-                        );
-                      }
-                    }
-
-                    // Paginile vizibile
-                    for (let i = startPage; i <= endPage; i++) {
-                      pages.push(
-                        <button
-                          key={i}
-                          onClick={() => setCurrentPage(i)}
-                          className={`px-3 py-1 text-sm rounded transition-colors ${
-                            i === currentPage
-                              ? 'bg-brand-accent text-white font-medium'
-                              : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-                          }`}
-                        >
-                          {i}
-                        </button>
-                      );
-                    }
-
-                    // Ultima pagină
-                    if (endPage < totalPages) {
-                      if (endPage < totalPages - 1) {
-                        pages.push(
-                          <span key="ellipsis2" className="px-2 text-gray-400">
-                            ...
-                          </span>
-                        );
-                      }
-                      
-                      pages.push(
-                        <button
-                          key={totalPages}
-                          onClick={() => setCurrentPage(totalPages)}
-                          className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
-                        >
-                          {totalPages}
-                        </button>
-                      );
-                    }
-
-                    return pages;
-                  })()}
-                </div>
-                
-                <button
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                  className="p-2 text-gray-500 hover:text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
-                  title="Pagina următoare"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            )}
+            {/* Paginare în partea de jos */}
+            <div className="mt-6">
+              {renderPagination()}
+            </div>
 
             {currentItems.length === 0 && (
               <div className="text-center py-8">
@@ -412,6 +424,11 @@ export function LatestNewsSection() {
             )}
           </>
         )}
+      </div>
+
+      {/* Most Reads section for mobile - appears after Latest News */}
+      <div className="block lg:hidden">
+        <MostReadNewsSection />
       </div>
     </section>
   );
