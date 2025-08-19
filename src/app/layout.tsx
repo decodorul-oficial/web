@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     default: 'Decodorul Oficial - Știri și Sinteze din Monitorul Oficial al României',
     template: '%s | Decodorul Oficial'
   },
-  description: 'Decodorul Oficial oferă sinteze și interpretări neoficiale ale actelor normative publicate în Monitorul Oficial al României. Informații actualizate despre legislație, hotărâri de guvern, ordine și alte acte normative.',
+  description: '📋 Descoperă rapid și simplu ce se întâmplă în legislația României! Decodorul Oficial traduce actele din Monitorul Oficial în limbaj simplu. Știri legislative actualizate, hotărâri de guvern, ordine ministeriale - totul explicat clar și concis. ⚖️',
   keywords: [
     'Monitorul Oficial',
     'legislație română',
@@ -32,7 +32,11 @@ export const metadata: Metadata = {
     'interpretări legale',
     'actualizări legislative',
     'coduri românia',
-    'regulamente românia'
+    'regulamente românia',
+    'știri legislative',
+    'monitor oficial românia',
+    'legislație simplificată',
+    'acte normative românia'
   ],
   authors: [{ name: 'Decodorul Oficial' }],
   creator: 'Decodorul Oficial',
@@ -48,7 +52,7 @@ export const metadata: Metadata = {
     url: process.env.NEXT_PUBLIC_BASE_URL || 'https://decodoruloficial.ro',
     siteName: 'Decodorul Oficial',
     title: 'Decodorul Oficial - Știri și Sinteze din Monitorul Oficial al României',
-    description: 'Decodorul Oficial oferă sinteze și interpretări neoficiale ale actelor normative publicate în Monitorul Oficial al României. Informații actualizate despre legislație, hotărâri de guvern, ordine și alte acte normative.',
+    description: '📋 Descoperă rapid și simplu ce se întâmplă în legislația României! Decodorul Oficial traduce actele din Monitorul Oficial în limbaj simplu. Știri legislative actualizate, hotărâri de guvern, ordine ministeriale - totul explicat clar și concis. ⚖️',
     images: [
       {
         url: '/logo_with_bg.png',
@@ -61,7 +65,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Decodorul Oficial - Știri și Sinteze din Monitorul Oficial al României',
-    description: 'Decodorul Oficial oferă sinteze și interpretări neoficiale ale actelor normative publicate în Monitorul Oficial al României.',
+    description: '📋 Descoperă rapid și simplu ce se întâmplă în legislația României! Decodorul Oficial traduce actele din Monitorul Oficial în limbaj simplu. ⚖️',
     images: ['/logo_with_bg.png'],
     creator: '@decodoruloficial',
     site: '@decodoruloficial',
@@ -130,10 +134,28 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Decodorul Oficial" />
-        <link rel="apple-touch-icon" href="/logo.png" />
+        
+        {/* Favicon configuration for better Google search results */}
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/logo.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/logo.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/logo.png" />
+        <link rel="icon" type="image/png" sizes="48x48" href="/logo.png" />
+        <link rel="icon" type="image/png" sizes="96x96" href="/logo.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/logo.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/logo_with_bg.png" />
+        
+        {/* Apple touch icons */}
+        <link rel="apple-touch-icon" href="/logo.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/logo.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/logo.png" />
+        <link rel="apple-touch-icon" sizes="144x144" href="/logo.png" />
+        <link rel="apple-touch-icon" sizes="120x120" href="/logo.png" />
+        <link rel="apple-touch-icon" sizes="114x114" href="/logo.png" />
+        <link rel="apple-touch-icon" sizes="76x76" href="/logo.png" />
+        <link rel="apple-touch-icon" sizes="72x72" href="/logo.png" />
+        <link rel="apple-touch-icon" sizes="60x60" href="/logo.png" />
+        <link rel="apple-touch-icon" sizes="57x57" href="/logo.png" />
+        
         <link rel="manifest" href="/manifest.json" />
         <script
           type="application/ld+json"
@@ -143,14 +165,22 @@ export default function RootLayout({
               "@type": "WebSite",
               "name": "Decodorul Oficial",
               "url": process.env.NEXT_PUBLIC_BASE_URL || "https://decodoruloficial.ro",
-              "description": "Decodorul Oficial oferă sinteze și interpretări neoficiale ale actelor normative publicate în Monitorul Oficial al României.",
+              "description": "📋 Descoperă rapid și simplu ce se întâmplă în legislația României! Decodorul Oficial traduce actele din Monitorul Oficial în limbaj simplu. Știri legislative actualizate, hotărâri de guvern, ordine ministeriale - totul explicat clar și concis. ⚖️",
               "publisher": {
                 "@type": "Organization",
                 "name": "Decodorul Oficial",
                 "url": process.env.NEXT_PUBLIC_BASE_URL || "https://decodoruloficial.ro",
                 "logo": {
                   "@type": "ImageObject",
-                  "url": `${process.env.NEXT_PUBLIC_BASE_URL || "https://decodoruloficial.ro"}/logo_with_bg.png`
+                  "url": `${process.env.NEXT_PUBLIC_BASE_URL || "https://decodoruloficial.ro"}/logo_with_bg.png`,
+                  "width": 512,
+                  "height": 512
+                },
+                "description": "Platformă de informare și analiză a legislației române",
+                "foundingDate": "2024",
+                "areaServed": {
+                  "@type": "Country",
+                  "name": "Romania"
                 }
               },
               "potentialAction": {
@@ -161,7 +191,26 @@ export default function RootLayout({
                 },
                 "query-input": "required name=search_term_string"
               },
-              "inLanguage": "ro"
+              "inLanguage": "ro",
+              "isAccessibleForFree": true,
+              "genre": "legal information",
+              "keywords": "Monitorul Oficial, legislație română, acte normative, hotărâri de guvern, ordine ministeriale, legi românia, buletin oficial, publicații oficiale, decodor legislație, sinteze legislative, interpretări legale, actualizări legislative",
+              "audience": {
+                "@type": "Audience",
+                "audienceType": "Legal professionals, businesses, citizens"
+              },
+              "about": [
+                {
+                  "@type": "Thing",
+                  "name": "Romanian Legislation",
+                  "description": "Legislația României și actele normative"
+                },
+                {
+                  "@type": "Thing", 
+                  "name": "Monitorul Oficial",
+                  "description": "Buletinul oficial al României"
+                }
+              ]
             })
           }}
         />

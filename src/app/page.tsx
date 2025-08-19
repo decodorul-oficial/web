@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Decodorul Oficial - Știri și Sinteze din Monitorul Oficial al României',
-  description: 'Decodorul Oficial oferă sinteze și interpretări neoficiale ale actelor normative publicate în Monitorul Oficial al României. Informații actualizate despre legislație, hotărâri de guvern, ordine și alte acte normative.',
+  description: '📋 Descoperă rapid și simplu ce se întâmplă în legislația României! Decodorul Oficial traduce actele din Monitorul Oficial în limbaj simplu. Știri legislative actualizate, hotărâri de guvern, ordine ministeriale - totul explicat clar și concis. ⚖️',
   keywords: [
     'Monitorul Oficial',
     'legislație română',
@@ -25,11 +25,15 @@ export const metadata: Metadata = {
     'coduri românia',
     'regulamente românia',
     'știri legislative',
-    'monitor oficial românia'
+    'monitor oficial românia',
+    'legislație simplificată',
+    'acte normative românia',
+    'ultimele știri legislative',
+    'hotărâri guvern românia'
   ],
   openGraph: {
     title: 'Decodorul Oficial - Știri și Sinteze din Monitorul Oficial al României',
-    description: 'Decodorul Oficial oferă sinteze și interpretări neoficiale ale actelor normative publicate în Monitorul Oficial al României. Informații actualizate despre legislație, hotărâri de guvern, ordine și alte acte normative.',
+    description: '📋 Descoperă rapid și simplu ce se întâmplă în legislația României! Decodorul Oficial traduce actele din Monitorul Oficial în limbaj simplu. Știri legislative actualizate, hotărâri de guvern, ordine ministeriale - totul explicat clar și concis. ⚖️',
     url: '/',
     siteName: 'Decodorul Oficial',
     images: [
@@ -46,7 +50,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Decodorul Oficial - Știri și Sinteze din Monitorul Oficial al României',
-    description: 'Decodorul Oficial oferă sinteze și interpretări neoficiale ale actelor normative publicate în Monitorul Oficial al României.',
+    description: '📋 Descoperă rapid și simplu ce se întâmplă în legislația României! Decodorul Oficial traduce actele din Monitorul Oficial în limbaj simplu. ⚖️',
     images: ['/logo_with_bg.png'],
   },
   alternates: {
