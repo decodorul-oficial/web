@@ -56,6 +56,9 @@ export function MobileMenu() {
                 <Link href="/" className="block rounded px-2 py-2 hover:bg-gray-50" onClick={() => setOpen(false)}>
                   Acasă
                 </Link>
+                <Link href="/stiri" className="block rounded px-2 py-2 hover:bg-gray-50" onClick={() => setOpen(false)}>
+                  Căutare Avansată
+                </Link>
                 {/* comentez butoanele
                 <details open>
                   <summary className="cursor-pointer select-none rounded px-2 py-2 hover:bg-gray-50">Category</summary>

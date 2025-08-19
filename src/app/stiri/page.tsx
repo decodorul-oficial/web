@@ -6,7 +6,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { searchStiriByKeywords } from '@/features/news/services/newsService';
 import { NewsItem } from '@/features/news/types';
-import { Search, Filter, Bell, Calendar, Eye, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Search, Filter, Bell, Calendar, Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { createNewsSlug } from '@/lib/utils/slugify';
 import { SearchStiriByKeywordsParams } from '@/features/news/types';
@@ -25,6 +25,7 @@ function StiriPageContent() {
   
   // State pentru rezultate
   const [news, setNews] = useState<NewsItem[]>([]);
+  const [allNews, setAllNews] = useState<NewsItem[]>([]); // Toate rezultatele pentru paginare pe client
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
     totalCount: 0,
@@ -34,8 +35,28 @@ function StiriPageContent() {
     hasPreviousPage: false
   });
   
+  const itemsPerPage = 10; // Numărul de rezultate per pagină
+  
   // State pentru notificări
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
+  // Funcții pentru gestionarea inputurilor de dată
+  const handleDateFromChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDateFrom(e.target.value);
+  };
+
+  const handleDateToChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDateTo(e.target.value);
+  };
+
+  // Funcții pentru resetarea inputurilor de dată
+  const resetDateFrom = () => {
+    setDateFrom('');
+  };
+
+  const resetDateTo = () => {
+    setDateTo('');
+  };
 
   // Inițializare din URL params
   useEffect(() => {
@@ -63,13 +84,11 @@ function StiriPageContent() {
     
     setLoading(true);
     try {
-      const offset = (page - 1) * 20;
-      
-      // Construim parametrii pentru căutare
+      // Pentru paginarea pe client, luăm toate rezultatele
       const searchParams: SearchStiriByKeywordsParams = {
         keywords,
-        limit: 20,
-        offset,
+        limit: 1000, // Luăm toate rezultatele pentru paginare pe client
+        offset: 0,
         orderBy,
         orderDirection
       };
@@ -84,17 +103,28 @@ function StiriPageContent() {
       
       const result = await searchStiriByKeywords(searchParams);
       
-      setNews(result.stiri);
+      // Salvăm toate rezultatele
+      setAllNews(result.stiri);
+      
+      // Calculăm paginarea pe client
+      const totalCount = result.stiri.length;
+      const totalPages = Math.ceil(totalCount / itemsPerPage);
+      const startIndex = (page - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const currentPageItems = result.stiri.slice(startIndex, endIndex);
+      
+      setNews(currentPageItems);
       setPagination({
-        totalCount: result.pagination.totalCount,
+        totalCount,
         currentPage: page,
-        totalPages: result.pagination.totalPages,
-        hasNextPage: result.pagination.hasNextPage,
-        hasPreviousPage: result.pagination.hasPreviousPage
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1
       });
     } catch (error) {
       console.error('Error searching news:', error);
       setNews([]);
+      setAllNews([]);
       setPagination({
         totalCount: 0,
         currentPage: 1,
@@ -105,7 +135,7 @@ function StiriPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [keywords, orderBy, orderDirection, dateFrom, dateTo]);
+  }, [keywords, orderBy, orderDirection, dateFrom, dateTo, itemsPerPage]);
 
   // Efect pentru căutare automată când se schimbă filtrele
   useEffect(() => {
@@ -155,7 +185,23 @@ function StiriPageContent() {
 
   // Handler pentru paginare
   const handlePageChange = (page: number) => {
-    performSearch(page);
+    if (allNews.length === 0) return;
+    
+    // Calculăm paginarea pe client
+    const totalCount = allNews.length;
+    const totalPages = Math.ceil(totalCount / itemsPerPage);
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentPageItems = allNews.slice(startIndex, endIndex);
+    
+    setNews(currentPageItems);
+    setPagination({
+      totalCount,
+      currentPage: page,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1
+    });
   };
 
   // Formatare dată
@@ -281,37 +327,71 @@ function StiriPageContent() {
                   <label htmlFor="dateFrom" className="block text-sm font-medium text-gray-700 mb-2">
                     De la data
                   </label>
-                  <input
-                    type="date"
-                    id="dateFrom"
-                    value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand focus:border-transparent"
-                    style={{ fontSize: '16px' }}
-                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      id="dateFrom"
+                      value={dateFrom}
+                      onChange={handleDateFromChange}
+                      onInput={(e) => {
+                        const target = e.target as HTMLInputElement;
+                        if (!target.value) {
+                          setDateFrom('');
+                        }
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand focus:border-transparent min-h-[44px]"
+                      style={{ fontSize: '16px' }}
+                    />
+                    {dateFrom && (
+                      <button
+                        onClick={resetDateFrom}
+                        className="p-1 text-gray-500 hover:text-gray-700"
+                        title="Resetează data de la"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 
                 <div>
                   <label htmlFor="dateTo" className="block text-sm font-medium text-gray-700 mb-2">
                     Până la data
                   </label>
-                  <input
-                    type="date"
-                    id="dateTo"
-                    value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand focus:border-transparent"
-                    style={{ fontSize: '16px' }}
-                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      id="dateTo"
+                      value={dateTo}
+                      onChange={handleDateToChange}
+                      onInput={(e) => {
+                        const target = e.target as HTMLInputElement;
+                        if (!target.value) {
+                          setDateTo('');
+                        }
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand focus:border-transparent min-h-[44px]"
+                      style={{ fontSize: '16px' }}
+                    />
+                    {dateTo && (
+                      <button
+                        onClick={resetDateTo}
+                        className="p-1 text-gray-500 hover:text-gray-700"
+                        title="Resetează data până la"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* Notificări și aplicare filtre */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+              <div className="flex flex-col gap-4">
                 <button
                   onClick={handleNotificationToggle}
                   disabled
-                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                  className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md transition-colors w-full sm:w-auto ${
                     notificationsEnabled
                       ? 'bg-green-100 text-green-800 border border-green-300'
                       : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
@@ -323,7 +403,7 @@ function StiriPageContent() {
                 
                 <button
                   onClick={handleApplyFilters}
-                  className="px-6 py-2 bg-brand-info text-white rounded-md hover:bg-brand-highlight transition-colors flex items-center gap-2"
+                  className="w-full sm:w-auto px-6 py-2 bg-brand-info text-white rounded-md hover:bg-brand-highlight transition-colors flex items-center justify-center gap-2"
                 >
                   <Filter className="h-4 w-4" />
                   Aplică filtrele
@@ -448,25 +528,98 @@ function StiriPageContent() {
 
               {/* Paginare */}
               {!loading && pagination.totalPages > 1 && (
-                <div className="flex items-center justify-center space-x-2">
+                <div className="flex items-center justify-center gap-2">
                   <button
                     onClick={() => handlePageChange(pagination.currentPage - 1)}
                     disabled={!pagination.hasPreviousPage}
-                    className="px-3 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    className="p-2 text-gray-500 hover:text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
+                    title="Pagina anterioară"
                   >
-                    <ArrowLeft className="h-4 w-4" />
+                    <ChevronLeft className="h-4 w-4" />
                   </button>
-                  
-                  <span className="px-3 py-2 text-sm text-gray-700">
-                    Pagina {pagination.currentPage} din {pagination.totalPages}
-                  </span>
+
+                  <div className="flex items-center gap-1">
+                    {(() => {
+                      const pages = [];
+                      const maxVisiblePages = 5;
+                      let startPage = Math.max(1, pagination.currentPage - Math.floor(maxVisiblePages / 2));
+                      let endPage = Math.min(pagination.totalPages, startPage + maxVisiblePages - 1);
+                      
+                      // Ajustăm startPage dacă nu avem suficiente pagini la sfârșit
+                      if (endPage - startPage + 1 < maxVisiblePages) {
+                        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                      }
+
+                      // Prima pagină
+                      if (startPage > 1) {
+                        pages.push(
+                          <button
+                            key={1}
+                            onClick={() => handlePageChange(1)}
+                            className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                          >
+                            1
+                          </button>
+                        );
+                        
+                        if (startPage > 2) {
+                          pages.push(
+                            <span key="ellipsis1" className="px-2 text-gray-400">
+                              ...
+                            </span>
+                          );
+                        }
+                      }
+
+                      // Paginile vizibile
+                      for (let i = startPage; i <= endPage; i++) {
+                        pages.push(
+                          <button
+                            key={i}
+                            onClick={() => handlePageChange(i)}
+                            className={`px-3 py-1 text-sm rounded transition-colors ${
+                              i === pagination.currentPage
+                                ? 'bg-brand-accent text-white font-medium'
+                                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                            }`}
+                          >
+                            {i}
+                          </button>
+                        );
+                      }
+
+                      // Ultima pagină
+                      if (endPage < pagination.totalPages) {
+                        if (endPage < pagination.totalPages - 1) {
+                          pages.push(
+                            <span key="ellipsis2" className="px-2 text-gray-400">
+                              ...
+                            </span>
+                          );
+                        }
+                        
+                        pages.push(
+                          <button
+                            key={pagination.totalPages}
+                            onClick={() => handlePageChange(pagination.totalPages)}
+                            className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                          >
+                            {pagination.totalPages}
+                          </button>
+                        );
+                      }
+
+                      return pages;
+                    })()}
+                  </div>
                   
                   <button
                     onClick={() => handlePageChange(pagination.currentPage + 1)}
                     disabled={!pagination.hasNextPage}
-                    className="px-3 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    className="p-2 text-gray-500 hover:text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
+                    title="Pagina următoare"
                   >
-                    <ArrowRight className="h-4 w-4" />
+                    <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
               )}

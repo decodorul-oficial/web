@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation';
 
 const navItems: { href: string; label: string }[] = [
   { href: '/', label: 'Acasă' },
+  { href: '/stiri', label: 'Căutare Avansată' },
   // slot for dropdown "Category"
   //{ href: '/categorii/administratie', label: 'Category' },
   //{ href: '/categorii/economie', label: 'Category 2' },
@@ -97,6 +98,14 @@ export function Header() {
             className={`text-sm font-medium transition-colors hover:text-brand-info ${safePathname === navItems[0].href ? 'text-brand-info' : 'text-gray-600'}`}
           >
             {navItems[0].label}
+          </Link>
+
+          {/* Cautare Avansata */}
+          <Link
+            href={navItems[1].href as any}
+            className={`text-sm font-medium transition-colors hover:text-brand-info ${safePathname === navItems[1].href ? 'text-brand-info' : 'text-gray-600'}`}
+          >
+            {navItems[1].label}
           </Link>
 
           {/* Search */}
