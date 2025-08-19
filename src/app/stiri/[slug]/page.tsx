@@ -13,6 +13,7 @@ import { Rss } from 'lucide-react';
 import { notFound, redirect } from 'next/navigation';
 import { SessionCookieInitializer } from '@/components/session/SessionCookieInitializer';
 import { NewsViewTrackingWrapper } from '@/features/news/components/NewsViewTrackingWrapper';
+import { extractParteaFromFilename } from '@/lib/utils/monitorulOficial';
 
 
 type PageProps = { params: { slug: string } };
@@ -25,11 +26,15 @@ function extractField<T = string>(content: unknown, key: string): T | undefined 
   return c?.[key] as T | undefined;
 }
 
-function getCitationFields(content: unknown) {
+function getCitationFields(content: unknown, filename?: string) {
   const c = (content ?? {}) as any;
+  
+  // Extract partea from filename if available, otherwise fallback to content or default
+  const extractedPartea = extractParteaFromFilename(filename);
+  
   return {
     act: c?.act || c?.actName || undefined,
-    partea: c?.partea || 'Partea I',
+    partea: extractedPartea || c?.partea || 'Partea I',
     numarSiData: c?.monitorulOficial || c?.moNumberDate || undefined,
     sourceUrl: c?.sourceUrl || c?.url || undefined
   } as const;
@@ -214,7 +219,7 @@ export default async function NewsDetailPage(props: PageProps) {
     year: 'numeric' 
   });
 
-  const citationFields = getCitationFields(news.content);
+  const citationFields = getCitationFields(news.content, news.filename);
   const summary = extractField<string>(news.content, 'summary');
   const body = extractField<string>(news.content, 'body');
   const author = extractField<string>(news.content, 'author');

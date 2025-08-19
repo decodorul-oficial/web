@@ -10,6 +10,7 @@ import { Gavel, Landmark, Calendar, X, ChevronLeft, ChevronRight } from 'lucide-
 import { createNewsSlug } from '@/lib/utils/slugify';
 import { trackNewsClick } from '../../../lib/analytics';
 import type { NewsItem } from '@/features/news/types';
+import { extractParteaFromFilename } from '@/lib/utils/monitorulOficial';
 
 export function LatestNewsSection() {
   const [stiri, setStiri] = useState<NewsItem[]>([]);
@@ -130,11 +131,15 @@ export function LatestNewsSection() {
     }
   }
 
-  function getCitationFields(content: unknown) {
+  function getCitationFields(content: unknown, filename?: string) {
     const c = (content ?? {}) as any;
+    
+    // Extract partea from filename if available, otherwise fallback to content or default
+    const extractedPartea = extractParteaFromFilename(filename);
+    
     return {
       act: c?.act || c?.actName || undefined,
-      partea: c?.partea || 'Partea I',
+      partea: extractedPartea || c?.partea || 'Partea I',
       numarSiData: c?.monitorulOficial || c?.moNumberDate || undefined,
       sourceUrl: c?.sourceUrl || c?.url || undefined
     } as const;
@@ -293,7 +298,7 @@ export function LatestNewsSection() {
                   <div className="mb-4 text-sm text-gray-500">
                     {formatDate(featured.publicationDate)}
                   </div>
-                  <Citation {...getCitationFields(featured.content)} />
+                  <Citation {...getCitationFields(featured.content, featured.filename)} />
                 </div>
               </div>
             </article>
@@ -401,7 +406,7 @@ export function LatestNewsSection() {
                     </h4>
                     <p className="line-clamp-2 text-sm text-gray-600 mb-2">{getSummary(n.content)?.slice(0, 180)}...</p>
                     <div>
-                      <Citation {...getCitationFields(n.content)} />
+                      <Citation {...getCitationFields(n.content, n.filename)} />
                     </div>
                   </div>
                 </article>
