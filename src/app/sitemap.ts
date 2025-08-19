@@ -3,7 +3,7 @@ import { fetchLatestNews } from '@/features/news/services/newsService';
 import { createNewsSlug } from '@/lib/utils/slugify';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://decodoruloficial.ro';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro';
   const currentDate = new Date();
   
   // Static pages with enhanced metadata

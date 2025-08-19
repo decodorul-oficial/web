@@ -12,7 +12,7 @@ import { SectionViewTracker } from '@/components/analytics/SectionViewTracker';
 import { FontSizeControl } from '@/components/ui/FontSizeControl';
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://decodoruloficial.ro'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro'),
   title: {
     default: 'Decodorul Oficial - Știri și Sinteze din Monitorul Oficial al României',
     template: '%s | Decodorul Oficial'
@@ -46,10 +46,10 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  openGraph: {
-    type: 'website',
-    locale: 'ro_RO',
-    url: process.env.NEXT_PUBLIC_BASE_URL || 'https://decodoruloficial.ro',
+      openGraph: {
+      type: 'website',
+      locale: 'ro_RO',
+      url: process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro',
     siteName: 'Decodorul Oficial',
     title: 'Decodorul Oficial - Știri și Sinteze din Monitorul Oficial al României',
     description: '📋 Descoperă rapid și simplu ce se întâmplă în legislația României! Decodorul Oficial traduce actele din Monitorul Oficial în limbaj simplu. Știri legislative actualizate, hotărâri de guvern, ordine ministeriale - totul explicat clar și concis. ⚖️',
@@ -87,7 +87,7 @@ export const metadata: Metadata = {
     yahoo: process.env.YAHOO_VERIFICATION,
   },
   alternates: {
-    canonical: process.env.NEXT_PUBLIC_BASE_URL || 'https://decodoruloficial.ro',
+    canonical: process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro',
   },
   category: 'legal',
   classification: 'legal information',
@@ -164,15 +164,15 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "WebSite",
               "name": "Decodorul Oficial",
-              "url": process.env.NEXT_PUBLIC_BASE_URL || "https://decodoruloficial.ro",
+              "url": process.env.NEXT_PUBLIC_BASE_URL || "https://www.decodoruloficial.ro",
               "description": "📋 Descoperă rapid și simplu ce se întâmplă în legislația României! Decodorul Oficial traduce actele din Monitorul Oficial în limbaj simplu. Știri legislative actualizate, hotărâri de guvern, ordine ministeriale - totul explicat clar și concis. ⚖️",
               "publisher": {
                 "@type": "Organization",
                 "name": "Decodorul Oficial",
-                "url": process.env.NEXT_PUBLIC_BASE_URL || "https://decodoruloficial.ro",
+                "url": process.env.NEXT_PUBLIC_BASE_URL || "https://www.decodoruloficial.ro",
                 "logo": {
                   "@type": "ImageObject",
-                  "url": `${process.env.NEXT_PUBLIC_BASE_URL || "https://decodoruloficial.ro"}/logo_with_bg.png`,
+                  "url": `${process.env.NEXT_PUBLIC_BASE_URL || "https://www.decodoruloficial.ro"}/logo_with_bg.png`,
                   "width": 512,
                   "height": 512
                 },
@@ -187,7 +187,7 @@ export default function RootLayout({
                 "@type": "SearchAction",
                 "target": {
                   "@type": "EntryPoint",
-                  "urlTemplate": `${process.env.NEXT_PUBLIC_BASE_URL || "https://decodoruloficial.ro"}/stiri?search={search_term_string}`
+                  "urlTemplate": `${process.env.NEXT_PUBLIC_BASE_URL || "https://www.decodoruloficial.ro"}/stiri?search={search_term_string}`
                 },
                 "query-input": "required name=search_term_string"
               },

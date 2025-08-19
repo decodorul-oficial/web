@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://decodoruloficial.ro/sitemap.xml
+Sitemap: https://www.decodoruloficial.ro/sitemap.xml
 
 # Crawl-delay for respectful crawling
 Crawl-delay: 1
