@@ -124,12 +124,21 @@ export function MostReadNewsSection() {
         <ul className="space-y-4">
           {stiri.map((n) => (
             <li key={n.id} className="flex items-start gap-3">
-              <div className="h-12 w-12 shrink-0 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 flex items-center justify-center">
-                <span className="flex items-center gap-1">
-                  <Eye className="h-4 w-4 text-white" />
-                  <span className="text-xs font-bold text-white">
-                    {formatViewCount(n.viewCount)}
+              <div className="flex flex-col items-center">
+                <div className="h-12 w-12 shrink-0 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 flex items-center justify-center">
+                  <span className="flex items-center gap-1">
+                    <Eye className="h-4 w-4 text-white" />
+                    <span className="text-xs font-bold text-white">
+                      {formatViewCount(n.viewCount)}
+                    </span>
                   </span>
+                </div>
+                <span className="text-[10px] text-gray-500 mt-1 block">
+                  {new Date(n.publicationDate).toLocaleDateString('ro-RO', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                  })}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
