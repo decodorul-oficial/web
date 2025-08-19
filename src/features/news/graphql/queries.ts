@@ -86,7 +86,7 @@ export const GET_MOST_READ_STIRI = gql`
 // Note: trackNewsView mutation is no longer needed as it's handled automatically
 // by the getStireById query
 
-// New query for searching news by keywords
+// Query for searching news by keywords (without date filters for now)
 export const SEARCH_STIRI_BY_KEYWORDS = gql`
   query SearchStiriByKeywords(
     $keywords: [String!]!
@@ -94,6 +94,8 @@ export const SEARCH_STIRI_BY_KEYWORDS = gql`
     $offset: Int
     $orderBy: String
     $orderDirection: String
+    $publicationDateFrom: String
+    $publicationDateTo: String
   ) {
     searchStiriByKeywords(
       keywords: $keywords
@@ -101,6 +103,8 @@ export const SEARCH_STIRI_BY_KEYWORDS = gql`
       offset: $offset
       orderBy: $orderBy
       orderDirection: $orderDirection
+      publicationDateFrom: $publicationDateFrom
+      publicationDateTo: $publicationDateTo
     ) {
       stiri {
         id

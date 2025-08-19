@@ -55,6 +55,8 @@ export type SearchStiriByKeywordsParams = {
   offset?: number;
   orderBy?: string;
   orderDirection?: 'asc' | 'desc';
+  publicationDateFrom?: string;
+  publicationDateTo?: string;
 };
 
 

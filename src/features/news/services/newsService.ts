@@ -133,7 +133,7 @@ export async function fetchMostReadStiri(params: MostReadStiriParams = {}) {
 
 // New function for searching news by keywords
 export async function searchStiriByKeywords(params: SearchStiriByKeywordsParams) {
-  const { keywords, limit = 20, offset = 0, orderBy = 'publicationDate', orderDirection = 'desc' } = params;
+  const { keywords, limit = 20, offset = 0, orderBy = 'publicationDate', orderDirection = 'desc', publicationDateFrom, publicationDateTo } = params;
   const limitClamped = Math.max(1, Math.min(100, limit));
 
   // Asigură că cookie-ul mo_session este setat pentru analytics
@@ -146,7 +146,9 @@ export async function searchStiriByKeywords(params: SearchStiriByKeywordsParams)
       limit: limitClamped,
       offset,
       orderBy,
-      orderDirection
+      orderDirection,
+      publicationDateFrom,
+      publicationDateTo
     });
     return data.searchStiriByKeywords;
   } catch (primaryError: any) {
@@ -154,7 +156,7 @@ export async function searchStiriByKeywords(params: SearchStiriByKeywordsParams)
     try {
       const { data } = await requestWithEndpointFallback<SearchStiriByKeywordsResponse>(
         SEARCH_STIRI_BY_KEYWORDS,
-        { keywords, limit: limitClamped, offset, orderBy, orderDirection },
+        { keywords, limit: limitClamped, offset, orderBy, orderDirection, publicationDateFrom, publicationDateTo },
         process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT
       );
       return data.searchStiriByKeywords;

@@ -9,6 +9,7 @@ import { NewsItem } from '@/features/news/types';
 import { Search, Filter, Bell, Calendar, Eye, ArrowLeft, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { createNewsSlug } from '@/lib/utils/slugify';
+import { SearchStiriByKeywordsParams } from '@/features/news/types';
 
 function StiriPageContent() {
   const searchParams = useSearchParams();
@@ -35,13 +36,6 @@ function StiriPageContent() {
   
   // State pentru notificări
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  const [notificationFilters, setNotificationFilters] = useState({
-    keywords: [] as string[],
-    dateFrom: '',
-    dateTo: '',
-    orderBy: 'publicationDate',
-    orderDirection: 'desc' as 'asc' | 'desc'
-  });
 
   // Inițializare din URL params
   useEffect(() => {
@@ -70,13 +64,25 @@ function StiriPageContent() {
     setLoading(true);
     try {
       const offset = (page - 1) * 20;
-      const result = await searchStiriByKeywords({
+      
+      // Construim parametrii pentru căutare
+      const searchParams: SearchStiriByKeywordsParams = {
         keywords,
         limit: 20,
         offset,
         orderBy,
         orderDirection
-      });
+      };
+      
+      // Adăugăm filtrele de dată dacă sunt setate
+      if (dateFrom) {
+        searchParams.publicationDateFrom = dateFrom;
+      }
+      if (dateTo) {
+        searchParams.publicationDateTo = dateTo;
+      }
+      
+      const result = await searchStiriByKeywords(searchParams);
       
       setNews(result.stiri);
       setPagination({
@@ -99,14 +105,14 @@ function StiriPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [keywords, orderBy, orderDirection]);
+  }, [keywords, orderBy, orderDirection, dateFrom, dateTo]);
 
   // Efect pentru căutare automată când se schimbă filtrele
   useEffect(() => {
     if (keywords.length > 0) {
       performSearch(1);
     }
-  }, [performSearch]);
+  }, [performSearch, keywords.length]);
 
   // Actualizare URL când se schimbă filtrele
   const updateURL = useCallback(() => {
@@ -127,20 +133,23 @@ function StiriPageContent() {
   const handleSearch = () => {
     const newKeywords = searchInput.split(',').map(k => k.trim()).filter(k => k.length > 0);
     setKeywords(newKeywords);
+    // Nu apelăm updateURL() aici pentru a evita problema cu redirectarea
+    // Vom apela performSearch direct
+    if (newKeywords.length > 0) {
+      performSearch(1);
+    }
+  };
+
+  // Handler pentru aplicarea filtrelor
+  const handleApplyFilters = () => {
     updateURL();
+    if (keywords.length > 0) {
+      performSearch(1);
+    }
   };
 
   // Handler pentru notificări
   const handleNotificationToggle = () => {
-    if (!notificationsEnabled) {
-      setNotificationFilters({
-        keywords: [...keywords],
-        dateFrom,
-        dateTo,
-        orderBy,
-        orderDirection
-      });
-    }
     setNotificationsEnabled(!notificationsEnabled);
   };
 
@@ -161,8 +170,8 @@ function StiriPageContent() {
   // Extragere keywords din content
   const extractKeywords = (content: unknown): string[] => {
     if (!content || typeof content !== 'object') return [];
-    const c = content as any;
-    return Array.isArray(c?.keywords) ? c.keywords : [];
+    const c = content as Record<string, unknown>;
+    return Array.isArray(c?.keywords) ? c.keywords as string[] : [];
   };
 
   return (
@@ -230,8 +239,8 @@ function StiriPageContent() {
                 </p>
               </div>
 
-              {/* Filtre avansate */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Filtre de sortare și direcție */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="orderBy" className="block text-sm font-medium text-gray-700 mb-2">
                     Ordonează după
@@ -264,7 +273,10 @@ function StiriPageContent() {
                     <option value="asc">Crescător</option>
                   </select>
                 </div>
-                
+              </div>
+
+              {/* Filtre de dată */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="dateFrom" className="block text-sm font-medium text-gray-700 mb-2">
                     De la data
@@ -278,10 +290,7 @@ function StiriPageContent() {
                     style={{ fontSize: '16px' }}
                   />
                 </div>
-              </div>
-
-              {/* Filtre suplimentare */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
                 <div>
                   <label htmlFor="dateTo" className="block text-sm font-medium text-gray-700 mb-2">
                     Până la data
@@ -295,30 +304,25 @@ function StiriPageContent() {
                     style={{ fontSize: '16px' }}
                   />
                 </div>
-                
-                <div className="flex items-end">
-                  <button
-                    onClick={handleNotificationToggle}
-                    disabled
-                    className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
-                      notificationsEnabled
-                        ? 'bg-green-100 text-green-800 border border-green-300'
-                        : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
-                  >
-                    <Bell className="h-4 w-4" />
-                    {notificationsEnabled ? 'Notificări activate' : 'Activează notificări'}
-                  </button>
-                </div>
               </div>
 
-              {/* Aplică filtrele */}
-              <div className="flex justify-end">
+              {/* Notificări și aplicare filtre */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
                 <button
-                  onClick={() => {
-                    updateURL();
-                    performSearch(1);
-                  }}
+                  onClick={handleNotificationToggle}
+                  disabled
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                    notificationsEnabled
+                      ? 'bg-green-100 text-green-800 border border-green-300'
+                      : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  <Bell className="h-4 w-4" />
+                  {notificationsEnabled ? 'Notificări activate' : 'Activează notificări'}
+                </button>
+                
+                <button
+                  onClick={handleApplyFilters}
                   className="px-6 py-2 bg-brand-info text-white rounded-md hover:bg-brand-highlight transition-colors flex items-center gap-2"
                 >
                   <Filter className="h-4 w-4" />
@@ -368,7 +372,29 @@ function StiriPageContent() {
                             {item.title}
                           </Link>
                         </h3>
-                        
+
+                        {/* Sumarul știrii */}
+                        {(() => {
+                          let summary = '';
+                          if (
+                            item.content &&
+                            typeof item.content === 'object' &&
+                            'summary' in item.content &&
+                            typeof (item.content as any).summary === 'string'
+                          ) {
+                            summary = (item.content as any).summary;
+                          }
+                          // Trunchiem la 200 caractere și adăugăm "..."
+                          if (summary.length > 300) {
+                            summary = summary.slice(0, 300) + '...';
+                          } else if (summary.length > 0) {
+                            summary = summary;
+                          }
+                          return summary ? (
+                            <p className="text-gray-700 text-sm">{summary}</p>
+                          ) : null;
+                        })()}
+
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                           <time dateTime={item.publicationDate} className="flex items-center gap-1">
                             <Calendar className="h-4 w-4" />
