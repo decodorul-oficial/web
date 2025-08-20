@@ -66,7 +66,7 @@ src/
 - `unsubscribe()` - Dezabonarea de la newsletter
 - `checkSubscriptionStatus()` - Verificarea statusului
 - Gestionarea stării (loading, error, success)
-- Verificarea duplicatelor înainte de înscriere
+- Verificarea statusului înainte de înscriere (evită duplicatelor, permite resubscribe)
 
 #### NewsletterService
 - Integrare cu GraphQL API
@@ -197,7 +197,7 @@ query SubStatus($email: String!) {
 ### 1. Înscrierea la Newsletter
 - Modal responsiv și accesibil
 - Validare email în timp real
-- Verificarea duplicatelor
+- Verificarea statusului (evită duplicatelor, permite resubscribe)
 - Consimțământ explicit pentru GDPR
 - Tracking pentru analytics
 

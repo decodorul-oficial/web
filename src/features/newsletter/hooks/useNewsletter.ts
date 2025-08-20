@@ -13,14 +13,17 @@ export const useNewsletter = () => {
     setSuccess(null);
 
     try {
-      // Verifică dacă email-ul există deja
-      const emailExists = await NewsletterService.checkEmailExists(input.email);
+      // Verifică statusul actual al email-ului
+      const currentStatus = await NewsletterService.getSubscriptionStatus(input.email);
       
-      if (emailExists) {
+      // Dacă email-ul există și este deja subscribed, afișează mesajul
+      if (currentStatus && currentStatus.status === 'subscribed') {
         setSuccess('Email-ul tău este deja înscris la newsletter!');
         return { success: true, alreadySubscribed: true };
       }
 
+      // Dacă email-ul există dar este unsubscribed, API-ul va face resubscribe automat
+      // Dacă email-ul nu există, API-ul va crea o nouă înscriere
       const result = await NewsletterService.subscribe({
         ...input,
         locale: input.locale || 'ro-RO',
@@ -30,7 +33,13 @@ export const useNewsletter = () => {
         metadata: input.metadata || {}
       });
 
-      setSuccess('Te-ai înscris cu succes la newsletter!');
+      // Mesaj diferit în funcție de dacă era unsubscribed sau nou
+      if (currentStatus && currentStatus.status === 'unsubscribed') {
+        setSuccess('Te-ai reînscris cu succes la newsletter!');
+      } else {
+        setSuccess('Te-ai înscris cu succes la newsletter!');
+      }
+      
       return { success: true, data: result };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Eroare la înscrierea la newsletter';
