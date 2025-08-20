@@ -10,6 +10,7 @@ import { NavigationInterceptor } from '@/components/ui/NavigationInterceptor';
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import { SectionViewTracker } from '@/components/analytics/SectionViewTracker';
 import { FontSizeControl } from '@/components/ui/FontSizeControl';
+import { NewsletterProvider } from '@/components/newsletter/NewsletterProvider';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro'),
@@ -308,17 +309,19 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-white text-gray-900 antialiased">
         <ConsentProvider>
-          <GoogleAnalytics />
-          <div className="flex flex-col min-h-screen">
-            <DisclaimerBanner />
-            <NavigationInterceptor />
-            {children}
-            <CookieBanner />
-            <ScrollToTop />
-            <NavigationOverlay />
-            <FontSizeControl />
-          </div>
-          <SectionViewTracker />
+          <NewsletterProvider>
+            <GoogleAnalytics />
+            <div className="flex flex-col min-h-screen">
+              <DisclaimerBanner />
+              <NavigationInterceptor />
+              {children}
+              <CookieBanner />
+              <ScrollToTop />
+              <NavigationOverlay />
+              <FontSizeControl />
+            </div>
+            <SectionViewTracker />
+          </NewsletterProvider>
         </ConsentProvider>
       </body>
     </html>

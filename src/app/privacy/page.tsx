@@ -90,6 +90,7 @@ export default function PrivacyPolicyPage() {
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
               <li><strong>Formulare de contact:</strong> nume, e-mail, mesaj (dacă există)</li>
               <li><strong>Feedback:</strong> comentarii sau sugestii (dacă sunt implementate)</li>
+              <li><strong>Newsletter:</strong> adresa de email pentru înscrierea la newsletter, preferințe de conținut, consimțământ pentru marketing</li>
             </ul>
           </section>
 
@@ -101,6 +102,7 @@ export default function PrivacyPolicyPage() {
               <li><strong>Funcționarea site-ului:</strong> afișarea conținutului, navigarea, securitatea</li>
               <li><strong>Îmbunătățirea serviciilor:</strong> analiza traficului, optimizarea performanței</li>
               <li><strong>Comunicarea:</strong> răspunsul la solicitări, informări despre servicii</li>
+              <li><strong>Newsletter și marketing:</strong> trimiterea de informații relevante, actualizări legislative, știri importante</li>
               <li><strong>Conformitatea legală:</strong> respectarea obligațiilor legale și reglementărilor</li>
             </ul>
           </section>
@@ -170,7 +172,30 @@ export default function PrivacyPolicyPage() {
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              9. Cookie-uri
+              9. Newsletter și Marketing
+            </h2>
+            <p className="text-gray-700 mb-4">
+              Dacă te înscrii la newsletter-ul nostru, colectăm următoarele informații:
+            </p>
+            <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-4">
+              <li><strong>Adresa de email:</strong> pentru trimiterea newsletter-ului</li>
+              <li><strong>Preferințe de conținut:</strong> tipul de informații pe care dorești să le primești</li>
+              <li><strong>Consimțământul:</strong> confirmarea că accepti să primești comunicări de marketing</li>
+              <li><strong>Date de utilizare:</strong> interacțiunile cu newsletter-ul pentru îmbunătățirea serviciului</li>
+            </ul>
+            <p className="text-gray-700 mb-4">
+              <strong>Drepturile tale:</strong> Poți să te dezabonezi oricând folosind link-ul din newsletter sau vizitând <a href="/newsletter/unsubscribe" className="text-brand-info hover:underline">pagina de dezabonare</a>.
+            </p>
+            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+              <p className="text-sm text-blue-700">
+                <strong>Consimțământ explicit:</strong> Newsletter-ul se trimite <strong>doar cu consimțământul tău explicit</strong> și poate fi revocat oricând.
+              </p>
+            </div>
+          </section>
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+              10. Cookie-uri
             </h2>
             <p className="text-gray-700 leading-relaxed">
               Pentru informații detaliate despre cookie-urile pe care le folosim, consultă <a href="/cookies" className="text-brand-info hover:underline">Politica noastră de Cookie-uri</a>.
@@ -179,7 +204,7 @@ export default function PrivacyPolicyPage() {
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              10. Modificări ale Politicii
+              11. Modificări ale Politicii
             </h2>
             <p className="text-gray-700 leading-relaxed">
               Ne rezervăm dreptul de a actualiza această politică de confidențialitate. Modificările vor fi comunicate prin actualizarea datei de "Ultima actualizare" și, dacă este cazul, prin notificări pe site.
@@ -188,7 +213,7 @@ export default function PrivacyPolicyPage() {
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              11. Contact pentru Confidențialitate
+              12. Contact pentru Confidențialitate
             </h2>
             <p className="text-gray-700 mb-4">
               Pentru orice întrebări privind această politică de confidențialitate sau pentru exercitarea drepturilor GDPR, ne poți contacta:
@@ -201,7 +226,7 @@ export default function PrivacyPolicyPage() {
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              12. Autoritatea de Supraveghere
+              13. Autoritatea de Supraveghere
             </h2>
             <p className="text-gray-700 mb-4">
               Ai dreptul să depui o plângere la Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal (ANSPDCP) dacă consideri că prelucrarea datelor tale personale încalcă GDPR-ul.
@@ -215,7 +240,7 @@ export default function PrivacyPolicyPage() {
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              Pagini Legate
+              14. Pagini Legate
             </h2>
             <div className="grid md:grid-cols-2 gap-4">
               <a 

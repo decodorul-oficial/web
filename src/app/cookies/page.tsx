@@ -122,7 +122,28 @@ export default function CookiesPolicyPage() {
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
               <li><strong>Cookie-uri de preferințe:</strong> salvează setările tale (limba, tema, etc.)</li>
               <li><strong>Cookie-uri de social media:</strong> permit integrarea cu platformele sociale (dacă aplicabil)</li>
+              <li><strong>Cookie-uri de newsletter:</strong> gestionează preferințele tale pentru newsletter și consimțământul pentru marketing</li>
             </ul>
+          </section>
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+              3.4 Cookie-uri de Newsletter și Marketing
+            </h2>
+            <p className="text-gray-700 mb-4">
+              Aceste cookie-uri sunt folosite pentru gestionarea newsletter-ului și a preferințelor tale de marketing:
+            </p>
+            <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-6">
+              <li><strong>Cookie-uri de consimțământ newsletter:</strong> salvează consimțământul tău pentru primirea newsletter-ului</li>
+              <li><strong>Cookie-uri de preferințe newsletter:</strong> stochează preferințele tale pentru tipul de conținut dorit</li>
+              <li><strong>Cookie-uri de tracking newsletter:</strong> monitorizează interacțiunile cu newsletter-ul pentru îmbunătățirea serviciului</li>
+              <li><strong>Cookie-uri de segmentare:</strong> permit personalizarea conținutului newsletter-ului în funcție de interesele tale</li>
+            </ul>
+            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+              <p className="text-sm text-blue-700">
+                <strong>Important:</strong> Cookie-urile de newsletter sunt activate <strong>doar cu consimțământul tău explicit</strong> și pot fi revocate oricând din setările tale.
+              </p>
+            </div>
           </section>
 
           <section className="mb-8">
@@ -180,10 +201,11 @@ export default function CookiesPolicyPage() {
               Site-ul nostru oferă un banner de consimțământ pentru cookie-urile non-esențiale. Poți:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
-              <li>Accepta toate cookie-urile (inclusiv analytics și mo_session)</li>
-              <li>Respinge cookie-urile non-esențiale (analytics și mo_session nu se vor seta)</li>
+              <li>Accepta toate cookie-urile (inclusiv analytics, mo_session și newsletter)</li>
+              <li>Respinge cookie-urile non-esențiale (analytics, mo_session și newsletter nu se vor seta)</li>
               <li>Modifica preferințele oricând din footer-ul site-ului</li>
               <li>Revoca consimțământul pentru analytics (cookie-ul mo_session se va elimina automat)</li>
+              <li>Gestionează preferințele newsletter-ului din setările tale</li>
             </ul>
             <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mt-4 rounded">
               <p className="text-sm text-blue-700">
@@ -263,6 +285,7 @@ export default function CookiesPolicyPage() {
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
               <li><strong>E-mail:</strong> contact@decodoruloficial.ro</li>
               <li><strong>Pagina de contact:</strong> <a href="/contact" className="text-brand-info hover:underline">/contact</a></li>
+              <li><strong>Dezabonare newsletter:</strong> <a href="/newsletter/unsubscribe" className="text-brand-info hover:underline">/newsletter/unsubscribe</a></li>
             </ul>
           </section>
 
