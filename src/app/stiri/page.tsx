@@ -80,13 +80,14 @@ function StiriPageContent() {
 
   // Funcția de căutare
   const performSearch = useCallback(async (page: number = 1) => {
-    if (keywords.length === 0) return;
+    // Allow search with no keywords if date filters are applied
+    if (keywords.length === 0 && !dateFrom && !dateTo) return;
     
     setLoading(true);
     try {
       // Pentru paginarea pe client, luăm toate rezultatele
       const searchParams: SearchStiriByKeywordsParams = {
-        keywords,
+        keywords: keywords.length > 0 ? keywords : [], // Allow empty keywords for date-only search
         limit: 1000, // Luăm toate rezultatele pentru paginare pe client
         offset: 0,
         orderBy,
@@ -139,10 +140,10 @@ function StiriPageContent() {
 
   // Efect pentru căutare automată când se schimbă filtrele
   useEffect(() => {
-    if (keywords.length > 0) {
+    if (keywords.length > 0 || dateFrom || dateTo) {
       performSearch(1);
     }
-  }, [performSearch, keywords.length]);
+  }, [performSearch, keywords.length, dateFrom, dateTo]);
 
   // Actualizare URL când se schimbă filtrele
   const updateURL = useCallback(() => {
@@ -173,7 +174,7 @@ function StiriPageContent() {
   // Handler pentru aplicarea filtrelor
   const handleApplyFilters = () => {
     updateURL();
-    if (keywords.length > 0) {
+    if (keywords.length > 0 || dateFrom || dateTo) {
       performSearch(1);
     }
   };
@@ -413,13 +414,26 @@ function StiriPageContent() {
           </div>
 
           {/* Rezultatele căutării */}
-          {keywords.length > 0 && (
+          {(keywords.length > 0 || dateFrom || dateTo) && (
             <div className="space-y-6">
               {/* Header rezultate */}
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
-                    Rezultate pentru: {keywords.join(', ')}
+                    {keywords.length > 0 
+                      ? `Rezultate pentru: ${keywords.join(', ')}`
+                      : 'Rezultate pentru perioada selectată'
+                    }
+                    {(dateFrom || dateTo) && (
+                      <span className="text-sm text-gray-500 block mt-1">
+                        {dateFrom && dateTo 
+                          ? `${dateFrom} - ${dateTo}`
+                          : dateFrom 
+                            ? `Din ${dateFrom}`
+                            : `Până la ${dateTo}`
+                        }
+                      </span>
+                    )}
                   </h2>
                   <p className="text-gray-600">
                     {pagination.totalCount} știri găsite
@@ -513,16 +527,35 @@ function StiriPageContent() {
               )}
 
               {/* Mesaj când nu sunt rezultate */}
-              {!loading && news.length === 0 && keywords.length > 0 && (
+              {!loading && news.length === 0 && (keywords.length > 0 || dateFrom || dateTo) && (
                 <div className="text-center py-12">
                   <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Nu s-au găsit rezultate</h3>
-                  <p className="text-gray-600">
-                    Nu s-au găsit știri care să conțină toate cuvintele cheie: {keywords.join(', ')}
-                  </p>
-                  <p className="text-gray-500 mt-2">
-                    Încearcă să modifici cuvintele cheie sau să elimini unele dintre ele.
-                  </p>
+                  {keywords.length > 0 ? (
+                    <>
+                      <p className="text-gray-600">
+                        Nu s-au găsit știri care să conțină toate cuvintele cheie: {keywords.join(', ')}
+                      </p>
+                      <p className="text-gray-500 mt-2">
+                        Încearcă să modifici cuvintele cheie sau să elimini unele dintre ele.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-gray-600">
+                        Nu s-au găsit știri în perioada selectată
+                        {dateFrom && dateTo 
+                          ? ` (${dateFrom} - ${dateTo})`
+                          : dateFrom 
+                            ? ` (din ${dateFrom})`
+                            : ` (până la ${dateTo})`
+                        }
+                      </p>
+                      <p className="text-gray-500 mt-2">
+                        Încearcă să selectezi o perioadă diferită sau să adaugi cuvinte cheie.
+                      </p>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -627,12 +660,15 @@ function StiriPageContent() {
           )}
 
           {/* Mesaj inițial când nu s-a făcut nicio căutare */}
-          {keywords.length === 0 && (
+          {keywords.length === 0 && !dateFrom && !dateTo && (
             <div className="text-center py-12">
               <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">Începe să cauți știri</h3>
               <p className="text-gray-600">
                 Folosește filtrele de mai sus pentru a găsi știrile care te interesează.
+              </p>
+              <p className="text-gray-500 mt-2">
+                Poți căuta după cuvinte cheie, perioada de publicare, sau ambele.
               </p>
             </div>
           )}

@@ -1,6 +1,6 @@
 import { getGraphQLClient } from '@/lib/graphql/client';
 import { requestWithEndpointFallback } from '@/lib/graphql/utils';
-import { GET_STIRI, GET_STIRE_BY_ID, GET_MOST_READ_STIRI, SEARCH_STIRI_BY_KEYWORDS } from '@/features/news/graphql/queries';
+import { GET_STIRI, GET_STIRE_BY_ID, GET_MOST_READ_STIRI, SEARCH_STIRI_BY_KEYWORDS, SEARCH_STIRI } from '@/features/news/graphql/queries';
 import type { GetStiriResponse, NewsItem, MostReadStiriResponse, MostReadStiriParams, SearchStiriByKeywordsResponse, SearchStiriByKeywordsParams } from '@/features/news/types';
 import { ensureSessionCookie } from '@/lib/utils/sessionCookie';
 
@@ -139,7 +139,10 @@ export async function searchStiriByKeywords(params: SearchStiriByKeywordsParams)
   ensureSessionCookie();
 
   try {
-    const client = getGraphQLClient();
+    const client = getGraphQLClient({
+      getAuthToken: () => (typeof window !== 'undefined' ? localStorage.getItem('DO_TOKEN') ?? undefined : undefined)
+    });
+    
     const data = await client.request<SearchStiriByKeywordsResponse>(SEARCH_STIRI_BY_KEYWORDS, {
       keywords,
       limit: limitClamped,
@@ -151,7 +154,9 @@ export async function searchStiriByKeywords(params: SearchStiriByKeywordsParams)
     });
     return data.searchStiriByKeywords;
   } catch (primaryError: any) {
-    if (process.env.NODE_ENV !== 'production') console.debug('searchStiriByKeywords primary failed; retrying endpoint', primaryError);
+    console.error('searchStiriByKeywords failed:', primaryError);
+    
+    // Try endpoint fallback with proper headers
     try {
       const { data } = await requestWithEndpointFallback<SearchStiriByKeywordsResponse>(
         SEARCH_STIRI_BY_KEYWORDS,
@@ -160,7 +165,7 @@ export async function searchStiriByKeywords(params: SearchStiriByKeywordsParams)
       );
       return data.searchStiriByKeywords;
     } catch (fallbackError) {
-      if (process.env.NODE_ENV !== 'production') console.debug('endpoint fallback failed', fallbackError);
+      console.error('Endpoint fallback also failed:', fallbackError);
       return {
         stiri: [],
         pagination: { totalCount: 0, currentPage: 1, totalPages: 1, hasNextPage: false, hasPreviousPage: false }

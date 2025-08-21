@@ -25,20 +25,32 @@ const DEFAULT_ENDPOINT = normalizeEndpoint();
 let singletonClient: GraphQLClient | null = null;
 
 export function getGraphQLClient(options?: GraphQLClientFactoryOptions): GraphQLClient {
+  // Always create a new client on browser side for proper header management
   if (typeof window !== 'undefined') {
-    const token = undefined;
-    // Optimizat pentru a fi mai rapid
+    const token = options?.getAuthToken?.();
+    const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+    
     return new GraphQLClient(normalizeEndpoint(options?.endpoint), {
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...authHeaders
+      }
     });
   }
 
+  // Server side - use singleton but with proper headers
   if (!singletonClient) {
     const tokenMaybe = options?.getAuthToken?.();
     const resolveToken = typeof tokenMaybe === 'string' || tokenMaybe === undefined ? tokenMaybe : undefined;
-    // Optimizat pentru a fi mai rapid
+    const authHeaders = resolveToken ? { Authorization: `Bearer ${resolveToken}` } : {};
+    
     singletonClient = new GraphQLClient(normalizeEndpoint(options?.endpoint), {
-      headers: resolveToken ? { Authorization: `Bearer ${resolveToken}` } : {}
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...authHeaders
+      }
     });
   }
 
