@@ -28,14 +28,17 @@ export function getGraphQLClient(options?: GraphQLClientFactoryOptions): GraphQL
   // Always create a new client on browser side for proper header management
   if (typeof window !== 'undefined') {
     const token = options?.getAuthToken?.();
-    const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
     
     return new GraphQLClient(normalizeEndpoint(options?.endpoint), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        ...authHeaders
-      }
+      headers
     });
   }
 
@@ -43,14 +46,17 @@ export function getGraphQLClient(options?: GraphQLClientFactoryOptions): GraphQL
   if (!singletonClient) {
     const tokenMaybe = options?.getAuthToken?.();
     const resolveToken = typeof tokenMaybe === 'string' || tokenMaybe === undefined ? tokenMaybe : undefined;
-    const authHeaders = resolveToken ? { Authorization: `Bearer ${resolveToken}` } : {};
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    
+    if (resolveToken) {
+      headers.Authorization = `Bearer ${resolveToken}`;
+    }
     
     singletonClient = new GraphQLClient(normalizeEndpoint(options?.endpoint), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        ...authHeaders
-      }
+      headers
     });
   }
 
