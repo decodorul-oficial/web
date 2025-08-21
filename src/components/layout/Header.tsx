@@ -9,6 +9,7 @@ import { usePathname } from 'next/navigation';
 const navItems: { href: string; label: string }[] = [
   { href: '/', label: 'Acasă' },
   { href: '/stiri', label: 'Căutare Avansată' },
+  { href: '/sinteza-zilnica', label: 'Sinteza Zilnică' },
   // slot for dropdown "Category"
   //{ href: '/categorii/administratie', label: 'Category' },
   //{ href: '/categorii/economie', label: 'Category 2' },
@@ -108,9 +109,6 @@ export function Header() {
             {navItems[1].label}
           </Link>
 
-          {/* Search */}
-          <SearchSpotlight />
-
           {/* Keep other links */}
           {navItems.slice(2).map((item) => {
             const active = safePathname === item.href;
@@ -124,6 +122,10 @@ export function Header() {
               </Link>
             );
           })}
+
+          {/* Search */}
+          <SearchSpotlight />
+
         </nav>
         <div className="md:hidden flex items-center gap-2">
           <SearchSpotlight />

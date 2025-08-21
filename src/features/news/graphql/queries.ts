@@ -127,4 +127,17 @@ export const SEARCH_STIRI_BY_KEYWORDS = gql`
   }
 `;
 
+// Query for daily synthesis
+export const GET_DAILY_SYNTHESIS = gql`
+  query GetDailySynthesis($date: String!) {
+    getDailySynthesis(date: $date) {
+      synthesisDate
+      title
+      content
+      summary
+      metadata
+    }
+  }
+`;
+
 

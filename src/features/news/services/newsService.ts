@@ -1,7 +1,23 @@
 import { getGraphQLClient } from '@/lib/graphql/client';
 import { requestWithEndpointFallback } from '@/lib/graphql/utils';
-import { GET_STIRI, GET_STIRE_BY_ID, GET_MOST_READ_STIRI, SEARCH_STIRI_BY_KEYWORDS, SEARCH_STIRI } from '@/features/news/graphql/queries';
-import type { GetStiriResponse, NewsItem, MostReadStiriResponse, MostReadStiriParams, SearchStiriByKeywordsResponse, SearchStiriByKeywordsParams } from '@/features/news/types';
+import { 
+  GET_STIRI, 
+  GET_STIRE_BY_ID, 
+  SEARCH_STIRI, 
+  GET_MOST_READ_STIRI, 
+  SEARCH_STIRI_BY_KEYWORDS,
+  GET_DAILY_SYNTHESIS
+} from '../graphql/queries';
+import { 
+  GetStiriResponse, 
+  NewsItem, 
+  MostReadStiriResponse, 
+  MostReadStiriParams,
+  SearchStiriByKeywordsResponse,
+  SearchStiriByKeywordsParams,
+  GetDailySynthesisResponse,
+  GetDailySynthesisParams
+} from '../types';
 import { ensureSessionCookie } from '@/lib/utils/sessionCookie';
 
 export type FetchNewsParams = {
@@ -172,6 +188,20 @@ export async function searchStiriByKeywords(params: SearchStiriByKeywordsParams)
         pagination: { totalCount: 0, currentPage: 1, totalPages: 1, hasNextPage: false, hasPreviousPage: false }
       };
     }
+  }
+}
+
+export async function getDailySynthesis(params: GetDailySynthesisParams): Promise<GetDailySynthesisResponse> {
+  try {
+    const client = getGraphQLClient();
+    const response = await client.request<GetDailySynthesisResponse>(
+      GET_DAILY_SYNTHESIS,
+      params
+    );
+    return response;
+  } catch (error) {
+    console.error('Error fetching daily synthesis:', error);
+    throw error;
   }
 }
 

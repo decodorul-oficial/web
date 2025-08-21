@@ -60,4 +60,24 @@ export type SearchStiriByKeywordsParams = {
   publicationDateTo?: string;
 };
 
+// Types for daily synthesis
+export type DailySynthesis = {
+  synthesisDate: string;
+  title: string;
+  content: string; // HTML content
+  summary: string;
+  metadata: {
+    hashtags?: string[];
+    character_count?: number;
+  };
+};
+
+export type GetDailySynthesisResponse = {
+  getDailySynthesis: DailySynthesis | null;
+};
+
+export type GetDailySynthesisParams = {
+  date: string; // Format: YYYY-MM-DD
+};
+
 

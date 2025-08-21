@@ -15,6 +15,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
     },
     {
+      url: `${baseUrl}/sinteza-zilnica`,
+      lastModified: currentDate,
+      changeFrequency: 'daily' as const,
+      priority: 0.9,
+    },
+    {
       url: `${baseUrl}/contact`,
       lastModified: currentDate,
       changeFrequency: 'monthly' as const,
