@@ -15,9 +15,11 @@ function StiriPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
-  // State pentru filtrare
-  const [keywords, setKeywords] = useState<string[]>([]);
-  const [searchInput, setSearchInput] = useState('');
+  // State pentru filtrare îmbunătățită
+  const [searchQuery, setSearchQuery] = useState(''); // Fuzzy/full-text search
+  const [keywords, setKeywords] = useState<string[]>([]); // Exact keywords from content.keywords
+  const [searchInput, setSearchInput] = useState(''); // Input field for main search
+  const [keywordsInput, setKeywordsInput] = useState(''); // Input field for keywords
   const [orderBy, setOrderBy] = useState('publicationDate');
   const [orderDirection, setOrderDirection] = useState<'asc' | 'desc'>('desc');
   const [dateFrom, setDateFrom] = useState('');
@@ -37,8 +39,7 @@ function StiriPageContent() {
   
   const itemsPerPage = 10; // Numărul de rezultate per pagină
   
-  // State pentru notificări
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
 
   // Funcții pentru gestionarea inputurilor de dată
   const handleDateFromChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,16 +61,22 @@ function StiriPageContent() {
 
   // Inițializare din URL params
   useEffect(() => {
+    const urlQuery = searchParams.get('query');
     const urlKeywords = searchParams.get('keywords');
     const urlOrderBy = searchParams.get('orderBy');
     const urlOrderDirection = searchParams.get('orderDirection');
     const urlDateFrom = searchParams.get('dateFrom');
     const urlDateTo = searchParams.get('dateTo');
     
+    if (urlQuery) {
+      setSearchQuery(decodeURIComponent(urlQuery));
+      setSearchInput(decodeURIComponent(urlQuery));
+    }
+    
     if (urlKeywords) {
       const decodedKeywords = decodeURIComponent(urlKeywords).split(',').filter(k => k.trim());
       setKeywords(decodedKeywords);
-      setSearchInput(decodedKeywords.join(', '));
+      setKeywordsInput(decodedKeywords.join(', '));
     }
     
     if (urlOrderBy) setOrderBy(urlOrderBy);
@@ -78,21 +85,30 @@ function StiriPageContent() {
     if (urlDateTo) setDateTo(urlDateTo);
   }, [searchParams]);
 
-  // Funcția de căutare
+  // Funcția de căutare îmbunătățită
   const performSearch = useCallback(async (page: number = 1) => {
-    // Allow search with no keywords if date filters are applied
-    if (keywords.length === 0 && !dateFrom && !dateTo) return;
+    // Allow search if any filter is applied: query, keywords, or date range
+    if (!searchQuery && keywords.length === 0 && !dateFrom && !dateTo) return;
     
     setLoading(true);
     try {
       // Pentru paginarea pe client, luăm toate rezultatele
       const searchParams: SearchStiriByKeywordsParams = {
-        keywords: keywords.length > 0 ? keywords : [], // Allow empty keywords for date-only search
         limit: 1000, // Luăm toate rezultatele pentru paginare pe client
         offset: 0,
         orderBy,
         orderDirection
       };
+      
+      // Adăugăm query-ul fuzzy/full-text dacă este setat
+      if (searchQuery && searchQuery.trim()) {
+        searchParams.query = searchQuery.trim();
+      }
+      
+      // Adăugăm keywords-urile exacte dacă sunt setate
+      if (keywords.length > 0) {
+        searchParams.keywords = keywords;
+      }
       
       // Adăugăm filtrele de dată dacă sunt setate
       if (dateFrom) {
@@ -136,18 +152,21 @@ function StiriPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [keywords, orderBy, orderDirection, dateFrom, dateTo, itemsPerPage]);
+  }, [searchQuery, keywords, orderBy, orderDirection, dateFrom, dateTo, itemsPerPage]);
 
   // Efect pentru căutare automată când se schimbă filtrele
   useEffect(() => {
-    if (keywords.length > 0 || dateFrom || dateTo) {
+    if (searchQuery || keywords.length > 0 || dateFrom || dateTo) {
       performSearch(1);
     }
-  }, [performSearch, keywords.length, dateFrom, dateTo]);
+  }, [performSearch, searchQuery, keywords.length, dateFrom, dateTo]);
 
   // Actualizare URL când se schimbă filtrele
   const updateURL = useCallback(() => {
     const params = new URLSearchParams();
+    if (searchQuery && searchQuery.trim()) {
+      params.set('query', encodeURIComponent(searchQuery.trim()));
+    }
     if (keywords.length > 0) {
       params.set('keywords', encodeURIComponent(keywords.join(',')));
     }
@@ -158,14 +177,20 @@ function StiriPageContent() {
     
     const newURL = params.toString() ? `?${params.toString()}` : '/stiri';
     router.push(newURL);
-  }, [keywords, orderBy, orderDirection, dateFrom, dateTo, router]);
+  }, [searchQuery, keywords, orderBy, orderDirection, dateFrom, dateTo, router]);
 
-  // Handler pentru căutare
-  const handleSearch = () => {
-    const newKeywords = searchInput.split(',').map(k => k.trim()).filter(k => k.length > 0);
+  // Handler pentru căutare text (fuzzy/full-text)
+  const handleTextSearch = () => {
+    setSearchQuery(searchInput.trim());
+    if (searchInput.trim()) {
+      performSearch(1);
+    }
+  };
+
+  // Handler pentru căutare keywords
+  const handleKeywordsSearch = () => {
+    const newKeywords = keywordsInput.split(',').map(k => k.trim()).filter(k => k.length > 0);
     setKeywords(newKeywords);
-    // Nu apelăm updateURL() aici pentru a evita problema cu redirectarea
-    // Vom apela performSearch direct
     if (newKeywords.length > 0) {
       performSearch(1);
     }
@@ -174,15 +199,12 @@ function StiriPageContent() {
   // Handler pentru aplicarea filtrelor
   const handleApplyFilters = () => {
     updateURL();
-    if (keywords.length > 0 || dateFrom || dateTo) {
+    if (searchQuery || keywords.length > 0 || dateFrom || dateTo) {
       performSearch(1);
     }
   };
 
-  // Handler pentru notificări
-  const handleNotificationToggle = () => {
-    setNotificationsEnabled(!notificationsEnabled);
-  };
+
 
   // Handler pentru paginare
   const handlePageChange = (page: number) => {
@@ -248,194 +270,202 @@ function StiriPageContent() {
               Știri și Actualizări Legislative Partile I și II
             </h1>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Caută și filtrează știrile din Decodorul Oficial după cuvinte cheie, dată și alte criterii
+              Caută și filtrează știrile din Decodorul Oficial cu căutare inteligentă, keywords exacte și filtre de dată
             </p>
           </div>
 
-          {/* Panou de filtrare */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="space-y-6">
-              {/* Căutare după keywords */}
-              <div>
-                <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
-                  Caută după cuvinte cheie
-                </label>
-                <div className="flex gap-2">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <input
-                      type="text"
-                      id="search"
-                      value={searchInput}
-                      onChange={(e) => setSearchInput(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                      placeholder="Ex: Ministerul Afacerilor Interne, strategie, lege..."
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand focus:border-transparent"
-                      style={{ fontSize: '16px' }}
-                    />
+          {/* Panou de căutare compact */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            {/* Linia principală de căutare */}
+            <div className="flex flex-col lg:flex-row gap-3 mb-4">
+              {/* Căutare text principală */}
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleTextSearch()}
+                    placeholder="Căutare text: guvern decision, hotarare, legislatie..."
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand focus:border-transparent text-base"
+                  />
+                </div>
+              </div>
+              
+              {/* Keywords exacte */}
+              <div className="flex-1">
+                <div className="relative">
+                  <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={keywordsInput}
+                    onChange={(e) => setKeywordsInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleKeywordsSearch()}
+                    placeholder="Keywords exacte: legislatie, finante..."
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand focus:border-transparent text-base"
+                  />
+                </div>
+              </div>
+              
+              {/* Buton căutare */}
+              <button
+                onClick={() => {
+                  handleTextSearch();
+                  handleKeywordsSearch();
+                }}
+                className="px-6 py-2.5 bg-brand-info text-white rounded-md hover:bg-brand-highlight transition-colors whitespace-nowrap"
+              >
+                <Search className="h-4 w-4 inline mr-2" />
+                Caută
+              </button>
+            </div>
+
+            {/* Filtre avansate (collapse) */}
+            <details className="group">
+              <summary className="flex items-center justify-between cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900 py-2">
+                <span className="flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  Filtre avansate
+                </span>
+                <ChevronRight className="h-4 w-4 transition-transform group-open:rotate-90" />
+              </summary>
+              
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {/* Data de la */}
+                  <div className="relative">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">De la data</label>
+                    <div className="flex items-center">
+                      <input
+                        type="date"
+                        value={dateFrom}
+                        onChange={handleDateFromChange}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-brand focus:border-transparent"
+                      />
+                      {dateFrom && (
+                        <button
+                          onClick={resetDateFrom}
+                          className="ml-1 p-1 text-gray-400 hover:text-gray-600"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
                   </div>
+                  
+                  {/* Data până la */}
+                  <div className="relative">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Până la data</label>
+                    <div className="flex items-center">
+                      <input
+                        type="date"
+                        value={dateTo}
+                        onChange={handleDateToChange}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-brand focus:border-transparent"
+                      />
+                      {dateTo && (
+                        <button
+                          onClick={resetDateTo}
+                          className="ml-1 p-1 text-gray-400 hover:text-gray-600"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Sortare */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Sortare</label>
+                    <select
+                      value={orderBy}
+                      onChange={(e) => setOrderBy(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-brand focus:border-transparent"
+                    >
+                      <option value="publicationDate">Data publicării</option>
+                      <option value="title">Titlu</option>
+                      <option value="viewCount">Vizualizări</option>
+                    </select>
+                  </div>
+                  
+                  {/* Direcție */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Direcție</label>
+                    <select
+                      value={orderDirection}
+                      onChange={(e) => setOrderDirection(e.target.value as 'asc' | 'desc')}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-brand focus:border-transparent"
+                    >
+                      <option value="desc">Descrescător</option>
+                      <option value="asc">Crescător</option>
+                    </select>
+                  </div>
+                </div>
+                
+                {/* Buton aplicare filtre */}
+                <div className="mt-3 flex justify-end">
                   <button
-                    onClick={handleSearch}
-                    className="px-6 py-2 bg-brand-info text-white rounded-md hover:bg-brand-highlight transition-colors"
+                    onClick={handleApplyFilters}
+                    className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors flex items-center gap-2"
                   >
-                    Caută
+                    <Filter className="h-3 w-3" />
+                    Aplică filtrele
                   </button>
                 </div>
-                <p className="text-sm text-gray-500 mt-1">
-                  Introduce cuvinte cheie separate prin virgulă. Toate cuvintele trebuie să fie prezente în știre.
-                </p>
               </div>
-
-              {/* Filtre de sortare și direcție */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="orderBy" className="block text-sm font-medium text-gray-700 mb-2">
-                    Ordonează după
-                  </label>
-                  <select
-                    id="orderBy"
-                    value={orderBy}
-                    onChange={(e) => setOrderBy(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand focus:border-transparent"
-                    style={{ fontSize: '16px' }}
-                  >
-                    <option value="publicationDate">Data publicării</option>
-                    <option value="title">Titlu</option>
-                    <option value="viewCount">Numărul de vizualizări</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label htmlFor="orderDirection" className="block text-sm font-medium text-gray-700 mb-2">
-                    Direcția
-                  </label>
-                  <select
-                    id="orderDirection"
-                    value={orderDirection}
-                    onChange={(e) => setOrderDirection(e.target.value as 'asc' | 'desc')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand focus:border-transparent"
-                    style={{ fontSize: '16px' }}
-                  >
-                    <option value="desc">Descrescător</option>
-                    <option value="asc">Crescător</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Filtre de dată */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="dateFrom" className="block text-sm font-medium text-gray-700 mb-2">
-                    De la data
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="date"
-                      id="dateFrom"
-                      value={dateFrom}
-                      onChange={handleDateFromChange}
-                      onInput={(e) => {
-                        const target = e.target as HTMLInputElement;
-                        if (!target.value) {
-                          setDateFrom('');
-                        }
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand focus:border-transparent min-h-[44px]"
-                      style={{ fontSize: '16px' }}
-                    />
-                    {dateFrom && (
-                      <button
-                        onClick={resetDateFrom}
-                        className="p-1 text-gray-500 hover:text-gray-700"
-                        title="Resetează data de la"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-                
-                <div>
-                  <label htmlFor="dateTo" className="block text-sm font-medium text-gray-700 mb-2">
-                    Până la data
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="date"
-                      id="dateTo"
-                      value={dateTo}
-                      onChange={handleDateToChange}
-                      onInput={(e) => {
-                        const target = e.target as HTMLInputElement;
-                        if (!target.value) {
-                          setDateTo('');
-                        }
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand focus:border-transparent min-h-[44px]"
-                      style={{ fontSize: '16px' }}
-                    />
-                    {dateTo && (
-                      <button
-                        onClick={resetDateTo}
-                        className="p-1 text-gray-500 hover:text-gray-700"
-                        title="Resetează data până la"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Notificări și aplicare filtre */}
-              <div className="flex flex-col gap-4">
-                <button
-                  onClick={handleNotificationToggle}
-                  disabled
-                  className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md transition-colors w-full sm:w-auto ${
-                    notificationsEnabled
-                      ? 'bg-green-100 text-green-800 border border-green-300'
-                      : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  <Bell className="h-4 w-4" />
-                  {notificationsEnabled ? 'Notificări activate' : 'Activează notificări'}
-                </button>
-                
-                <button
-                  onClick={handleApplyFilters}
-                  className="w-full sm:w-auto px-6 py-2 bg-brand-info text-white rounded-md hover:bg-brand-highlight transition-colors flex items-center justify-center gap-2"
-                >
-                  <Filter className="h-4 w-4" />
-                  Aplică filtrele
-                </button>
-              </div>
-            </div>
+            </details>
           </div>
 
           {/* Rezultatele căutării */}
-          {(keywords.length > 0 || dateFrom || dateTo) && (
+          {(searchQuery || keywords.length > 0 || dateFrom || dateTo) && (
             <div className="space-y-6">
               {/* Header rezultate */}
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
-                    {keywords.length > 0 
-                      ? `Rezultate pentru: ${keywords.join(', ')}`
-                      : 'Rezultate pentru perioada selectată'
-                    }
-                    {(dateFrom || dateTo) && (
-                      <span className="text-sm text-gray-500 block mt-1">
-                        {dateFrom && dateTo 
-                          ? `${dateFrom} - ${dateTo}`
-                          : dateFrom 
-                            ? `Din ${dateFrom}`
-                            : `Până la ${dateTo}`
-                        }
-                      </span>
-                    )}
+                    Rezultate pentru căutarea:
+                    <div className="text-sm text-gray-600 mt-1 space-y-1">
+                      {searchQuery && (
+                        <div>
+                          <span className="font-medium text-blue-700">Text: </span>
+                          <span className="bg-blue-100 px-2 py-1 rounded">{searchQuery}</span>
+                        </div>
+                      )}
+                      {keywords.length > 0 && (
+                        <div>
+                          <span className="font-medium text-green-700">Keywords: </span>
+                          {keywords.map(keyword => (
+                            <span key={keyword} className="bg-green-100 px-2 py-1 rounded mr-1">{keyword}</span>
+                          ))}
+                        </div>
+                      )}
+                      {(dateFrom || dateTo) && (
+                        <div>
+                          <span className="font-medium text-purple-700">Perioada: </span>
+                          <span className="bg-purple-100 px-2 py-1 rounded">
+                            {(() => {
+                              // Helper to format YYYY-MM-DD to DD.MM.YYYY
+                              const formatDate = (dateStr: string) => {
+                                if (!dateStr) return '';
+                                const [year, month, day] = dateStr.split('-');
+                                if (!year || !month || !day) return dateStr;
+                                return `${day}.${month}.${year}`;
+                              };
+                              if (dateFrom && dateTo) {
+                                return `De la ${formatDate(dateFrom)} - Până la ${formatDate(dateTo)}`;
+                              } else if (dateFrom) {
+                                return `Din ${formatDate(dateFrom)}`;
+                              } else {
+                                return `Până la ${formatDate(dateTo)}`;
+                              }
+                            })()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </h2>
-                  <p className="text-gray-600">
+                  <p className="text-gray-600 mt-2">
                     {pagination.totalCount} știri găsite
                   </p>
                 </div>
@@ -527,35 +557,38 @@ function StiriPageContent() {
               )}
 
               {/* Mesaj când nu sunt rezultate */}
-              {!loading && news.length === 0 && (keywords.length > 0 || dateFrom || dateTo) && (
+              {!loading && news.length === 0 && (searchQuery || keywords.length > 0 || dateFrom || dateTo) && (
                 <div className="text-center py-12">
                   <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Nu s-au găsit rezultate</h3>
-                  {keywords.length > 0 ? (
-                    <>
-                      <p className="text-gray-600">
-                        Nu s-au găsit știri care să conțină toate cuvintele cheie: {keywords.join(', ')}
-                      </p>
-                      <p className="text-gray-500 mt-2">
-                        Încearcă să modifici cuvintele cheie sau să elimini unele dintre ele.
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-gray-600">
-                        Nu s-au găsit știri în perioada selectată
+                  <div className="text-gray-600 space-y-2">
+                    {searchQuery && (
+                      <p>Nu s-au găsit știri pentru căutarea text: <span className="font-medium">"{searchQuery}"</span></p>
+                    )}
+                    {keywords.length > 0 && (
+                      <p>Nu s-au găsit știri cu keywords-urile: <span className="font-medium">{keywords.join(', ')}</span></p>
+                    )}
+                    {(dateFrom || dateTo) && (
+                      <p>
+                        Nu s-au găsit știri în perioada
                         {dateFrom && dateTo 
-                          ? ` (${dateFrom} - ${dateTo})`
+                          ? ` ${dateFrom} - ${dateTo}`
                           : dateFrom 
-                            ? ` (din ${dateFrom})`
-                            : ` (până la ${dateTo})`
+                            ? ` din ${dateFrom}`
+                            : ` până la ${dateTo}`
                         }
                       </p>
-                      <p className="text-gray-500 mt-2">
-                        Încearcă să selectezi o perioadă diferită sau să adaugi cuvinte cheie.
-                      </p>
-                    </>
-                  )}
+                    )}
+                  </div>
+                  <div className="text-gray-500 mt-4 space-y-1">
+                    <p>Sugestii:</p>
+                    <ul className="text-sm space-y-1">
+                      <li>• Încearcă termeni mai generali în căutarea text</li>
+                      <li>• Verifică dacă keywords-urile sunt corecte</li>
+                      <li>• Extinde perioada de căutare</li>
+                      <li>• Combină diferite tipuri de filtre</li>
+                    </ul>
+                  </div>
                 </div>
               )}
 
@@ -660,16 +693,29 @@ function StiriPageContent() {
           )}
 
           {/* Mesaj inițial când nu s-a făcut nicio căutare */}
-          {keywords.length === 0 && !dateFrom && !dateTo && (
+          {!searchQuery && keywords.length === 0 && !dateFrom && !dateTo && (
             <div className="text-center py-12">
               <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">Începe să cauți știri</h3>
-              <p className="text-gray-600">
-                Folosește filtrele de mai sus pentru a găsi știrile care te interesează.
+              <p className="text-gray-600 mb-6">
+                Folosește bara de căutare de mai sus pentru a găsi știrile care te interesează.
               </p>
-              <p className="text-gray-500 mt-2">
-                Poți căuta după cuvinte cheie, perioada de publicare, sau ambele.
-              </p>
+              <div className="max-w-lg mx-auto bg-gray-50 p-4 rounded-lg">
+                <div className="grid grid-cols-1 gap-3 text-sm">
+                  <div className="flex items-center gap-3">
+                    <Search className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                    <span><strong>Căutare text:</strong> guvern, hotarare, legislatie</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Filter className="h-4 w-4 text-green-500 flex-shrink-0" />
+                    <span><strong>Keywords exacte:</strong> educatie, finante</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-4 w-4 text-purple-500 flex-shrink-0" />
+                    <span><strong>Filtre avansate:</strong> periode, sortare</span>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>

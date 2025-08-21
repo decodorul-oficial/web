@@ -130,9 +130,9 @@ export async function fetchMostReadStiri(params: MostReadStiriParams = {}) {
 // Note: trackNewsView is no longer needed as it's handled automatically by the API
 // when calling getStireById
 
-// New function for searching news by keywords
+// Enhanced function for searching news with fuzzy search, keywords, and date filters
 export async function searchStiriByKeywords(params: SearchStiriByKeywordsParams) {
-  const { keywords, limit = 20, offset = 0, orderBy = 'publicationDate', orderDirection = 'desc', publicationDateFrom, publicationDateTo } = params;
+  const { query, keywords, limit = 20, offset = 0, orderBy = 'publicationDate', orderDirection = 'desc', publicationDateFrom, publicationDateTo } = params;
   const limitClamped = Math.max(1, Math.min(100, limit));
 
   // Asigură că cookie-ul mo_session este setat pentru analytics
@@ -144,6 +144,7 @@ export async function searchStiriByKeywords(params: SearchStiriByKeywordsParams)
     });
     
     const data = await client.request<SearchStiriByKeywordsResponse>(SEARCH_STIRI_BY_KEYWORDS, {
+      query,
       keywords,
       limit: limitClamped,
       offset,
@@ -160,7 +161,7 @@ export async function searchStiriByKeywords(params: SearchStiriByKeywordsParams)
     try {
       const { data } = await requestWithEndpointFallback<SearchStiriByKeywordsResponse>(
         SEARCH_STIRI_BY_KEYWORDS,
-        { keywords, limit: limitClamped, offset, orderBy, orderDirection, publicationDateFrom, publicationDateTo },
+        { query, keywords, limit: limitClamped, offset, orderBy, orderDirection, publicationDateFrom, publicationDateTo },
         process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT
       );
       return data.searchStiriByKeywords;

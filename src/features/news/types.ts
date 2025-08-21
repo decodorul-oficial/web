@@ -50,7 +50,8 @@ export type SearchStiriByKeywordsResponse = {
 };
 
 export type SearchStiriByKeywordsParams = {
-  keywords: string[];
+  query?: string; // Fuzzy/full-text search parameter
+  keywords?: string[]; // Exact keyword filtering from content.keywords
   limit?: number;
   offset?: number;
   orderBy?: string;
