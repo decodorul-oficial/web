@@ -73,22 +73,21 @@ export async function fetchNewsByDate(date: string, excludeId?: string, limit: n
   ensureSessionCookie();
   
   try {
-    const client = getGraphQLClient();
-    // Obținem toate știrile și le filtrăm pe client pentru a găsi cele din aceeași zi
-    // Optimizat pentru a fi mai rapid
-    const { stiri } = await fetchLatestNews({ limit: 100, offset: 0, orderBy: 'id', orderDirection: 'desc' });
-    
-    // Filtrăm știrile din aceeași zi, excluzând știrea curentă
-    const targetDate = new Date(date);
-    const sameDayNews = stiri.filter(stire => {
-      const stireDate = new Date(stire.publicationDate);
-      const isSameDay = stireDate.toDateString() === targetDate.toDateString();
-      const isNotCurrent = stire.id !== excludeId;
-      return isSameDay && isNotCurrent;
+    // Interogăm direct API-ul pentru ziua respectivă (fără keywords)
+    // Keywords poate fi listă goală conform noii implementări din API
+    const needsExtra = excludeId ? 1 : 0;
+    const { stiri } = await searchStiriByKeywords({
+      keywords: [],
+      limit: limit + needsExtra,
+      offset: 0,
+      orderBy: 'publicationDate',
+      orderDirection: 'desc',
+      publicationDateFrom: date,
+      publicationDateTo: date
     });
-    
-    // Returnăm primele 5 știri
-    return sameDayNews.slice(0, limit);
+
+    const filtered = excludeId ? stiri.filter((s) => s.id !== excludeId) : stiri;
+    return filtered.slice(0, limit);
   } catch (error) {
     console.error('fetchNewsByDate failed', error);
     return [];

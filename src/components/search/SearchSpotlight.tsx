@@ -41,7 +41,7 @@ export function SearchSpotlight() {
     }
   }, [open]);
 
-  const runSearch = useCallback(async (q: string, lim: number, off: number, ob: string, od: 'asc' | 'desc') => {
+  const runSearch = useCallback(async (q: string, lim: number, off: number, ob: string, od: 'asc' | 'desc', append: boolean = false) => {
     if (q.length < 2) {
       setItems([]);
       setTotal(0);
@@ -57,7 +57,15 @@ export function SearchSpotlight() {
     const now = Date.now();
     const cached = cacheRef.current.get(cacheKey);
     if (cached && now - cached.ts < 45_000) {
-      setItems(cached.data.items);
+      if (append) {
+        setItems((prev) => {
+          const existingIds = new Set(prev.map((p) => p.id));
+          const newUnique = cached.data.items.filter((it) => !existingIds.has(it.id));
+          return [...prev, ...newUnique];
+        });
+      } else {
+        setItems(cached.data.items);
+      }
       setTotal(cached.data.total);
       lastCompletedRef.current = cacheKey;
       setError(null);
@@ -95,13 +103,21 @@ export function SearchSpotlight() {
       ])) as { searchStiri: { stiri: SpotlightItem[]; pagination: { totalCount: number } } };
       const itemsNew = data.searchStiri.stiri;
       const totalNew = data.searchStiri.pagination?.totalCount ?? itemsNew.length;
-      setItems(itemsNew);
+      if (append) {
+        setItems((prev) => {
+          const existingIds = new Set(prev.map((p) => p.id));
+          const newUnique = itemsNew.filter((it) => !existingIds.has(it.id));
+          return [...prev, ...newUnique];
+        });
+      } else {
+        setItems(itemsNew);
+      }
       setTotal(totalNew);
       cacheRef.current.set(cacheKey, { ts: now, data: { items: itemsNew, total: totalNew } });
       lastCompletedRef.current = cacheKey;
       
       // Track search event
-      trackSearch(q, totalNew);
+      if (!append) trackSearch(q, totalNew);
     } catch (e: any) {
       const code = e?.response?.errors?.[0]?.code;
       if (code === 'VALIDATION_ERROR') setError('Limita nu poate depăși 100 sau parametrii nu sunt validați.');
@@ -115,10 +131,15 @@ export function SearchSpotlight() {
   // Debounce 500ms
   useEffect(() => {
     const id = setTimeout(() => {
-      runSearch(query.trim(), 10, 0, 'id', 'desc');
+      runSearch(query.trim(), 10, 0, 'id', 'desc', false);
     }, 500);
     return () => clearTimeout(id);
   }, [query, runSearch]);
+
+  // Reset pagination when query changes
+  useEffect(() => {
+    setOffset(0);
+  }, [query]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -234,7 +255,7 @@ export function SearchSpotlight() {
                     onClick={() => {
                       const nextOffset = offset + 10;
                       setOffset(nextOffset);
-                      runSearch(query.trim(), 10, nextOffset, 'id', 'desc');
+                      runSearch(query.trim(), 10, nextOffset, 'id', 'desc', true);
                     }}
                   >
                     Încarcă mai multe

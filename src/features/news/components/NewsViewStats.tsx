@@ -17,23 +17,23 @@ export function NewsViewStats({ news }: NewsViewStatsProps) {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Statistics</h3>
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Statistici</h3>
       <div className="rounded border p-4 text-sm text-gray-700 space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-gray-500">Views:</span>
+          <span className="text-gray-500">Vizualizări:</span>
           <span className="font-medium text-brand-info">
             {formatViewCount(news.viewCount)}
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-gray-500">Published:</span>
+          <span className="text-gray-500">Publicat la:</span>
           <span className="font-medium">
             {new Date(news.publicationDate).toLocaleDateString('ro-RO')}
           </span>
         </div>
         {news.createdAt && (
           <div className="flex items-center justify-between">
-            <span className="text-gray-500">Created:</span>
+            <span className="text-gray-500">Creat la:</span>
             <span className="font-medium">
               {new Date(news.createdAt).toLocaleDateString('ro-RO')}
             </span>
@@ -41,7 +41,7 @@ export function NewsViewStats({ news }: NewsViewStatsProps) {
         )}
         {news.updatedAt && (
           <div className="flex items-center justify-between">
-            <span className="text-gray-500">Updated:</span>
+            <span className="text-gray-500">Actualizat la:</span>
             <span className="font-medium">
               {new Date(news.updatedAt).toLocaleDateString('ro-RO')}
             </span>

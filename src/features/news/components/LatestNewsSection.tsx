@@ -6,13 +6,15 @@ import { fetchLatestNews, fetchNewsByDate } from '@/features/news/services/newsS
 import { Citation } from '@/components/legal/Citation';
 import { stripHtml } from '@/lib/html/sanitize';
 import { MostReadNewsSection } from './MostReadNewsSection';
-import { Gavel, Landmark, Calendar, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Gavel, Landmark, Calendar, X, ChevronLeft, ChevronRight, Mail } from 'lucide-react';
 import { createNewsSlug } from '@/lib/utils/slugify';
 import { trackNewsClick } from '../../../lib/analytics';
 import type { NewsItem } from '@/features/news/types';
 import { extractParteaFromFilename } from '@/lib/utils/monitorulOficial';
+import { useNewsletterContext } from '@/components/newsletter/NewsletterProvider';
 
 export function LatestNewsSection() {
+  const { showNewsletterModal } = useNewsletterContext();
   const [stiri, setStiri] = useState<NewsItem[]>([]);
   const [filteredStiri, setFilteredStiri] = useState<NewsItem[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>('');
@@ -124,7 +126,8 @@ export function LatestNewsSection() {
     if (!content) return undefined;
     try {
       const c = content as any;
-      const raw = c.summary || c.body || c.text || (typeof c === 'string' ? c : undefined);
+      // Prioritizăm body-ul pentru a afișa conținutul complet al știrii
+      const raw = c.body || c.summary || c.text || (typeof c === 'string' ? c : undefined);
       return typeof raw === 'string' ? stripHtml(raw) : raw;
     } catch {
       return undefined;
@@ -280,7 +283,8 @@ export function LatestNewsSection() {
             </article>
           ) : featured ? (
             <article className="mb-8">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              {/* Layout pentru mobile și tabletă */}
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:hidden">
                 <div className="h-48 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 md:h-full flex items-center justify-center">
                   <Landmark className="h-16 w-16 text-white" />
                 </div>
@@ -294,12 +298,60 @@ export function LatestNewsSection() {
                       {featured.title}
                     </Link>
                   </h2>
-                  <p className="mb-4 text-gray-600">{getSummary(featured.content)?.slice(0, 350)}...</p>
+                  <p className="mb-4 text-gray-600 leading-relaxed">
+                    {(() => {
+                      const content = getSummary(featured.content);
+                      if (!content) return null;
+                      // Limităm conținutul la ~1200 caractere pentru a face înălțimea să fie egală cu secțiunea "Most reads"
+                      const maxChars = 300;
+                      if (content.length > maxChars) {
+                        return content.slice(0, maxChars) + '...';
+                      }
+                      return content;
+                    })()}
+                  </p>
                   <div className="mb-4 text-sm text-gray-500">
                     {formatDate(featured.publicationDate)}
                   </div>
                   <Citation {...getCitationFields(featured.content, featured.filename)} />
                 </div>
+              </div>
+              
+              {/* Layout pentru desktop cu float pentru pătrat */}
+              <div className="hidden lg:block">
+                <div className="float-left mr-6 mb-4">
+                  <div className="h-48 w-64 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 flex items-center justify-center">
+                    <Landmark className="h-16 w-16 text-white" />
+                  </div>
+                </div>
+                <div>
+                  <h2 className="mb-3 text-xl font-bold">
+                    <Link 
+                      href={`/stiri/${createNewsSlug(featured.title, featured.id)}`} 
+                      className="hover:underline"
+                      onClick={() => handleNewsClick(featured, 'featured')}
+                    >
+                      {featured.title}
+                    </Link>
+                  </h2>
+                  <p className="mb-4 text-gray-600 leading-relaxed">
+                    {(() => {
+                      const content = getSummary(featured.content);
+                      if (!content) return null;
+                      // Limităm conținutul la ~1200 caractere pentru a face înălțimea să fie egală cu secțiunea "Most reads"
+                      const maxChars = 880;
+                      if (content.length > maxChars) {
+                        return content.slice(0, maxChars) + '...';
+                      }
+                      return content;
+                    })()}
+                  </p>
+                  <div className="mb-4 text-sm text-gray-500">
+                    {formatDate(featured.publicationDate)}
+                  </div>
+                  <Citation {...getCitationFields(featured.content, featured.filename)} />
+                </div>
+                <div className="clear-left"></div>
               </div>
             </article>
           ) : null}
@@ -384,32 +436,52 @@ export function LatestNewsSection() {
             {renderPagination()}
             
             <div className="divide-y">
-              {currentItems.map((n) => (
-                <article key={n.id} className="flex gap-3 py-4">
-                  <div className="flex-shrink-0">
-                    <div className="h-16 w-16 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 flex items-center justify-center">
-                      <Gavel className="h-6 w-6 text-white" />
+              {currentItems.map((n, idx) => (
+                <div key={n.id}>
+                  <article className="flex gap-3 py-4">
+                    <div className="flex-shrink-0">
+                      <div className="h-16 w-16 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 flex items-center justify-center">
+                        <Gavel className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="mt-2 text-xs text-gray-500">
+                        {formatDate(n.publicationDate)}
+                      </div>
                     </div>
-                    <div className="mt-2 text-xs text-gray-500">
-                      {formatDate(n.publicationDate)}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="mb-2 font-semibold">
+                        <Link 
+                          href={`/stiri/${createNewsSlug(n.title, n.id)}`} 
+                          className="hover:underline"
+                          onClick={() => handleNewsClick(n, 'latest_news')}
+                        >
+                          {n.title}
+                        </Link>
+                      </h4>
+                      <p className="line-clamp-2 text-sm text-gray-600 mb-2">{getSummary(n.content)?.slice(0, 180)}...</p>
+                      <div className="mt-1 text-xs text-gray-600">
+                        <Citation {...getCitationFields(n.content, n.filename)} />
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="mb-2 font-semibold">
-                      <Link 
-                        href={`/stiri/${createNewsSlug(n.title, n.id)}`} 
-                        className="hover:underline"
-                        onClick={() => handleNewsClick(n, 'latest_news')}
-                      >
-                        {n.title}
-                      </Link>
-                    </h4>
-                    <p className="line-clamp-2 text-sm text-gray-600 mb-2">{getSummary(n.content)?.slice(0, 180)}...</p>
-                    <div>
-                      <Citation {...getCitationFields(n.content, n.filename)} />
+                  </article>
+
+                  {idx === 4 && (
+                    <div className="py-3">
+                      <div className="flex items-center justify-between gap-3 rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+                        <div className="flex items-center gap-2 text-xs text-gray-700">
+                          <Mail className="h-4 w-4 text-brand-accent" />
+                          <span>Primește cele mai noi acte și decizii pe email</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={showNewsletterModal}
+                          className="inline-flex items-center gap-1 rounded-md border border-gray-300 px-3 py-1 text-xs text-gray-800 hover:bg-gray-100 hover:border-gray-400 transition-colors whitespace-nowrap"
+                        >
+                          Abonează-te
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </article>
+                  )}
+                </div>
               ))}
             </div>
 

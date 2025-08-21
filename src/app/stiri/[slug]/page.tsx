@@ -14,6 +14,7 @@ import { notFound, redirect } from 'next/navigation';
 import { SessionCookieInitializer } from '@/components/session/SessionCookieInitializer';
 import { NewsViewTrackingWrapper } from '@/features/news/components/NewsViewTrackingWrapper';
 import { extractParteaFromFilename } from '@/lib/utils/monitorulOficial';
+import { NewsletterCtaInline } from '@/components/newsletter/NewsletterCtaInline';
 
 
 type PageProps = { params: { slug: string } };
@@ -367,8 +368,10 @@ export default async function NewsDetailPage(props: PageProps) {
                 {typeof news.content === 'string' && <p>{news.content}</p>}
               </section>
               
-              <div>
+              <div className="space-y-3">
                 <Citation {...citationFields} />
+                {/* Minimal newsletter CTA below full article */}
+                <NewsletterCtaInline />
               </div>
             </div>
             
@@ -390,3 +393,5 @@ export default async function NewsDetailPage(props: PageProps) {
     </div>
   );
 }
+
+// removed inline client component; replaced with dedicated client component NewsletterCtaInline

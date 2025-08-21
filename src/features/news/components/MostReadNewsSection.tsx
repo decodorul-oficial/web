@@ -51,7 +51,8 @@ export function MostReadNewsSection() {
     if (!content) return undefined;
     try {
       const c = content as any;
-      const raw = c.summary || c.body || c.text || (typeof c === 'string' ? c : undefined);
+      // Prioritizăm body-ul pentru a afișa conținutul complet al știrii
+      const raw = c.body || c.summary || c.text || (typeof c === 'string' ? c : undefined);
       return typeof raw === 'string' ? stripHtml(raw) : raw;
     } catch {
       return undefined;
@@ -68,9 +69,9 @@ export function MostReadNewsSection() {
   const currentConfig = NEWS_VIEW_PERIODS[currentPeriod];
 
   return (
-    <div className="space-y-4 p-4 bg-gray-50/50 rounded-lg border border-gray-200/40">
+    <div className="space-y-4 p-4 bg-gray-50/50 rounded-lg border border-gray-200/40 most-read-news">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
           Most reads
           {/* <span className="ml-2 text-xs font-normal text-gray-400">
             ({currentConfig.labelRo.toLowerCase()})

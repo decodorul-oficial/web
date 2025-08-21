@@ -48,8 +48,8 @@ export function SameDayNewsSection({ news, currentNewsId }: SameDayNewsSectionPr
   const currentDate = news[0]?.publicationDate || '';
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+    <div className="space-y-4 same-day-news">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
         Știri din aceeași zi ({formatDate(currentDate)})
       </h3>
       <div className="space-y-3">
