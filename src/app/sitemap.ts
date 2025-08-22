@@ -48,7 +48,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     // Fetch all news (with a reasonable limit for sitemap)
-    const { stiri } = await fetchLatestNews({ limit: 1000, orderBy: 'publicationDate', orderDirection: 'desc' });
+    const { stiri } = await fetchLatestNews({ limit: 20, orderBy: 'publicationDate', orderDirection: 'desc' });
     
     const newsPages = stiri.map((news) => {
       const publicationDate = new Date(news.publicationDate);
