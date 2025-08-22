@@ -21,8 +21,7 @@ export default function robots(): MetadataRoute.Robots {
           '/admin/',
           '/login',
           '/test-news/',
-          '/*.json',
-          '/*.xml'
+          '/*.json'
         ],
         crawlDelay: 1,
       },
@@ -42,8 +41,7 @@ export default function robots(): MetadataRoute.Robots {
           '/admin/',
           '/login',
           '/test-news/',
-          '/*.json',
-          '/*.xml'
+          '/*.json'
         ],
         crawlDelay: 0.5,
       },
@@ -63,8 +61,7 @@ export default function robots(): MetadataRoute.Robots {
           '/admin/',
           '/login',
           '/test-news/',
-          '/*.json',
-          '/*.xml'
+          '/*.json'
         ],
         crawlDelay: 1,
       },
