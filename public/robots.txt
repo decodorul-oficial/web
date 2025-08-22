@@ -7,18 +7,10 @@ Sitemap: https://www.decodoruloficial.ro/sitemap.xml
 # Crawl-delay for respectful crawling
 Crawl-delay: 1
 
-# Allow all important pages
-Allow: /stiri/
-Allow: /contact
-Allow: /privacy
-Allow: /legal
-Allow: /cookies
-
-# Disallow admin or private areas (if any)
+# Disallow admin or private areas
 Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
-Disallow: /login
 Disallow: /test-news/
 
 # Google specific

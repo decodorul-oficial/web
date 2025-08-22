@@ -15,6 +15,43 @@ function StiriPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
+  // Schema.org structured data for news search page
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Căutare Avansată Știri Legislative | Decodorul Oficial",
+    "description": "Caută și filtrează știrile legislative din Monitorul Oficial al României. Căutare avansată după cuvinte cheie, perioade și categorii.",
+    "url": `${process.env.NEXT_PUBLIC_BASE_URL || "https://www.decodoruloficial.ro"}/stiri`,
+    "mainEntity": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": `${process.env.NEXT_PUBLIC_BASE_URL || "https://www.decodoruloficial.ro"}/stiri?query={search_term_string}&keywords={keywords}&dateFrom={date_from}&dateTo={date_to}`
+      },
+      "query-input": "required name=search_term_string"
+    },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Acasă",
+          "item": process.env.NEXT_PUBLIC_BASE_URL || "https://www.decodoruloficial.ro"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Căutare Avansată",
+          "item": `${process.env.NEXT_PUBLIC_BASE_URL || "https://www.decodoruloficial.ro"}/stiri`
+        }
+      ]
+    },
+    "inLanguage": "ro",
+    "isAccessibleForFree": true,
+    "genre": "legal information"
+  };
+  
   // State pentru filtrare îmbunătățită
   const [searchQuery, setSearchQuery] = useState(''); // Fuzzy/full-text search
   const [keywords, setKeywords] = useState<string[]>([]); // Exact keywords from content.keywords
@@ -245,6 +282,14 @@ function StiriPageContent() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      {/* Schema.org structured data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(schemaData)
+        }}
+      />
+      
       <Header />
       
       <main className="container-responsive flex-1 py-8" role="main">

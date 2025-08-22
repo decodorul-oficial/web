@@ -40,6 +40,60 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <div className="flex min-h-screen flex-col">
+      {/* Schema.org structured data for contact page */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ContactPage",
+            "name": "Contact și Informații de Identificare | Decodorul Oficial",
+            "description": "Contactează Decodorul Oficial pentru întrebări despre legislația română, acte normative și Monitorul Oficial. Informații de identificare conform Legea 365/2002.",
+            "url": `${process.env.NEXT_PUBLIC_BASE_URL || "https://www.decodoruloficial.ro"}/contact`,
+            "mainEntity": {
+              "@type": "Organization",
+              "name": "Decodorul Oficial",
+              "url": process.env.NEXT_PUBLIC_BASE_URL || "https://www.decodoruloficial.ro",
+              "email": "contact@decodoruloficial.ro",
+              "contactPoint": {
+                "@type": "ContactPoint",
+                "contactType": "customer service",
+                "email": "contact@decodoruloficial.ro",
+                "availableLanguage": "Romanian",
+                "areaServed": {
+                  "@type": "Country",
+                  "name": "Romania"
+                }
+              },
+              "address": {
+                "@type": "PostalAddress",
+                "addressCountry": "RO"
+              }
+            },
+            "breadcrumb": {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Acasă",
+                  "item": process.env.NEXT_PUBLIC_BASE_URL || "https://www.decodoruloficial.ro"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Contact",
+                  "item": `${process.env.NEXT_PUBLIC_BASE_URL || "https://www.decodoruloficial.ro"}/contact`
+                }
+              ]
+            },
+            "inLanguage": "ro",
+            "isAccessibleForFree": true,
+            "genre": "legal information"
+          })
+        }}
+      />
+      
       <Header />
       <SessionCookieInitializer />
       <main className="flex-1" role="main">
@@ -79,7 +133,7 @@ export default function ContactPage() {
                     href="/" 
                     className="text-brand-info hover:underline font-medium"
                   >
-                    decodoruloficial.ro
+                    www.decodoruloficial.ro
                   </a>
                 </li>
               </ul>

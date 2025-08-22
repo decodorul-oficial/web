@@ -235,45 +235,62 @@ export default async function NewsDetailPage(props: PageProps) {
       <NavigationEndBeacon />
       
       {/* Schema.org structured data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "NewsArticle",
-            "headline": news.title,
-            "description": summary || news.title,
-            "image": {
-              "@type": "ImageObject",
-              "url": `${process.env.NEXT_PUBLIC_BASE_URL || "https://decodoruloficial.ro"}/logo_with_bg.png`,
-              "width": 1200,
-              "height": 630
-            },
-            "datePublished": news.publicationDate,
-            "dateModified": news.updatedAt || news.publicationDate,
-            "author": {
-              "@type": "Organization",
-              "name": author || "Decodorul Oficial"
-            },
-            "publisher": {
-              "@type": "Organization",
-              "name": "Decodorul Oficial",
-              "logo": {
+              <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "NewsArticle",
+              "headline": news.title,
+              "description": summary || news.title,
+              "image": {
                 "@type": "ImageObject",
-                "url": `${process.env.NEXT_PUBLIC_BASE_URL || "https://decodoruloficial.ro"}/logo_with_bg.png`
+                "url": `${process.env.NEXT_PUBLIC_BASE_URL || "https://www.decodoruloficial.ro"}/logo_with_bg.png`,
+                "width": 1200,
+                "height": 630,
+                "alt": `Logo Decodorul Oficial - ${news.title}`
+              },
+              "datePublished": news.publicationDate,
+              "dateModified": news.updatedAt || news.publicationDate,
+              "author": {
+                "@type": "Organization",
+                "name": author || "Decodorul Oficial",
+                "url": process.env.NEXT_PUBLIC_BASE_URL || "https://www.decodoruloficial.ro"
+              },
+              "publisher": {
+                "@type": "Organization",
+                "name": "Decodorul Oficial",
+                "url": process.env.NEXT_PUBLIC_BASE_URL || "https://www.decodoruloficial.ro",
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": `${process.env.NEXT_PUBLIC_BASE_URL || "https://www.decodoruloficial.ro"}/logo_with_bg.png`,
+                  "width": 512,
+                  "height": 512
+                },
+                "foundingDate": "2024",
+                "areaServed": {
+                  "@type": "Country",
+                  "name": "Romania"
+                }
+              },
+              "mainEntityOfPage": {
+                "@type": "WebPage",
+                "@id": `${process.env.NEXT_PUBLIC_BASE_URL || "https://www.decodoruloficial.ro"}/stiri/${createNewsSlug(news.title, news.id)}`
+              },
+              "articleSection": category || "Legislație",
+              "keywords": keywords ? keywords.join(", ") : "legislație română, acte normative, Monitorul Oficial",
+              "inLanguage": "ro",
+              "isAccessibleForFree": true,
+              "wordCount": summary ? summary.split(' ').length : 0,
+              "articleBody": summary || news.title,
+              "genre": "legal information",
+              "audience": {
+                "@type": "Audience",
+                "audienceType": "Legal professionals, businesses, citizens"
               }
-            },
-            "mainEntityOfPage": {
-              "@type": "WebPage",
-              "@id": `${process.env.NEXT_PUBLIC_BASE_URL || "https://decodoruloficial.ro"}/stiri/${createNewsSlug(news.title, news.id)}`
-            },
-            "articleSection": category || "Legislație",
-            "keywords": keywords ? keywords.join(", ") : "legislație română, acte normative, Monitorul Oficial",
-            "inLanguage": "ro",
-            "isAccessibleForFree": true
-          })
-        }}
-      />
+            })
+          }}
+        />
 
       <main className="container-responsive flex-1 py-8" role="main">
         {/* Breadcrumb: desktop shows full, mobile shows "Înapoi la listă" */}
