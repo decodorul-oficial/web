@@ -11,8 +11,8 @@ export function ScrollToTop() {
   }, []);
 
   useEffect(() => {
-    const BASE_GAP = 24; // 1.5rem
-    const SAFE_GAP = 8; // spațiu de siguranță deasupra footerului (mai aproape de footer)
+    const BASE_GAP = 24; // 1.5rem (folosit și ca spațiu deasupra footerului)
+    const MAX_EXTRA = 200; // plafon pentru a nu urca excesiv
     let ticking = false;
 
     const updatePosition = () => {
@@ -22,9 +22,9 @@ export function ScrollToTop() {
       const footer = document.querySelector('footer');
       if (footer) {
         const rect = footer.getBoundingClientRect();
-        const overlap = Math.max(0, window.innerHeight - rect.top);
-        const nextBottom = BASE_GAP + (overlap > 0 ? overlap + SAFE_GAP : 0);
-        setBottomOffset(nextBottom);
+        const intrusion = Math.max(0, window.innerHeight - rect.top);
+        const clamped = Math.min(intrusion, MAX_EXTRA);
+        setBottomOffset(BASE_GAP + clamped);
       } else {
         setBottomOffset(BASE_GAP);
       }

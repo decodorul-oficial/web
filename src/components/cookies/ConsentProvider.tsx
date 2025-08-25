@@ -13,6 +13,7 @@ type ConsentContextValue = {
   resetConsent: () => void;
   hasAnalyticsConsent: boolean;
   hasEssentialConsent: boolean;
+  isLoaded: boolean;
 };
 
 const ConsentContext = createContext<ConsentContextValue | undefined>(undefined);
@@ -21,6 +22,7 @@ const STORAGE_KEY = 'cookie-consent.v1';
 
 export function ConsentProvider({ children }: { children: React.ReactNode }) {
   const [consent, setConsentState] = useState<ConsentCategories | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     try {
@@ -31,6 +33,8 @@ export function ConsentProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       // Silent error handling for production
+    } finally {
+      setIsLoaded(true);
     }
   }, []);
 
@@ -68,8 +72,9 @@ export function ConsentProvider({ children }: { children: React.ReactNode }) {
     setConsent, 
     resetConsent, 
     hasAnalyticsConsent, 
-    hasEssentialConsent 
-  }), [consent, hasAnalyticsConsent, hasEssentialConsent, setConsent, resetConsent]);
+    hasEssentialConsent,
+    isLoaded
+  }), [consent, hasAnalyticsConsent, hasEssentialConsent, isLoaded, setConsent, resetConsent]);
 
   return <ConsentContext.Provider value={value}>{children}</ConsentContext.Provider>;
 }

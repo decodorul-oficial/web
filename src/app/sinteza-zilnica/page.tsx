@@ -6,7 +6,8 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { getDailySynthesis } from '@/features/news/services/newsService';
 import { DailySynthesis } from '@/features/news/types';
-import { ChevronLeft, ChevronRight, Calendar, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, AlertCircle, Info } from 'lucide-react';
+import OverlayBackdrop from '@/components/ui/OverlayBackdrop';
 import Link from 'next/link';
 
 // Funcții utilitare pentru gestionarea datelor
@@ -112,6 +113,7 @@ function SintezaZilnicaContent() {
   const [weekendInfo, setWeekendInfo] = useState<{ message: string; visible: boolean } | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
+  const [showInfoToast, setShowInfoToast] = useState(false);
 
   // Inițializare din URL params sau data curentă
   useEffect(() => {
@@ -360,11 +362,20 @@ function SintezaZilnicaContent() {
 
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Header cu titlu și descriere */}
-          <div className="text-center space-y-4">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
-              Sinteza Zilnică
-            </h1>
-            <p className="text-lg text-gray-600">
+          <div className="text-center space-y-3">
+            <div className="flex items-center justify-center gap-2">
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+                Sinteza Zilnică
+              </h1>
+              <button
+                onClick={() => setShowInfoToast(true)}
+                aria-label="Informații despre pagină"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-brand-info hover:bg-brand-info hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-brand-info focus:ring-offset-2"
+              >
+                <Info className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="hidden sm:block text-lg text-gray-600">
               Rezumatul zilnic al activității legislative și administrative
             </p>
           </div>
@@ -492,17 +503,47 @@ function SintezaZilnicaContent() {
             </button>
           </div>
 
-          {/* Informații despre navigare */}
-          <div className="bg-blue-50 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-blue-900 mb-2">
-              Navigare între zile
-            </h3>
-            <p className="text-sm text-blue-800">
-              Sintezele sunt disponibile doar pentru zilele lucrătoare (Luni-Vineri). 
-              Weekendurile sunt sărite automat în navigare. 
-              Click pe data pentru a selecta o zi specifică din trecut.
-            </p>
-          </div>
+          {/* Info toast (înlocuiește panourile albastre) */}
+          {showInfoToast && (
+            <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+              {/* background overlay similar cu loader-ul global */}
+              <OverlayBackdrop position="absolute" onClick={() => setShowInfoToast(false)} />
+              <div className="w-[min(40rem,100%)] rounded-lg border border-blue-200 bg-white/90 backdrop-blur-md shadow-2xl">
+                <div className="p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 rounded-full bg-blue-50 p-2 text-blue-600">
+                      <Info className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-semibold text-gray-900 mb-1">Navigare între zile</h4>
+                      <p className="text-sm text-gray-700">
+                        Sintezele sunt disponibile doar pentru zilele lucrătoare (Luni–Vineri). Weekendurile sunt sărite automat în navigare. Click pe data pentru a selecta o zi specifică din trecut.
+                      </p>
+                      <h4 className="text-sm font-semibold text-gray-900 mt-3 mb-1">Despre Sinteza Zilnică</h4>
+                      <p className="text-sm text-gray-700">
+                        Sinteza zilnică oferă un rezumat comprehensiv al activității legislative și administrative din Monitorul Oficial. Conținutul include hotărâri de guvern, ordonanțe, legi și alte acte normative publicate în ziua respectivă.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowInfoToast(false)}
+                      className="ml-2 rounded-md p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                      aria-label="Închide"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      onClick={() => setShowInfoToast(false)}
+                      className="px-3 py-1.5 text-sm font-medium text-white bg-brand-info hover:bg-brand-highlight rounded-md"
+                    >
+                      Am înțeles
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Conținutul sintezei */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 relative">
@@ -602,16 +643,7 @@ function SintezaZilnicaContent() {
             )}
           </div>
 
-          {/* Informații suplimentare */}
-          <div className="bg-blue-50 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-blue-900 mb-2">
-              Despre Sinteza Zilnică
-            </h3>
-            <p className="text-sm text-blue-800">
-              Sinteza zilnică oferă un rezumat comprehensiv al activității legislative și administrative din Monitorul Oficial. 
-              Conținutul include hotărâri de guvern, ordonanțe, legi și alte acte normative publicate în ziua respectivă.
-            </p>
-          </div>
+          {/* Panoul informativ albastru este mutat în toast la cerere */}
         </div>
       </main>
       

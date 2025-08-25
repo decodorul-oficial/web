@@ -1,10 +1,23 @@
 "use client";
 import { useConsent } from './ConsentProvider';
 import { trackConsent } from '../../lib/analytics';
+import OverlayBackdrop from '@/components/ui/OverlayBackdrop';
+import { usePathname } from 'next/navigation';
 
 export function CookieBanner() {
-  const { consent, setConsent } = useConsent();
+  const { consent, setConsent, isLoaded } = useConsent();
+  const pathname = usePathname();
   
+  // Evită flash-ul: nu randăm nimic până când starea consimțământului este încărcată.
+  if (!isLoaded) {
+    return null;
+  }
+
+  // Nu arătăm bannerul pe paginile de informare pentru a permite decizie informată
+  if (pathname === '/privacy' || pathname === '/cookies') {
+    return null;
+  }
+
   if (consent) {
     return null;
   }
@@ -25,8 +38,8 @@ export function CookieBanner() {
 
   return (
     <>
-      {/* Backdrop to darken the rest of the application */}
-      <div className="fixed inset-0 bg-black/30 z-[60]" />
+      {/* Backdrop consistent with global loader/info toast */}
+      <OverlayBackdrop zIndexClass="z-[60]" />
       
       {/* Cookie Banner */}
       <div className="fixed inset-x-0 bottom-0 z-[70] border-t bg-white/95 shadow-lg">

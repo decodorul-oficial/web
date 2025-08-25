@@ -193,17 +193,17 @@ export function FontSizeControl() {
   const [bottomOffset, setBottomOffset] = useState<number>(24); // px for bottom-6
 
   useEffect(() => {
-    const BASE_GAP = 24; // 1.5rem
-    const SAFE_GAP = 8;
+    const BASE_GAP = 24; // 1.5rem (folosit și ca spațiu deasupra footerului)
+    const MAX_EXTRA = 200; // plafon pentru a nu urca excesiv
     let ticking = false;
 
     const updatePosition = () => {
       const footer = document.querySelector('footer');
       if (footer) {
         const rect = footer.getBoundingClientRect();
-        const overlap = Math.max(0, window.innerHeight - rect.top);
-        const nextBottom = BASE_GAP + (overlap > 0 ? overlap + SAFE_GAP : 0);
-        setBottomOffset(nextBottom);
+        const intrusion = Math.max(0, window.innerHeight - rect.top);
+        const clamped = Math.min(intrusion, MAX_EXTRA);
+        setBottomOffset(BASE_GAP + clamped);
       } else {
         setBottomOffset(BASE_GAP);
       }
