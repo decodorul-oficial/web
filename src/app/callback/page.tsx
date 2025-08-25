@@ -29,7 +29,19 @@ function LinkedInCallbackContent() {
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      alert('Codul a fost copiat în clipboard!');
+      if (window && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification('Succes', { body: 'Codul a fost copiat în clipboard!' });
+      } else {
+        // fallback toast
+        const toast = document.createElement('div');
+        toast.textContent = 'Codul a fost copiat în clipboard!';
+        toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-[9999] animate-fade-in';
+        document.body.appendChild(toast);
+        setTimeout(() => {
+          toast.classList.add('animate-fade-out');
+          setTimeout(() => toast.remove(), 400);
+        }, 2000);
+      }
     } catch (err) {
       console.error('Eroare la copierea în clipboard:', err);
       alert('Eroare la copierea în clipboard. Vă rugăm să copiați manual.');
