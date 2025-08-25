@@ -20,9 +20,9 @@ export const NewsletterButton = ({
   const baseClasses = 'inline-flex items-center justify-center font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
   
   const variantClasses = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
-    secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500',
-    outline: 'border border-blue-600 text-blue-600 hover:bg-blue-50 focus:ring-blue-500'
+    primary: 'bg-brand-info text-white hover:bg-brand-highlight focus:ring-brand-info',
+    secondary: 'bg-brand-highlight text-white hover:bg-brand focus:ring-brand-highlight',
+    outline: 'border border-brand-info text-brand-info hover:bg-brand-info/10 focus:ring-brand-info'
   };
 
   const sizeClasses = {

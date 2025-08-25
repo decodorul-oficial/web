@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useNewsletter } from '@/features/newsletter/hooks/useNewsletter';
 import { NewsletterModalProps } from '@/features/newsletter/types';
+import { OverlayBackdrop } from '@/components/ui/OverlayBackdrop';
 
 export const NewsletterModal = ({ isOpen, onClose, onSuccess }: NewsletterModalProps) => {
   const [email, setEmail] = useState('');
@@ -89,21 +90,28 @@ export const NewsletterModal = ({ isOpen, onClose, onSuccess }: NewsletterModalP
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
+      <OverlayBackdrop
+        position="fixed"
+        zIndexClass="z-40"
         onClick={onClose}
+        ariaHidden={true}
+        className="bg-brand-info/20"
       />
       
       {/* Modal */}
-      <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="relative z-50 bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6 border-t-4 border-brand-info animate-in slide-in-from-bottom-2"
+      >
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-2xl font-bold text-brand">
             Înscrie-te la Newsletter
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-brand-highlight hover:text-brand transition-colors"
             aria-label="Închide"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,19 +122,19 @@ export const NewsletterModal = ({ isOpen, onClose, onSuccess }: NewsletterModalP
 
         {/* Content */}
         <div className="mb-6">
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-700 mb-4">
             Primește cele mai importante știri și actualizări legislative direct în inbox-ul tău.
           </p>
           
-          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+          <div className="bg-brand-info/10 border-l-4 border-brand-info p-4 rounded">
             <div className="flex">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                <svg className="h-5 w-5 text-brand-info" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-blue-700">
+                <p className="text-sm text-brand">
                   <strong>Gratuit și fără spam.</strong> Poți să te dezabonezi oricând.
                 </p>
               </div>
@@ -137,7 +145,7 @@ export const NewsletterModal = ({ isOpen, onClose, onSuccess }: NewsletterModalP
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="email" className="block text-sm font-medium text-brand mb-2">
               Adresa de email *
             </label>
             <input
@@ -146,7 +154,7 @@ export const NewsletterModal = ({ isOpen, onClose, onSuccess }: NewsletterModalP
               value={email}
               onChange={handleEmailChange}
               onBlur={() => validateEmail(email)}
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-info focus:border-brand-info ${
                 emailError ? 'border-red-300' : 'border-gray-300'
               }`}
               placeholder="exemplu@email.com"
@@ -171,8 +179,8 @@ export const NewsletterModal = ({ isOpen, onClose, onSuccess }: NewsletterModalP
                 <div 
                   className={`h-5 w-5 border-2 rounded cursor-pointer flex items-center justify-center transition-colors ${
                     consent 
-                      ? 'bg-blue-600 border-blue-600' 
-                      : 'bg-white border-gray-300 hover:border-blue-400'
+                      ? 'bg-brand-info border-brand-info' 
+                      : 'bg-white border-gray-300 hover:border-brand-info'
                   }`}
                   onClick={() => !isLoading && setConsent(!consent)}
                 >
@@ -185,13 +193,13 @@ export const NewsletterModal = ({ isOpen, onClose, onSuccess }: NewsletterModalP
               </div>
             </div>
             <div className="text-sm">
-              <label htmlFor="consent" className="text-gray-700 cursor-pointer leading-relaxed">
+              <label htmlFor="consent" className="text-brand cursor-pointer leading-relaxed">
                 Accept să primesc newsletter-ul și confirm că am citit și accept{' '}
-                <a href="/privacy" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
+                <a href="/privacy" className="text-brand-info hover:underline" target="_blank" rel="noopener noreferrer">
                   Politica de Confidențialitate
                 </a>{' '}
                 și{' '}
-                <a href="/cookies" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
+                <a href="/cookies" className="text-brand-info hover:underline" target="_blank" rel="noopener noreferrer">
                   Politica de Cookie-uri
                 </a>
               </label>
@@ -236,7 +244,7 @@ export const NewsletterModal = ({ isOpen, onClose, onSuccess }: NewsletterModalP
             className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
               isLoading || !consent
                 ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+                : 'bg-brand-info hover:bg-brand-highlight focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-info'
             } transition-colors`}
           >
             {isLoading ? (
