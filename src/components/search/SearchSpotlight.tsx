@@ -187,8 +187,7 @@ export function SearchSpotlight() {
                   <input
                     autoFocus
                     placeholder="Caută în știri (⌘K)"
-                    className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400 pr-8"
-                    style={{ fontSize: '16px' }}
+                    className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400 pr-8 text-base"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyDown={(e) => {

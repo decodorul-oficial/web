@@ -4,13 +4,15 @@ import { DisclaimerBanner } from '@/components/legal/DisclaimerBanner';
 import { ConsentProvider } from '@/components/cookies/ConsentProvider';
 import { CookieBanner } from '@/components/cookies/CookieBanner';
 // Header component is used in individual pages
-import { ScrollToTop } from '@/components/ui/ScrollToTop';
+import dynamic from 'next/dynamic';
+const ScrollToTop = dynamic(() => import('@/components/ui/ScrollToTop').then(m => m.ScrollToTop), { ssr: false });
 import { NavigationOverlay } from '@/components/ui/NavigationOverlay';
 import { NavigationInterceptor } from '@/components/ui/NavigationInterceptor';
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import { SectionViewTracker } from '@/components/analytics/SectionViewTracker';
-import { FontSizeControl } from '@/components/ui/FontSizeControl';
+const FontSizeControl = dynamic(() => import('@/components/ui/FontSizeControl').then(m => m.FontSizeControl), { ssr: false });
 import { NewsletterProvider } from '@/components/newsletter/NewsletterProvider';
+import { ZoomPrevention } from '@/components/ui/ZoomPrevention';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro'),
@@ -132,7 +134,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <meta name="theme-color" content="#ffffff" />
         <meta name="msapplication-TileColor" content="#ffffff" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Decodorul Oficial" />
         <meta name="HandheldFriendly" content="true" />
@@ -161,92 +163,7 @@ export default function RootLayout({
         
         <link rel="manifest" href="/manifest.json" />
         
-        {/* Prevent zoom functionality */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              // Prevent zoom on input focus
-              document.addEventListener('DOMContentLoaded', function() {
-                const inputs = document.querySelectorAll('input, textarea, select');
-                inputs.forEach(function(input) {
-                  input.style.fontSize = '16px';
-                });
-                
-                // Also handle dynamically added inputs
-                const observer = new MutationObserver(function(mutations) {
-                  mutations.forEach(function(mutation) {
-                    mutation.addedNodes.forEach(function(node) {
-                      if (node.nodeType === 1) {
-                        const newInputs = node.querySelectorAll ? node.querySelectorAll('input, textarea, select') : [];
-                        newInputs.forEach(function(input) {
-                          input.style.fontSize = '16px';
-                        });
-                      }
-                    });
-                  });
-                });
-                
-                observer.observe(document.body, {
-                  childList: true,
-                  subtree: true
-                });
-              });
-              
-              // Prevent pinch-to-zoom
-              document.addEventListener('touchstart', function(event) {
-                if (event.touches.length > 1) {
-                  event.preventDefault();
-                }
-              }, { passive: false });
-              
-              // Prevent double-tap zoom
-              let lastTouchEnd = 0;
-              document.addEventListener('touchend', function(event) {
-                const now = (new Date()).getTime();
-                if (now - lastTouchEnd <= 300) {
-                  event.preventDefault();
-                }
-                lastTouchEnd = now;
-              }, false);
-              
-              // Prevent wheel zoom
-              document.addEventListener('wheel', function(event) {
-                if (event.ctrlKey) {
-                  event.preventDefault();
-                }
-              }, { passive: false });
-              
-              // Prevent keyboard zoom
-              document.addEventListener('keydown', function(event) {
-                if ((event.ctrlKey || event.metaKey) && (event.key === '+' || event.key === '-' || event.key === '=')) {
-                  event.preventDefault();
-                }
-              });
-              
-              // Prevent zoom on focus for all form elements
-              document.addEventListener('focusin', function(event) {
-                if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'SELECT') {
-                  event.target.style.fontSize = '16px';
-                }
-              });
-              
-              // Additional iOS zoom prevention
-              if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-                document.addEventListener('gesturestart', function(event) {
-                  event.preventDefault();
-                });
-                
-                document.addEventListener('gesturechange', function(event) {
-                  event.preventDefault();
-                });
-                
-                document.addEventListener('gestureend', function(event) {
-                  event.preventDefault();
-                });
-              }
-            `
-          }}
-        />
+        {/* Prevent zoom functionality - moved to client-side component to avoid hydration issues */}
         
         <script
           type="application/ld+json"
@@ -318,6 +235,7 @@ export default function RootLayout({
               <ScrollToTop />
               <NavigationOverlay />
               <FontSizeControl />
+              <ZoomPrevention />
             </div>
             <SectionViewTracker />
           </NewsletterProvider>

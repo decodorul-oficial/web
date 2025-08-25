@@ -11,7 +11,7 @@ const nextConfig = {
   },
   // SEO optimizations - redirects are now handled in the page component
   
-  // Fix Permissions-Policy warning by removing browsing-topics
+  // Fix Permissions-Policy warning by removing browsing-topics exclude  interest-cohort=()
   async headers() {
     return [
       {
@@ -19,7 +19,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()'
+            value: 'camera=(), microphone=(), geolocation=()'
           }
         ]
       }

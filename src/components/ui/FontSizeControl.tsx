@@ -229,7 +229,11 @@ export function FontSizeControl() {
   }, []);
 
   return (
-    <div ref={containerRef} style={{ position: 'fixed', bottom: bottomOffset, left: 24, zIndex: 50 }} className={`transition-all duration-500 ease-in-out`}>
+    <div 
+      ref={containerRef} 
+      className={`fixed left-6 z-50 transition-all duration-500 ease-in-out`}
+      style={{ bottom: `${bottomOffset}px` }}
+    >
       {/* Butonul principal pentru a afișa/ascunde controlul */}
       <button
         onClick={() => setIsVisible(!isVisible)}

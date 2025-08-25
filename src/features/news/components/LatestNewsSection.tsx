@@ -406,10 +406,9 @@ export function LatestNewsSection() {
                     type="date"
                     value={selectedDate}
                     onChange={handleDateChange}
-                    className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-transparent w-full sm:w-auto"
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-transparent w-full sm:w-auto text-base"
                     max={new Date().toISOString().split('T')[0]}
                     autoFocus
-                    style={{ fontSize: '16px' }}
                   />
                 </div>
               )}

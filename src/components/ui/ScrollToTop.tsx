@@ -2,8 +2,13 @@
 import { useEffect, useState } from 'react';
 
 export function ScrollToTop() {
+  const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
   const [bottomOffset, setBottomOffset] = useState<number>(24); // px, echivalent cu bottom-6
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const BASE_GAP = 24; // 1.5rem
@@ -46,14 +51,14 @@ export function ScrollToTop() {
     };
   }, []);
 
-  if (!visible) return null;
+  if (!mounted || !visible) return null;
 
   return (
     <button
       aria-label="Scroll to top"
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      style={{ bottom: bottomOffset, right: 24, position: 'fixed', zIndex: 50 }}
-      className={`w-11 h-11 rounded-full bg-brand-info text-white shadow-lg transition-all duration-500 ease-in-out hover:opacity-90 hover:scale-110 hover:shadow-xl active:scale-95 flex items-center justify-center`}
+      className={`fixed right-6 z-50 w-11 h-11 rounded-full bg-brand-info text-white shadow-lg transition-all duration-500 ease-in-out hover:opacity-90 hover:scale-110 hover:shadow-xl active:scale-95 flex items-center justify-center`}
+      style={{ bottom: `${bottomOffset}px` }}
     >
       <svg 
         className="h-5 w-5 transition-transform duration-300 ease-in-out" 
