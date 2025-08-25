@@ -39,8 +39,11 @@ export function getGraphQLClient(options?: GraphQLClientFactoryOptions): GraphQL
 
     // Route all browser requests through local proxy to inject internal key server-side
     const browserEndpoint = options?.endpoint ?? '/api/graphql';
+    const absoluteBrowserEndpoint = browserEndpoint.startsWith('http')
+      ? browserEndpoint
+      : `${window.location.origin}${browserEndpoint}`;
     
-    return new GraphQLClient(normalizeEndpoint(browserEndpoint), {
+    return new GraphQLClient(absoluteBrowserEndpoint, {
       headers
     });
   }
