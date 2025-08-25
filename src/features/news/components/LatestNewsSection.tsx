@@ -192,7 +192,7 @@ export function LatestNewsSection() {
         }
         return (raw ?? {}) as any;
       })();
-      const iconName = c?.lucide_icon;
+      const iconName = c?.lucide_icon ?? c?.lucideIcon;
       if (typeof iconName === 'string' && iconName.trim().length > 0) {
         const candidates = Array.from(
           new Set([
@@ -204,9 +204,7 @@ export function LatestNewsSection() {
         );
         for (const candidate of candidates) {
           const Icon = (LucideIcons as Record<string, unknown>)[candidate];
-          if (Icon && typeof Icon === 'function') {
-            return Icon as LucideIcon;
-          }
+          if (Icon) return Icon as LucideIcon;
         }
       }
     } catch {
