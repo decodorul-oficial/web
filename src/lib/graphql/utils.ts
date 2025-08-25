@@ -50,6 +50,24 @@ export async function requestWithEndpointFallback<T>(
         headers['X-Internal-API-Key'] = process.env.INTERNAL_API_KEY as string;
       }
 
+      if (process.env.DEBUG_INTERNAL_API_KEY === 'true') {
+        try {
+          const opMatch = typeof query === 'string' ? /\b(query|mutation)\s+(\w+)/.exec(query) : null;
+          const operationName = opMatch?.[2] ?? 'unknown';
+          const isServer = typeof window === 'undefined';
+          console.info('[GraphQL][S2S Debug][fallback] sending request', {
+            runtime: isServer ? 'server' : 'browser',
+            endpoint,
+            operationName,
+            hasInternalKey: Boolean(process.env.INTERNAL_API_KEY),
+            internalKeyLength: process.env.INTERNAL_API_KEY?.length ?? 0,
+            headerNames: Object.keys(headers)
+          });
+        } catch {
+          // no-op
+        }
+      }
+
       const client = new GraphQLClient(endpoint, {
         headers,
       });

@@ -60,9 +60,49 @@ export function getGraphQLClient(options?: GraphQLClientFactoryOptions): GraphQL
       headers['X-Internal-API-Key'] = process.env.INTERNAL_API_KEY as string;
     }
     
-    singletonClient = new GraphQLClient(normalizeEndpoint(options?.endpoint), {
+    const endpoint = normalizeEndpoint(options?.endpoint);
+    const client = new GraphQLClient(endpoint, {
       headers
     });
+
+    // Conditional debug logging just before each request
+    if (process.env.DEBUG_INTERNAL_API_KEY === 'true') {
+      const originalRequest = client.request.bind(client) as (
+        query: any,
+        variables?: Record<string, unknown>,
+        requestHeaders?: HeadersInit
+      ) => Promise<any>;
+
+      (client as any).request = async (
+        query: any,
+        variables?: Record<string, unknown>,
+        requestHeaders?: HeadersInit
+      ) => {
+        try {
+          const isServer = typeof window === 'undefined';
+          const keyPresent = Boolean(process.env.INTERNAL_API_KEY);
+          const keyLength = process.env.INTERNAL_API_KEY?.length ?? 0;
+          const opMatch = typeof query === 'string' ? /\b(query|mutation)\s+(\w+)/.exec(query) : null;
+          const operationName = opMatch?.[2] ?? 'unknown';
+          const headerNames = Object.keys(headers);
+
+          // Do not log the actual key; only presence and length
+          console.info('[GraphQL][S2S Debug] sending request', {
+            runtime: isServer ? 'server' : 'browser',
+            endpoint,
+            operationName,
+            hasInternalKey: keyPresent,
+            internalKeyLength: keyLength,
+            headerNames
+          });
+        } catch {
+          // no-op
+        }
+        return originalRequest(query, variables, requestHeaders);
+      };
+    }
+
+    singletonClient = client;
   }
 
   return singletonClient;
