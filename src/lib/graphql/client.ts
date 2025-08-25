@@ -36,8 +36,11 @@ export function getGraphQLClient(options?: GraphQLClientFactoryOptions): GraphQL
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
+
+    // Route all browser requests through local proxy to inject internal key server-side
+    const browserEndpoint = options?.endpoint ?? '/api/graphql';
     
-    return new GraphQLClient(normalizeEndpoint(options?.endpoint), {
+    return new GraphQLClient(normalizeEndpoint(browserEndpoint), {
       headers
     });
   }
