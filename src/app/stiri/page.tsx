@@ -10,6 +10,7 @@ import { Search, Filter, Bell, Calendar, Eye, X, ChevronLeft, ChevronRight } fro
 import Link from 'next/link';
 import { createNewsSlug } from '@/lib/utils/slugify';
 import { SearchStiriByKeywordsParams } from '@/features/news/types';
+import BusinessDayDatePicker from '@/components/ui/BusinessDayDatePicker';
 
 function StiriPageContent() {
   const searchParams = useSearchParams();
@@ -79,12 +80,12 @@ function StiriPageContent() {
 
 
   // Funcții pentru gestionarea inputurilor de dată
-  const handleDateFromChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDateFrom(e.target.value);
+  const handleDateFromChange = (date: string) => {
+    setDateFrom(date);
   };
 
-  const handleDateToChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDateTo(e.target.value);
+  const handleDateToChange = (date: string) => {
+    setDateTo(date);
   };
 
   // Funcții pentru resetarea inputurilor de dată
@@ -382,11 +383,14 @@ function StiriPageContent() {
                   <div className="relative">
                     <label className="block text-xs font-medium text-gray-600 mb-1">De la data</label>
                     <div className="flex items-center">
-                      <input
-                        type="date"
+                      <BusinessDayDatePicker
+                        className="flex-1"
                         value={dateFrom}
                         onChange={handleDateFromChange}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-brand focus:border-transparent"
+                        popoverAlign="left"
+                        buttonClassName="w-full h-11 py-2.5"
+                        disableWeekends={true}
+                        disableFuture={true}
                       />
                       {dateFrom && (
                         <button
@@ -403,11 +407,15 @@ function StiriPageContent() {
                   <div className="relative">
                     <label className="block text-xs font-medium text-gray-600 mb-1">Până la data</label>
                     <div className="flex items-center">
-                      <input
-                        type="date"
+                      <BusinessDayDatePicker
+                        className="flex-1"
                         value={dateTo}
                         onChange={handleDateToChange}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-brand focus:border-transparent"
+                        popoverAlign="left"
+                        buttonClassName="w-full h-11 py-2.5"
+                        disableWeekends={true}
+                        disableFuture={true}
+                        min={dateFrom || undefined}
                       />
                       {dateTo && (
                         <button

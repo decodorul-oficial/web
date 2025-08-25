@@ -12,6 +12,7 @@ import { trackNewsClick } from '../../../lib/analytics';
 import type { NewsItem } from '@/features/news/types';
 import { extractParteaFromFilename } from '@/lib/utils/monitorulOficial';
 import { useNewsletterContext } from '@/components/newsletter/NewsletterProvider';
+import BusinessDayDatePicker from '@/components/ui/BusinessDayDatePicker';
 
 export function LatestNewsSection() {
   const { showNewsletterModal } = useNewsletterContext();
@@ -74,9 +75,9 @@ export function LatestNewsSection() {
     }
   };
 
-  const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedDate(event.target.value);
-    setShowDateInput(false); // Ascundem input-ul după selecție
+  const handleDateChangeFlow = (date: string) => {
+    setSelectedDate(date);
+    setShowDateInput(false);
   };
 
   const clearDateFilter = () => {
@@ -369,14 +370,14 @@ export function LatestNewsSection() {
       <div className="border-t border-gray-200/60 pt-8"></div>
 
       <div className="space-y-6 order-2 lg:order-3">
-        <div className="space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
           {/* Header și informații despre filtrare */}
-          <div className="space-y-2 sm:space-y-0 sm:flex sm:items-center sm:gap-3">
+          <div className="flex items-center gap-2">
             <h3 className="text-lg font-semibold">
               {isFiltered ? 'Știri după dată' : 'Latest News'}
             </h3>
             {isFiltered && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="hidden md:flex items-center gap-2 text-sm text-gray-600">
                 <span>pentru</span>
                 <span className="font-medium text-brand-accent">
                   {formatSelectedDate(selectedDate)}
@@ -386,42 +387,24 @@ export function LatestNewsSection() {
           </div>
           
           {/* Controale pentru dată */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              {!showDateInput ? (
+          <div className={`flex items-center gap-3 ${isFiltered ? 'w-full md:w-auto' : ''}`}>
+            <div className={`relative ${isFiltered ? 'flex-1 md:flex-initial' : ''}`}>
+              <BusinessDayDatePicker
+                value={selectedDate}
+                onChange={handleDateChangeFlow}
+                buttonClassName="h-10 w-full pr-10"
+              />
+              {isFiltered && (
                 <button
-                  onClick={openDateInput}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-transparent w-full sm:w-auto justify-center sm:justify-start"
-                  title="Selectează o dată"
+                  onClick={clearDateFilter}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-gray-700 transition-colors"
+                  aria-label="Elimină filtrarea după dată"
+                  title="Elimină filtrarea după dată"
                 >
-                  <Calendar className="h-4 w-4 text-gray-500" />
-                  <span className="text-gray-500">
-                    {selectedDate ? formatSelectedDate(selectedDate) : 'Selectează dată'}
-                  </span>
+                  <X className="h-4 w-4" />
                 </button>
-              ) : (
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <Calendar className="h-4 w-4 text-gray-500" />
-                  <input
-                    type="date"
-                    value={selectedDate}
-                    onChange={handleDateChange}
-                    className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-transparent w-full sm:w-auto text-base"
-                    max={new Date().toISOString().split('T')[0]}
-                    autoFocus
-                  />
-                </div>
               )}
             </div>
-            {isFiltered && (
-              <button
-                onClick={clearDateFilter}
-                className="p-2 text-gray-500 hover:text-gray-700 transition-colors border border-gray-300 rounded-md hover:bg-gray-50 sm:p-1 sm:border-0 sm:hover:bg-transparent"
-                title="Anulează filtrarea"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
           </div>
         </div>
 

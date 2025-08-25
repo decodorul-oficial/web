@@ -6,9 +6,10 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { getDailySynthesis } from '@/features/news/services/newsService';
 import { DailySynthesis } from '@/features/news/types';
-import { ChevronLeft, ChevronRight, Calendar, AlertCircle, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, AlertCircle, Info } from 'lucide-react';
 import OverlayBackdrop from '@/components/ui/OverlayBackdrop';
 import Link from 'next/link';
+import BusinessDayDatePicker from '@/components/ui/BusinessDayDatePicker';
 
 // Funcții utilitare pentru gestionarea datelor
 const isWeekend = (date: Date): boolean => {
@@ -111,8 +112,7 @@ function SintezaZilnicaContent() {
   const [error, setError] = useState<string | null>(null);
   const [currentDate, setCurrentDate] = useState<string>('');
   const [weekendInfo, setWeekendInfo] = useState<{ message: string; visible: boolean } | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
+  // Replaced custom datepicker with BusinessDayDatePicker
   const [showInfoToast, setShowInfoToast] = useState(false);
 
   // Inițializare din URL params sau data curentă
@@ -194,29 +194,7 @@ function SintezaZilnicaContent() {
     }
   }, [weekendInfo?.visible]);
 
-  // Efect pentru închiderea automată a date picker-ului când se schimbă data
-  useEffect(() => {
-    if (currentDate && showDatePicker) {
-      // Închide date picker-ul doar când se selectează o dată nouă
-      // Nu se închide când se deschide date picker-ul
-      setShowDatePicker(false);
-    }
-  }, [currentDate]); // Eliminăm showDatePicker din dependencies
-
-  // Efect pentru click outside pentru a închide date picker-ul
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (showDatePicker && !target.closest('.date-picker-container')) {
-        setShowDatePicker(false);
-      }
-    };
-
-    if (showDatePicker) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [showDatePicker]);
+  // (Click outside & close logic handled by BusinessDayDatePicker)
 
   // Funcții pentru navigare (sărim weekendurile)
   const goToPreviousDay = () => {
@@ -266,79 +244,7 @@ function SintezaZilnicaContent() {
   
   const isPreviousDayDisabled = false; // Întotdeauna activ pentru zilele trecute
 
-  // Funcții pentru date picker custom
-  const toggleDatePicker = () => {
-    setShowDatePicker(!showDatePicker);
-  };
-
-  const selectDate = (date: Date) => {
-    if (isWeekend(date) || isFutureDate(toLocalDateString(date))) {
-      return; // Nu permitem selectarea weekendurilor sau zilelor viitoare
-    }
-    
-    const dateString = toLocalDateString(date);
-    
-    // Nu schimbăm data dacă este aceeași cu cea curentă
-    if (dateString === currentDate) {
-      setShowDatePicker(false);
-      return;
-    }
-    
-    setCurrentDate(dateString);
-    setShowDatePicker(false); // Autohide
-  };
-
-  const goToCurrentDay = () => {
-    const today = getCurrentValidDate();
-    const todayString = toLocalDateString(today);
-    setCurrentDate(todayString);
-    setShowDatePicker(false); // Autohide
-  };
-
-  const goToPreviousMonth = () => {
-    const newMonth = new Date(selectedMonth);
-    newMonth.setMonth(newMonth.getMonth() - 1);
-    setSelectedMonth(newMonth);
-  };
-
-  const goToNextMonth = () => {
-    const newMonth = new Date(selectedMonth);
-    newMonth.setMonth(newMonth.getMonth() + 1);
-    setSelectedMonth(newMonth);
-  };
-
-  const getDaysInMonth = (date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    // Index cu săptămâna care începe de Luni (L=0, ... D=6)
-    const startingDayOfWeek = (firstDay.getDay() + 6) % 7;
-    
-    const days = [];
-    
-    // Adăugăm zilele din luna anterioară pentru a completa prima săptămână (luni prima zi)
-    for (let i = startingDayOfWeek; i > 0; i--) {
-      const prevDate = new Date(year, month, 1 - i);
-      days.push({ date: prevDate, isCurrentMonth: false, isWeekend: isWeekend(prevDate) });
-    }
-    
-    // Adăugăm zilele din luna curentă
-    for (let i = 1; i <= daysInMonth; i++) {
-      const currentDate = new Date(year, month, i);
-      days.push({ date: currentDate, isCurrentMonth: true, isWeekend: isWeekend(currentDate) });
-    }
-    
-    // Adăugăm zilele din luna următoare pentru a completa ultima săptămână
-    const remainingDays = 42 - days.length; // 6 săptămâni * 7 zile
-    for (let i = 1; i <= remainingDays; i++) {
-      const nextDate = new Date(year, month + 1, i);
-      days.push({ date: nextDate, isCurrentMonth: false, isWeekend: isWeekend(nextDate) });
-    }
-    
-    return days;
-  };
+  // (Datepicker logic replaced by BusinessDayDatePicker)
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -394,100 +300,20 @@ function SintezaZilnicaContent() {
             </button>
 
             {/* Data centrală cu ziua săptămânii */}
-            <div className="flex flex-col items-center gap-1 text-center relative date-picker-container">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-brand-info" />
-                <button
-                  onClick={toggleDatePicker}
-                  className="text-xl font-semibold text-gray-900 hover:text-brand-info transition-colors cursor-pointer"
-                  title="Click pentru a selecta o dată"
-                >
-                  {currentDate ? formatDisplayDate(currentDate) : '...'}
-                </button>
-              </div>
+            <div className="flex flex-col items-center gap-1 text-center relative">
+              <BusinessDayDatePicker
+                value={currentDate}
+                onChange={(d) => setCurrentDate(d)}
+                disableWeekends={true}
+                disableFuture={true}
+                centered={true}
+                showBackdrop={true}
+                buttonClassName="text-xl font-semibold text-gray-900 hover:text-brand-info transition-colors cursor-pointer"
+              />
               {currentDate && (
                 <span className="text-sm font-medium text-brand-info capitalize">
                   {formatWeekday(currentDate)}
                 </span>
-              )}
-
-              {/* Date Picker Custom */}
-              {showDatePicker && (
-                <div className="absolute top-full mt-2 z-50 bg-white rounded-lg shadow-lg border border-gray-200 p-4 min-w-[320px]">
-                  {/* Header cu navigare luni */}
-                  <div className="flex items-center justify-between mb-4">
-                    <button
-                      onClick={goToPreviousMonth}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {selectedMonth.toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' })}
-                    </h3>
-                    <button
-                      onClick={goToNextMonth}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  {/* Zilele săptămânii */}
-                  <div className="grid grid-cols-7 gap-1 mb-2">
-                    {['L', 'Ma', 'Mi', 'J', 'V', 'S', 'D'].map((day, index) => (
-                      <div key={index} className="w-8 h-8 flex items-center justify-center text-xs font-medium text-gray-500">
-                        {day}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Calendar grid */}
-                  <div className="grid grid-cols-7 gap-1">
-                    {getDaysInMonth(selectedMonth).map((dayInfo, index) => {
-                      const isSelected = currentDate === toLocalDateString(dayInfo.date);
-                      const isToday = toLocalDateString(getCurrentValidDate()) === toLocalDateString(dayInfo.date);
-                      
-                      return (
-                        <button
-                          key={index}
-                          onClick={() => selectDate(dayInfo.date)}
-                          disabled={dayInfo.isWeekend || isFutureDate(toLocalDateString(dayInfo.date))}
-                          className={`
-                            w-8 h-8 rounded-lg text-sm font-medium transition-colors
-                            ${dayInfo.isCurrentMonth 
-                              ? dayInfo.isWeekend || isFutureDate(toLocalDateString(dayInfo.date))
-                                ? 'text-gray-300 cursor-not-allowed bg-gray-50'
-                                : 'text-gray-700 hover:bg-blue-50 cursor-pointer'
-                              : 'text-gray-400 cursor-not-allowed'
-                            }
-                            ${isSelected ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}
-                            ${isToday && !isSelected ? 'bg-blue-100 text-blue-700' : ''}
-                          `}
-                          title={dayInfo.isWeekend ? 'Weekend - nu disponibil' : dayInfo.date.toLocaleDateString('ro-RO')}
-                        >
-                          {dayInfo.date.getDate()}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Butoane de acțiune */}
-                  <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
-                    <button
-                      onClick={goToCurrentDay}
-                      className="flex-1 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors"
-                    >
-                      Ziua curentă
-                    </button>
-                    <button
-                      onClick={() => setShowDatePicker(false)}
-                      className="px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
-                    >
-                      Închide
-                    </button>
-                  </div>
-                </div>
               )}
             </div>
 
