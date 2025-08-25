@@ -128,7 +128,17 @@ export function LatestNewsSection() {
   function getSummary(content: unknown): string | undefined {
     if (!content) return undefined;
     try {
-      const c = content as any;
+      const c = (() => {
+        const raw = content as any;
+        if (typeof raw === 'string') {
+          try {
+            return JSON.parse(raw);
+          } catch {
+            return raw;
+          }
+        }
+        return raw;
+      })();
       // Prioritizăm body-ul pentru a afișa conținutul complet al știrii
       const raw = c.body || c.summary || c.text || (typeof c === 'string' ? c : undefined);
       return typeof raw === 'string' ? stripHtml(raw) : raw;
@@ -138,7 +148,17 @@ export function LatestNewsSection() {
   }
 
   function getCitationFields(content: unknown, filename?: string) {
-    const c = (content ?? {}) as any;
+    const c = (() => {
+      const raw = content as any;
+      if (typeof raw === 'string') {
+        try {
+          return JSON.parse(raw);
+        } catch {
+          return {} as any;
+        }
+      }
+      return (raw ?? {}) as any;
+    })();
     
     // Extract partea from filename if available, otherwise fallback to content or default
     const extractedPartea = extractParteaFromFilename(filename);
@@ -161,7 +181,17 @@ export function LatestNewsSection() {
 
   function getLucideIconForContent(content: unknown, fallback: LucideIcon): LucideIcon {
     try {
-      const c = (content ?? {}) as any;
+      const c = (() => {
+        const raw = content as any;
+        if (typeof raw === 'string') {
+          try {
+            return JSON.parse(raw);
+          } catch {
+            return {} as any;
+          }
+        }
+        return (raw ?? {}) as any;
+      })();
       const iconName = c?.lucide_icon;
       if (typeof iconName === 'string' && iconName.trim().length > 0) {
         const candidates = Array.from(
