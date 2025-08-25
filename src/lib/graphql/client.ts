@@ -55,6 +55,11 @@ export function getGraphQLClient(options?: GraphQLClientFactoryOptions): GraphQL
       headers.Authorization = `Bearer ${resolveToken}`;
     }
     
+    // Inject internal API key for server-side requests
+    if (process.env.INTERNAL_API_KEY) {
+      headers['X-Internal-API-Key'] = process.env.INTERNAL_API_KEY as string;
+    }
+    
     singletonClient = new GraphQLClient(normalizeEndpoint(options?.endpoint), {
       headers
     });

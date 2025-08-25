@@ -40,11 +40,18 @@ export async function requestWithEndpointFallback<T>(
   let lastError: unknown;
   for (const endpoint of candidates) {
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
+
+      // Inject internal API key for server-side requests
+      if (typeof window === 'undefined' && process.env.INTERNAL_API_KEY) {
+        headers['X-Internal-API-Key'] = process.env.INTERNAL_API_KEY as string;
+      }
+
       const client = new GraphQLClient(endpoint, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        }
+        headers,
       });
       const data = await client.request<T>(query, variables);
       if (process.env.NODE_ENV !== 'production') {
