@@ -7,6 +7,8 @@ import { Citation } from '@/components/legal/Citation';
 import { stripHtml } from '@/lib/html/sanitize';
 import { MostReadNewsSection } from './MostReadNewsSection';
 import { Gavel, Landmark, Calendar, X, ChevronLeft, ChevronRight, Mail } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { createNewsSlug } from '@/lib/utils/slugify';
 import { trackNewsClick } from '../../../lib/analytics';
 import type { NewsItem } from '@/features/news/types';
@@ -149,6 +151,40 @@ export function LatestNewsSection() {
     } as const;
   }
 
+  function toPascalCase(value: string): string {
+    return value
+      .split(/[\s-_]+/)
+      .filter(Boolean)
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join('');
+  }
+
+  function getLucideIconForContent(content: unknown, fallback: LucideIcon): LucideIcon {
+    try {
+      const c = (content ?? {}) as any;
+      const iconName = c?.lucide_icon;
+      if (typeof iconName === 'string' && iconName.trim().length > 0) {
+        const candidates = Array.from(
+          new Set([
+            iconName,
+            toPascalCase(iconName),
+            iconName.charAt(0).toUpperCase() + iconName.slice(1),
+            iconName.replace(/[-_ ]+/g, ''),
+          ])
+        );
+        for (const candidate of candidates) {
+          const Icon = (LucideIcons as Record<string, unknown>)[candidate];
+          if (Icon && typeof Icon === 'function') {
+            return Icon as LucideIcon;
+          }
+        }
+      }
+    } catch {
+      // ignore and fall back
+    }
+    return fallback;
+  }
+
   const handleNewsClick = (news: NewsItem, section: string) => {
     trackNewsClick(news.id, news.title, section);
   };
@@ -287,7 +323,10 @@ export function LatestNewsSection() {
               {/* Layout pentru mobile și tabletă */}
               <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:hidden">
                 <div className="h-48 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 md:h-full flex items-center justify-center">
-                  <Landmark className="h-16 w-16 text-white" />
+                  {(() => {
+                    const Icon = getLucideIconForContent(featured.content, Landmark);
+                    return <Icon className="h-16 w-16 text-white" />;
+                  })()}
                 </div>
                 <div className="md:col-span-2">
                   <h2 className="mb-3 text-xl font-bold">
@@ -322,7 +361,10 @@ export function LatestNewsSection() {
               <div className="hidden lg:block">
                 <div className="float-left mr-6 mb-4">
                   <div className="h-48 w-64 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 flex items-center justify-center">
-                    <Landmark className="h-16 w-16 text-white" />
+                    {(() => {
+                      const Icon = getLucideIconForContent(featured.content, Landmark);
+                      return <Icon className="h-16 w-16 text-white" />;
+                    })()}
                   </div>
                 </div>
                 <div>
@@ -423,7 +465,10 @@ export function LatestNewsSection() {
                   <article className="flex gap-3 py-4">
                     <div className="flex-shrink-0">
                       <div className="h-16 w-16 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 flex items-center justify-center">
-                        <Gavel className="h-6 w-6 text-white" />
+                        {(() => {
+                          const Icon = getLucideIconForContent(n.content, Gavel);
+                          return <Icon className="h-6 w-6 text-white" />;
+                        })()}
                       </div>
                       <div className="mt-2 text-xs text-gray-500">
                         {formatDate(n.publicationDate)}
