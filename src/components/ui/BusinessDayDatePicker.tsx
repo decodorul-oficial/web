@@ -172,7 +172,7 @@ export default function BusinessDayDatePicker(props: BusinessDayDatePickerProps)
         <div
           className={
             centered
-              ? 'fixed inset-0 z-[2000] flex items-center justify-center p-4'
+              ? 'fixed inset-0 z-[3000] flex items-center justify-center p-4'
               : `absolute z-50 mt-2 min-w-[320px] rounded-lg border border-gray-200 bg-white p-4 shadow-lg ${
                   popoverAlign === 'right' ? 'right-0' : 'left-0'
                 }`

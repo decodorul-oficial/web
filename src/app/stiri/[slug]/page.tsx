@@ -15,6 +15,8 @@ import { SessionCookieInitializer } from '@/components/session/SessionCookieInit
 import { NewsViewTrackingWrapper } from '@/features/news/components/NewsViewTrackingWrapper';
 import { extractParteaFromFilename } from '@/lib/utils/monitorulOficial';
 import { NewsletterCtaInline } from '@/components/newsletter/NewsletterCtaInline';
+import { TablesRenderer } from '@/features/news/components/TablesRenderer';
+import { ShareButtons, FloatingShareSidebar, ArticleShareSection } from '@/components/ui/ShareButtons';
 
 
 type PageProps = { params: { slug: string } };
@@ -226,6 +228,7 @@ export default async function NewsDetailPage(props: PageProps) {
   const author = extractField<string>(news.content, 'author');
   const category = extractField<string>(news.content, 'category');
   const keywords = extractField<string[]>(news.content, 'keywords');
+  const tables = extractField<any[]>(news.content, 'tables') || [];
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -293,6 +296,13 @@ export default async function NewsDetailPage(props: PageProps) {
         />
 
       <main className="container-responsive flex-1 py-8" role="main">
+        {/* Floating Share Sidebar for Desktop */}
+        <FloatingShareSidebar
+          url={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro'}/stiri/${createNewsSlug(news.title, news.id)}`}
+          title={news.title}
+          description={summary || news.title}
+        />
+        
         {/* Breadcrumb: desktop shows full, mobile shows "Înapoi la listă" */}
         <nav aria-label="Breadcrumb" className="mb-6">
           {/* Desktop breadcrumb */}
@@ -360,6 +370,20 @@ export default async function NewsDetailPage(props: PageProps) {
                 ))}
               </div>
             )}
+
+            {/* Share buttons after title and metadata */}
+            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+              <div className="text-sm text-gray-500">
+                <span>Distribuie această știre:</span>
+              </div>
+              <ShareButtons
+                url={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro'}/stiri/${createNewsSlug(news.title, news.id)}`}
+                title={news.title}
+                description={summary || news.title}
+                variant="horizontal"
+                showLabels={false}
+              />
+            </div>
           </header>
 
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -389,12 +413,36 @@ export default async function NewsDetailPage(props: PageProps) {
                 <Citation {...citationFields} />
                 {/* Minimal newsletter CTA below full article */}
                 <NewsletterCtaInline />
+                
+                {/* Share section at the end of the article */}
+                <ArticleShareSection
+                  url={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro'}/stiri/${createNewsSlug(news.title, news.id)}`}
+                  title={news.title}
+                  description={summary || news.title}
+                />
               </div>
             </div>
             
             <aside className="space-y-6" role="complementary">
               {/* Statistics section */}
               <NewsViewStats news={news} />
+              
+              {/* Share buttons for mobile users - HIDDEN */}
+              {/* <div className="lg:hidden">
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                    Distribuie această știre
+                  </h3>
+                  <ShareButtons
+                    url={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro'}/stiri/${createNewsSlug(news.title, news.id)}`}
+                    title={news.title}
+                    description={summary || news.title}
+                    variant="horizontal"
+                    showLabels={true}
+                    className="justify-start"
+                  />
+                </div>
+              </div> */}
               
               {/* Secțiunea cu știrile din aceeași zi */}
               {sameDayNews.length > 0 && (
@@ -404,6 +452,12 @@ export default async function NewsDetailPage(props: PageProps) {
               )}
             </aside>
           </div>
+
+          {Array.isArray(tables) && tables.length > 0 && (
+            <section className="mt-8">
+              <TablesRenderer tables={tables} />
+            </section>
+          )}
         </article>
       </main>
       <Footer />

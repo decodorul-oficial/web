@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { createNewsSlug } from '@/lib/utils/slugify';
 import { SearchStiriByKeywordsParams } from '@/features/news/types';
 import BusinessDayDatePicker from '@/components/ui/BusinessDayDatePicker';
+import { ShareButtons } from '@/components/ui/ShareButtons';
 
 function StiriPageContent() {
   const searchParams = useSearchParams();
@@ -603,6 +604,31 @@ function StiriPageContent() {
                             </div>
                           ) : null;
                         })()}
+
+                        {/* Share buttons for each news item */}
+                        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                          <div className="text-xs text-gray-500">
+                            Distribuie:
+                          </div>
+                          <ShareButtons
+                            url={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro'}/stiri/${createNewsSlug(item.title, item.id)}`}
+                            title={item.title}
+                            description={(() => {
+                              let summary = '';
+                              if (
+                                item.content &&
+                                typeof item.content === 'object' &&
+                                'summary' in item.content &&
+                                typeof (item.content as any).summary === 'string'
+                              ) {
+                                summary = (item.content as any).summary;
+                              }
+                              return summary || item.title;
+                            })()}
+                            variant="horizontal"
+                            showLabels={false}
+                          />
+                        </div>
                       </div>
                     </article>
                   ))}

@@ -10,6 +10,7 @@ import { ChevronLeft, ChevronRight, AlertCircle, Info } from 'lucide-react';
 import OverlayBackdrop from '@/components/ui/OverlayBackdrop';
 import Link from 'next/link';
 import BusinessDayDatePicker from '@/components/ui/BusinessDayDatePicker';
+import { ShareButtons } from '@/components/ui/ShareButtons';
 
 // Funcții utilitare pentru gestionarea datelor
 const isWeekend = (date: Date): boolean => {
@@ -331,7 +332,7 @@ function SintezaZilnicaContent() {
 
           {/* Info toast (înlocuiește panourile albastre) */}
           {showInfoToast && (
-            <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4">
               {/* background overlay similar cu loader-ul global */}
               <OverlayBackdrop position="absolute" onClick={() => setShowInfoToast(false)} />
               <div className="w-[min(40rem,100%)] rounded-lg border border-blue-200 bg-white/90 backdrop-blur-md shadow-2xl">
@@ -416,6 +417,26 @@ function SintezaZilnicaContent() {
                   <div 
                     dangerouslySetInnerHTML={{ __html: synthesis.content }}
                     className="text-gray-700 leading-relaxed"
+                  />
+                </div>
+
+                {/* Share buttons */}
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Distribuie această sinteză
+                    </h3>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Ajută-i pe colegii tăi să rămână la curent cu legislația!
+                  </p>
+                  <ShareButtons
+                    url={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro'}/sinteza-zilnica?date=${currentDate}`}
+                    title={`Sinteza zilnică - ${currentDate ? formatDisplayDate(currentDate) : ''}`}
+                    description={synthesis.summary || synthesis.title}
+                    variant="horizontal"
+                    showLabels={true}
+                    className="justify-start"
                   />
                 </div>
 

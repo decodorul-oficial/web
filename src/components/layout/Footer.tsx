@@ -1,26 +1,59 @@
 import { NewsletterButton } from '@/components/newsletter/NewsletterButton';
+import { Linkedin, Instagram } from 'lucide-react';
 
 export function Footer() {
   return (
     <footer className="mt-16 border-t bg-gray-50">
-      <div className="container-responsive py-10 text-sm text-gray-600">
+      <div className="container-responsive py-8 text-sm text-gray-600">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col gap-4">
-            <p>© {new Date().getFullYear()} Decodorul Oficial. Toate drepturile rezervate.</p>
+          {/* Left side - Copyright, Newsletter, and Social Media */}
+          <div className="flex flex-col gap-4 text-center md:text-left">
+            <p className="text-gray-700">© {new Date().getFullYear()} Decodorul Oficial. Toate drepturile rezervate.</p>
             
-            {/* Newsletter Section */}
-            <div className="flex flex-col gap-2">
-              <p className="text-xs text-gray-500">Rămâi la curent cu legislația:</p>
-              <NewsletterButton variant="outline" size="sm">
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                Newsletter
-              </NewsletterButton>
+            {/* Newsletter and Social Media Row */}
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 md:gap-8">
+              {/* Newsletter Section */}
+              <div className="flex flex-col items-center md:items-start gap-2">
+                <p className="text-xs text-gray-500">Rămâi la curent cu legislația:</p>
+                <NewsletterButton variant="outline" size="sm">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Newsletter
+                </NewsletterButton>
+              </div>
+
+              {/* Social Media Links */}
+              <div className="flex flex-col items-center md:items-start gap-2">
+                <p className="text-xs text-gray-500">Urmărește-ne pe:</p>
+                <div className="flex gap-4">
+                  <a 
+                    href="https://www.linkedin.com/company/decodorul-oficial/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-brand-info hover:text-brand-highlight transition-colors duration-200"
+                    aria-label="Urmărește-ne pe LinkedIn"
+                  >
+                    <Linkedin className="w-4 h-4" />
+                    <span className="text-sm">LinkedIn</span>
+                  </a>
+                  <a 
+                    href="https://www.instagram.com/decodorul.oficial/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-brand-info hover:text-brand-highlight transition-colors duration-200"
+                    aria-label="Urmărește-ne pe Instagram"
+                  >
+                    <Instagram className="w-4 h-4" />
+                    <span className="text-sm">Instagram</span>
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
           
-          <nav className="flex flex-wrap gap-4 text-xs">
+          {/* Right side - Navigation Links */}
+          <nav className="flex flex-wrap justify-center md:justify-end gap-4 text-xs">
             <a href="/contact" className="hover:underline">Contact</a>
             <a href="/privacy" className="hover:underline">Confidențialitate</a>
             <a href="/cookies" className="hover:underline">Cookies</a>
