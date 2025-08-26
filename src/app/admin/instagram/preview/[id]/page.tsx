@@ -36,8 +36,8 @@ export default async function InstagramPreviewPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-2 sm:p-4">
+      <div className="w-full max-w-sm sm:max-w-md">
         <Suspense fallback={
           <div className="flex justify-center items-center h-96">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
@@ -47,12 +47,13 @@ export default async function InstagramPreviewPage({ params }: PageProps) {
         </Suspense>
         
         {/* Instructions */}
-        <div className="mt-8 text-center text-gray-600 text-sm">
-          <p>💡 Pentru cel mai bun rezultat:</p>
+        <div className="mt-6 sm:mt-8 text-center text-gray-600 text-xs sm:text-sm">
+          <p>💡 Funcționalități automate:</p>
           <ul className="mt-2 space-y-1">
-            <li>• Fă screenshot pe telefon în orientare portrait</li>
-            <li>• Asigură-te că imaginea este centrată</li>
-            <li>• Folosește funcția de crop din Instagram</li>
+            <li>• Click pe card pentru screenshot automat</li>
+            <li>• Imaginea se salvează direct în galeria telefonului</li>
+            <li>• Copiază hashtag-urile cu butonul dedicat</li>
+            <li>• Postează direct pe Instagram</li>
           </ul>
         </div>
       </div>

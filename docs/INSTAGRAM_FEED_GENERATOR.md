@@ -20,10 +20,12 @@ Pagina admin pentru generarea de imagini în stil Instagram cu ultimele știri d
 
 ### 2. Preview Individual (`/admin/instagram/preview/[id]`)
 - Afișare individuală a unei știri optimizată pentru screenshot
-- Design îmbunătățit pentru captura de ecran
-- Butoane pentru print și navigare înapoi
+- Design responsive cu dimensiuni adaptate pentru mobil
+- Container centrat cu max-width pentru consistență
+- **Screenshot automat** cu click pe card
+- **Salvare directă** în galeria telefonului
 - Secțiune hashtag-uri cu buton de copiere automată
-- Instrucțiuni pentru cel mai bun rezultat
+- Instrucțiuni pentru funcționalități automate
 
 ## Design
 
@@ -65,7 +67,8 @@ src/
         ├── InstagramFeed.tsx              # Componenta principală
         ├── InstagramCard.tsx              # Card individual
         ├── InstagramPreview.tsx           # Preview individual
-        └── HashtagSection.tsx             # Secțiune hashtag-uri
+        ├── HashtagSection.tsx             # Secțiune hashtag-uri
+        └── AutoScreenshot.tsx             # Screenshot automat
 ```
 
 ## Utilizare
@@ -73,16 +76,18 @@ src/
 ### Pentru Screenshot pe Telefon
 1. Accesează `/admin/instagram`
 2. Click pe cardul dorit
-3. Se deschide preview-ul în tab nou
-4. Fă screenshot pe telefon în orientare portrait
-5. Folosește funcția de crop din Instagram
+3. Se deschide preview-ul optimizat pentru mobil
+4. **Click pe card pentru screenshot automat**
+5. Imaginea se salvează direct în galeria telefonului
+6. Copiază hashtag-urile cu butonul dedicat
+7. Postează direct pe Instagram
 
 ### Pentru Screenshot pe Desktop
 1. Accesează `/admin/instagram`
 2. Click pe cardul dorit
-3. Folosește butonul "Print" pentru salvare
-4. Copiază hashtag-urile cu butonul dedicat
-5. Sau fă screenshot direct din browser
+3. **Click pe card pentru screenshot automat**
+4. Imaginea se descarcă automat
+5. Copiază hashtag-urile cu butonul dedicat
 
 ## Optimizări
 
@@ -115,10 +120,12 @@ src/
 ```
 
 ### Responsive Design
-- Mobile: 1 coloană
-- Tablet: 2 coloane
-- Desktop: 3-4 coloane
-- Aspect ratio păstrat pe toate device-urile
+- **Mobile**: Card optimizat cu dimensiuni mai mici, text și spacing adaptat
+- **Tablet**: 2 coloane
+- **Desktop**: 3-4 coloane
+- **Aspect ratio 1:1** păstrat pe toate device-urile
+- **Container centrat** cu max-width pentru consistență
+- **Padding și spacing** optimizate pentru fiecare breakpoint
 
 ## Extensibilitate
 
@@ -143,6 +150,7 @@ src/
 - Tailwind CSS
 - TypeScript
 - GraphQL pentru date
+- html2canvas pentru screenshot automat
 
 ### API Integration
 - Folosește `fetchLatestNews` pentru știri

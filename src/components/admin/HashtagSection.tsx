@@ -78,14 +78,14 @@ export function HashtagSection({ news }: HashtagSectionProps) {
   };
 
   return (
-    <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+    <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-700">
+        <h3 className="text-xs sm:text-sm font-semibold text-gray-700">
           📋 Hashtag-uri relevante
         </h3>
         <button
           onClick={handleCopyHashtags}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
             copied 
               ? 'bg-green-100 text-green-700 border border-green-200' 
               : 'bg-brand-info hover:bg-brand-highlight text-white'
@@ -93,14 +93,14 @@ export function HashtagSection({ news }: HashtagSectionProps) {
         >
           {copied ? (
             <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               Copiat!
             </>
           ) : (
             <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
               Copiază hashtag-uri
@@ -109,18 +109,18 @@ export function HashtagSection({ news }: HashtagSectionProps) {
         </button>
       </div>
       
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1 sm:gap-2">
         {hashtags.map((hashtag, index) => (
           <span
             key={index}
-            className="inline-block px-2 py-1 bg-white border border-gray-200 rounded-md text-sm text-gray-700 font-medium"
+            className="inline-block px-1.5 sm:px-2 py-0.5 sm:py-1 bg-white border border-gray-200 rounded-md text-xs sm:text-sm text-gray-700 font-medium"
           >
             {hashtag}
           </span>
         ))}
       </div>
       
-      <div className="mt-3 text-xs text-gray-500">
+      <div className="mt-2 sm:mt-3 text-xs text-gray-500">
         💡 Click pe buton pentru a copia toate hashtag-urile în clipboard
       </div>
     </div>
