@@ -57,17 +57,23 @@ export function HashtagSection({ news }: HashtagSectionProps) {
 
   const hashtags = getHashtags();
   const hashtagText = hashtags.join(' ');
+  
+  // Create the official website link
+  const officialLink = `https://decodoruloficial.ro/stiri/${news.id}`;
+  
+  // Combine hashtags and link for copying
+  const fullTextToCopy = `${hashtagText}\n\n🔗 ${officialLink}`;
 
   const handleCopyHashtags = async () => {
     try {
-      await navigator.clipboard.writeText(hashtagText);
+      await navigator.clipboard.writeText(fullTextToCopy);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       console.error('Failed to copy hashtags:', error);
       // Fallback for older browsers
       const textArea = document.createElement('textarea');
-      textArea.value = hashtagText;
+      textArea.value = fullTextToCopy;
       document.body.appendChild(textArea);
       textArea.select();
       document.execCommand('copy');
@@ -120,8 +126,28 @@ export function HashtagSection({ news }: HashtagSectionProps) {
         ))}
       </div>
       
+      {/* Official Website Link */}
+      <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-blue-600">🔗</span>
+            <span className="text-xs sm:text-sm text-blue-700 font-medium">
+              Link oficial:
+            </span>
+          </div>
+          <a
+            href={officialLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 underline break-all"
+          >
+            {officialLink}
+          </a>
+        </div>
+      </div>
+      
       <div className="mt-2 sm:mt-3 text-xs text-gray-500">
-        💡 Click pe buton pentru a copia toate hashtag-urile în clipboard
+        💡 Click pe buton pentru a copia toate hashtag-urile și link-ul în clipboard
       </div>
     </div>
   );

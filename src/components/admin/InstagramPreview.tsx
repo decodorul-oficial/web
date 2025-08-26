@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { NewsItem } from '@/features/news/types';
 import { HashtagSection } from './HashtagSection';
 import { AutoScreenshot } from './AutoScreenshot';
+import styles from './InstagramPreview.module.css';
 
 interface InstagramPreviewProps {
   news: NewsItem;
@@ -23,7 +24,7 @@ export function InstagramPreview({ news }: InstagramPreviewProps) {
   
   // Truncate synthesis to fit the card
   const truncatedSynthesis = synthesis.length > 250 
-    ? synthesis.substring(0, 250) + '...' 
+    ? synthesis.substring(0, 300) + '...' 
     : synthesis;
 
   // Extract category from content if available
@@ -43,63 +44,66 @@ export function InstagramPreview({ news }: InstagramPreviewProps) {
     <div className="w-full max-w-md mx-auto">
       {/* Instagram Card - Optimized for Screenshot */}
       <AutoScreenshot filename={`instagram-${news.id}`}>
-        <div className="relative w-full aspect-square bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div className={styles.instagramCard}>
         
-        {/* Background Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-brand via-brand-accent to-brand-highlight opacity-95"></div>
+        {/* Background Gradient - Simplified for better rendering */}
+        <div className={styles.backgroundGradient}></div>
         
         {/* Content Container */}
-        <div className="relative h-full flex flex-col p-5 sm:p-6">
+        <div className={styles.contentContainer}>
           
           {/* Header with Logo and Category */}
-          <div className="flex justify-between items-start mb-3 sm:mb-4">
+          <div className={styles.header}>
             {/* Logo */}
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+            <div className={styles.logoContainer}>
+              <div className={styles.logoWrapper}>
                 <Image 
                   src="/logo.png" 
                   alt="Decodorul Oficial" 
                   width={28} 
                   height={28} 
-                  className="w-5 h-5 sm:w-7 sm:h-7 object-contain"
+                  className={styles.logoImage}
+                  priority
                 />
               </div>
-              <span className="text-white text-sm sm:text-base font-bold leading-none">Decodorul Oficial</span>
+              <span className={styles.brandName}>
+                Decodorul Oficial
+              </span>
             </div>
             
             {/* Category Badge */}
             {category && (
-              <div className="bg-white/25 backdrop-blur-sm text-white text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-semibold flex-shrink-0">
+              <div className={styles.categoryBadge}>
                 {category}
               </div>
             )}
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 flex flex-col justify-center">
+          <div className={styles.mainContent}>
             {/* Title */}
-            <h1 className="text-white text-lg sm:text-xl font-bold leading-tight mb-3 line-clamp-3">
+            <h1 className={styles.title}>
               {news.title}
             </h1>
             
             {/* Synthesis */}
             {truncatedSynthesis && (
-              <p className="text-white/95 text-sm leading-relaxed line-clamp-4">
+              <p className={styles.synthesis}>
                 {truncatedSynthesis}
               </p>
             )}
           </div>
 
           {/* Footer */}
-          <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-white/25">
-            <div className="flex items-center justify-between text-white/80 text-xs">
-              <div className="flex items-center gap-1">
-                <span className="text-base">📋</span>
-                <span className="font-medium">Monitorul Oficial</span>
+          <div className={styles.footer}>
+            <div className={styles.footerContent}>
+              <div className={styles.footerLeft}>
+                <span className={styles.footerIcon}>📋</span>
+                <span className={styles.footerText}>Monitorul Oficial</span>
               </div>
-              <div className="flex items-center gap-1">
+              <div className={styles.footerRight}>
                 <span className="text-xs">Publicat:</span>
-                <span className="font-medium text-xs">
+                <span className={styles.footerDate}>
                   {news.publicationDate ? new Date(news.publicationDate).toLocaleDateString('ro-RO') : 'Data indisponibilă'}
                 </span>
               </div>
@@ -107,8 +111,8 @@ export function InstagramPreview({ news }: InstagramPreviewProps) {
           </div>
 
           {/* Decorative Elements */}
-          <div className="absolute top-1 sm:top-2 right-1 sm:right-2 w-8 h-8 sm:w-12 sm:h-12 bg-white/10 rounded-full"></div>
-          <div className="absolute bottom-2 sm:bottom-4 left-1 sm:left-2 w-4 h-4 sm:w-6 sm:h-6 bg-white/10 rounded-full"></div>
+          <div className={styles.decorativeElement1}></div>
+          <div className={styles.decorativeElement2}></div>
         </div>
         </div>
       </AutoScreenshot>

@@ -1,0 +1,298 @@
+/* Instagram Preview Admin Styles - Isolated CSS Module */
+
+/* Font preloading for better screenshot quality */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Optimized styles for Instagram preview screenshots */
+.screenshotOptimized {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ensure crisp text rendering in screenshots */
+.screenshotText {
+  text-rendering: optimizeLegibility;
+  -webkit-font-feature-settings: "kern" 1;
+  font-feature-settings: "kern" 1;
+}
+
+/* Optimized image rendering */
+.screenshotImage {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Ensure consistent spacing and alignment */
+.screenshotContainer {
+  contain: layout style paint;
+}
+
+/* Disable animations during screenshot */
+.screenshotMode * {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Hide logo image during screenshot, keep only text */
+.screenshotMode .logoImage {
+  display: none !important;
+}
+
+.screenshotMode .logoWrapper {
+  display: none !important;
+}
+
+/* Instagram card specific styles */
+.instagramCard {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  background-color: #0B132B;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.backgroundGradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #0B132B 0%, #1C2541 50%, #3A506B 100%);
+  opacity: 0.95;
+}
+
+.contentContainer {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logoWrapper {
+  width: 40px;
+  height: 40px;
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.logoImage {
+  width: 18px;
+  height: 18px;
+  padding-right: 5px;
+  object-fit: contain;
+}
+
+.brandName {
+  color: #FFFFFF;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.categoryBadge {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.mainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.title {
+  color: #FFFFFF;
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 1.2;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.synthesis {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 14px;
+  line-height: 1.6;
+  padding-bottom: 5px;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.footer {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.footerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+}
+
+.footerLeft {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.footerRight {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.footerIcon {
+  font-size: 16px;
+}
+
+.footerText {
+  font-weight: 500;
+}
+
+.footerDate {
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.decorativeElement1 {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 48px;
+  height: 48px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+.decorativeElement2 {
+  position: absolute;
+  bottom: 16px;
+  left: 8px;
+  width: 24px;
+  height: 24px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+/* Screenshot capture styles */
+.screenshotWrapper {
+  position: relative;
+}
+
+.screenshotTarget {
+  cursor: pointer;
+  /* transform: scale(1); */
+  /* transition: transform 0.2s ease; */
+  padding: 8px;
+}
+
+/* .screenshotTarget:hover {
+  transform: scale(1.05);
+} */
+
+.captureOverlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  z-index: 10;
+}
+
+.captureMessage {
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  border-radius: 50%;
+  height: 24px;
+  width: 24px;
+  border: 2px solid transparent;
+  border-bottom-color: #0B132B;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.successOverlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(34, 197, 94, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  z-index: 10;
+}
+
+.successMessage {
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.successIcon {
+  width: 24px;
+  height: 24px;
+  color: #22c55e;
+}
+
+.clickHint {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.clickHintText {
+  font-size: 12px;
+  color: #6b7280;
+}
