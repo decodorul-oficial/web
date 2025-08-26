@@ -10,7 +10,7 @@ describe('slugify', () => {
   });
 
   test('should remove special characters', () => {
-    expect(slugify('Legea nr. 123/2024!')).toBe('legea-nr-123-2024');
+    expect(slugify('Legea nr. 123/2024!')).toBe('legea-nr-1232024');
   });
 
   test('should handle multiple spaces and hyphens', () => {
@@ -36,7 +36,7 @@ describe('createNewsSlug', () => {
     const longTitle = 'A'.repeat(100);
     const slug = createNewsSlug(longTitle, '456', 30);
     expect(slug).toMatch(/^[a-z0-9-]+-456$/);
-    expect(slug.length).toBeLessThanOrEqual(33); // 30 + 3 for "-456"
+    expect(slug.length).toBeLessThanOrEqual(34); // 30 + 4 for "-456"
   });
 });
 

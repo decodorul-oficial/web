@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useNewsletter } from '@/features/newsletter/hooks/useNewsletter';
 import { UNSUBSCRIBE_REASONS, UnsubscribeReason } from '@/features/newsletter/types';
+import { resetNewsletterTracking } from '@/lib/utils/newsletterTracking';
 
 interface UnsubscribeNewsletterFormProps {
   initialEmail?: string;
@@ -20,6 +21,8 @@ export const UnsubscribeNewsletterForm = ({ initialEmail }: UnsubscribeNewslette
 
   useEffect(() => {
     if (success) {
+      // Resetează tracking-ul newsletter când utilizatorul se dezabonează
+      resetNewsletterTracking();
       setIsCompleted(true);
       setIsProcessing(false);
     }

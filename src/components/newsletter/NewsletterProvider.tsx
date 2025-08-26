@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { NewsletterModal } from './NewsletterModal';
+import { markNewsletterSubscribed } from '../../lib/utils/newsletterTracking';
 
 interface NewsletterContextType {
   showNewsletterModal: () => void;
@@ -30,8 +31,9 @@ export const NewsletterProvider = ({ children }: NewsletterProviderProps) => {
   const hideNewsletterModal = () => setIsNewsletterModalOpen(false);
 
   const handleNewsletterSuccess = () => {
-    // Poți adăuga logica pentru tracking sau alte acțiuni după înscrierea cu succes
-    console.log('Newsletter subscription successful');
+    // Marchează utilizatorul ca fiind abonat la newsletter
+    markNewsletterSubscribed();
+    console.log('Newsletter subscription successful - user marked as subscribed');
   };
 
   return (

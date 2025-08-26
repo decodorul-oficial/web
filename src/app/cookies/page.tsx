@@ -123,6 +123,7 @@ export default function CookiesPolicyPage() {
               <li><strong>Cookie-uri de preferințe:</strong> salvează setările tale (limba, tema, etc.)</li>
               <li><strong>Cookie-uri de social media:</strong> permit integrarea cu platformele sociale (dacă aplicabil)</li>
               <li><strong>Cookie-uri de newsletter:</strong> gestionează preferințele tale pentru newsletter și consimțământul pentru marketing</li>
+              <li><strong>Cookie-uri de tracking newsletter:</strong> monitorizează numărul de știri vizualizate pentru afișarea inteligentă a modal-ului newsletter</li>
             </ul>
           </section>
 
@@ -138,10 +139,11 @@ export default function CookiesPolicyPage() {
               <li><strong>Cookie-uri de preferințe newsletter:</strong> stochează preferințele tale pentru tipul de conținut dorit</li>
               <li><strong>Cookie-uri de tracking newsletter:</strong> monitorizează interacțiunile cu newsletter-ul pentru îmbunătățirea serviciului</li>
               <li><strong>Cookie-uri de segmentare:</strong> permit personalizarea conținutului newsletter-ului în funcție de interesele tale</li>
+              <li><strong>Cookie-uri de tracking comportamental newsletter:</strong> monitorizează numărul de știri vizualizate pentru afișarea inteligentă a modal-ului newsletter la intervale specifice (3, 6, 9 știri)</li>
             </ul>
             <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
               <p className="text-sm text-blue-700">
-                <strong>Important:</strong> Cookie-urile de newsletter sunt activate <strong>doar cu consimțământul tău explicit</strong> și pot fi revocate oricând din setările tale.
+                <strong>Important:</strong> Cookie-urile de newsletter sunt activate <strong>doar cu consimțământul tău explicit</strong> și pot fi revocate oricând din setările tale. Tracking-ul comportamental pentru newsletter se oprește automat când te dezabonezi.
               </p>
             </div>
           </section>
