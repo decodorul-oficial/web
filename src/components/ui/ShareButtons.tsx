@@ -102,10 +102,10 @@ export function ShareButtons({
     }
   ];
 
-  const baseButtonClasses = "flex items-center justify-center p-2 rounded-lg transition-all duration-200 border border-gray-200 bg-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand min-w-[44px] min-h-[44px] sm:min-w-auto sm:min-h-auto";
+  const baseButtonClasses = "flex items-center justify-center p-1.5 sm:p-2 rounded-lg transition-all duration-200 border border-gray-200 bg-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand min-w-[36px] min-h-[36px] sm:min-w-[44px] sm:min-h-[44px]";
   
   const containerClasses = {
-    horizontal: "flex items-center gap-2 flex-wrap",
+    horizontal: "flex items-center gap-1.5 sm:gap-2 flex-wrap",
     vertical: "flex flex-col items-center gap-2",
     floating: "fixed left-4 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-2 bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-lg border border-gray-200"
   };
@@ -120,9 +120,9 @@ export function ShareButtons({
         aria-label="Copiază link-ul"
       >
         {copied ? (
-          <Check className="w-4 h-4" />
+          <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         ) : (
-          <LinkIcon className="w-4 h-4" />
+          <LinkIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         )}
         {showLabels && (
           <span className="ml-2 text-sm font-medium hidden sm:inline">
@@ -139,7 +139,7 @@ export function ShareButtons({
           title="Partajează"
           aria-label="Partajează"
         >
-          <Share2 className="w-4 h-4" />
+          <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           {showLabels && (
             <span className="ml-2 text-sm font-medium hidden sm:inline">Partajează</span>
           )}
@@ -157,7 +157,7 @@ export function ShareButtons({
           title={button.label}
           aria-label={button.label}
         >
-          <button.icon className="w-4 h-4" />
+          <button.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           {showLabels && (
             <span className="ml-2 text-sm font-medium hidden sm:inline">{button.name}</span>
           )}

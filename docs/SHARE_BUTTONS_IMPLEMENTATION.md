@@ -251,10 +251,13 @@ interface ShareButtonsProps {
 ### Probleme Rezolvate
 
 1. **Duplicarea butoanelor:** A doua secțiune "Distribuie această știre" din sidebar este acum ascunsă pe mobile
-2. **Experiența touch:** Butoanele au dimensiunea minimă de 44px pentru touch targets
+2. **Experiența touch:** Butoanele au dimensiunea optimizată (36px pe mobile, 44px pe desktop) pentru touch targets
 3. **Layout compact:** Textele butoanelor sunt ascunse pe mobile, doar iconițele sunt vizibile
 4. **Spacing optimizat:** Padding și margin reduse pentru economie de spațiu
 5. **Flex-wrap:** Butoanele se înfășoară pe rânduri multiple pe ecrane mici
+6. **Text scurt pe mobile:** "Distribuie această știre:" devine "Distribuie:" pe mobile
+7. **Iconițe mai mici:** Dimensiunea iconițelor redusă pe mobile (14px vs 16px)
+8. **Gap optimizat:** Spacing între butoane redus pe mobile (6px vs 8px)
 
 ### Implementare Tehnică
 
@@ -266,17 +269,24 @@ useEffect(() => {
   setIsClient(true);
 }, []);
 
-// Butoane cu dimensiuni minime pentru touch
-const baseButtonClasses = "min-w-[44px] min-h-[44px] sm:min-w-auto sm:min-h-auto";
+// Butoane cu dimensiuni optimizate pentru mobile și desktop
+const baseButtonClasses = "min-w-[36px] min-h-[36px] sm:min-w-[44px] sm:min-h-[44px]";
 
-// Text ascuns pe mobile
+// Text scurt pe mobile
+<span className="hidden sm:inline">Distribuie această știre:</span>
+<span className="sm:hidden">Distribuie:</span>
+
+// Text ascuns pe mobile pentru butoane
 <span className="ml-2 text-sm font-medium hidden sm:inline">
   {copied ? 'Copiat!' : 'Copiază link'}
 </span>
 
-// Flex-wrap pentru layout responsive
+// Iconițe mai mici pe mobile
+<Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+
+// Flex-wrap cu gap optimizat
 const containerClasses = {
-  horizontal: "flex items-center gap-2 flex-wrap",
+  horizontal: "flex items-center gap-1.5 sm:gap-2 flex-wrap",
   // ...
 };
 

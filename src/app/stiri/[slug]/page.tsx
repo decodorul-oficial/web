@@ -374,7 +374,8 @@ export default async function NewsDetailPage(props: PageProps) {
             {/* Share buttons after title and metadata */}
             <div className="flex items-center justify-between pt-4 border-t border-gray-200">
               <div className="text-sm text-gray-500">
-                <span>Distribuie această știre:</span>
+                <span className="hidden sm:inline">Distribuie această știre:</span>
+                <span className="sm:hidden">Distribuie:</span>
               </div>
               <ShareButtons
                 url={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro'}/stiri/${createNewsSlug(news.title, news.id)}`}
@@ -382,6 +383,7 @@ export default async function NewsDetailPage(props: PageProps) {
                 description={summary || news.title}
                 variant="horizontal"
                 showLabels={false}
+                className="flex-shrink-0"
               />
             </div>
           </header>
