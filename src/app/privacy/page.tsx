@@ -185,7 +185,7 @@ export default function PrivacyPolicyPage() {
               <li><strong>Date de tracking comportamental:</strong> numărul de știri vizualizate pentru afișarea inteligentă a modal-ului newsletter</li>
             </ul>
             <p className="text-gray-700 mb-4">
-              <strong>Tracking-ul comportamental pentru newsletter:</strong> Pentru a îmbunătăți experiența ta și a oferi conținut relevant, monitorizăm numărul de știri pe care le vizualizezi. Acest tracking se folosește pentru a afișa modal-ul newsletter-ului la intervale specifice (după 3, 6, 9 știri vizualizate) și se oprește automat când te dezabonezi.
+              <strong>Tracking-ul comportamental pentru newsletter:</strong> Pentru a îmbunătăți experiența ta și a oferi conținut relevant, monitorizăm numărul de știri pe care le vizualizezi. Acest tracking se folosește pentru a afișa modal-ul newsletter-ului la intervale specifice (după 3, 9, 18 știri vizualizate) și se oprește automat când te dezabonezi.
             </p>
             <p className="text-gray-700 mb-4">
               <strong>Drepturile tale:</strong> Poți să te dezabonezi oricând folosind link-ul din newsletter sau vizitând <a href="/newsletter/unsubscribe" className="text-brand-info hover:underline">pagina de dezabonare</a>. La dezabonare, toate datele de tracking pentru newsletter sunt șterse automat.

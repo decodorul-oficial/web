@@ -20,8 +20,8 @@ interface NewsletterIntervals {
 
 const DEFAULT_INTERVALS: NewsletterIntervals = {
   first: 3,   // Prima afișare după 3 știri
-  second: 6,  // A doua afișare după 6 știri
-  third: 9    // A treia afișare după 9 știri
+  second: 9,  // A doua afișare după 9 știri
+  third: 18   // A treia afișare după 18 știri
 };
 
 /**

@@ -189,9 +189,9 @@ describe('Newsletter Tracking', () => {
       expect(result).toBe(true);
     });
 
-    it('should return true at second interval (6 news)', () => {
+    it('should return true at second interval (9 news)', () => {
       const data = {
-        newsViewed: 6,
+        newsViewed: 9,
         lastModalShown: 3,
         isSubscribed: false,
         lastReset: Date.now()
@@ -206,8 +206,8 @@ describe('Newsletter Tracking', () => {
 
     it('should return false if modal was already shown at current interval', () => {
       const data = {
-        newsViewed: 6,
-        lastModalShown: 6,
+        newsViewed: 9,
+        lastModalShown: 9,
         isSubscribed: false,
         lastReset: Date.now()
       };

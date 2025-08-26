@@ -46,7 +46,7 @@ localStorage.getItem('newsletter_tracking_' + document.cookie.match(/mo_session=
 
 #### Pasul 5: Testează Al Doilea Interval
 1. Așteaptă 24 ore sau modifică manual timestamp-ul
-2. Vizualizează încă 3 știri (total 6)
+2. Vizualizează încă 6 știri (total 9)
 3. Modal-ul ar trebui să apară din nou
 
 ### 3. Testarea Abonării

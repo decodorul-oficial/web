@@ -71,7 +71,7 @@ export const NewsletterTrackingStats = ({ showDetails = false }: NewsletterTrack
       {showDetails && (
         <div className="mt-3 pt-3 border-t border-gray-200">
           <div className="text-xs text-gray-500">
-            <p><strong>Intervale afișare:</strong> 3, 6, 9 știri</p>
+            <p><strong>Intervale afișare:</strong> 3, 9, 18 știri</p>
             <p><strong>Cooldown:</strong> 24 ore între afișări</p>
             <p><strong>Tracking activ:</strong> Doar cu consimțământ analytics</p>
           </div>

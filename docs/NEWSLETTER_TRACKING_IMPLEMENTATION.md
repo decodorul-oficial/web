@@ -14,8 +14,8 @@ Sistemul de tracking newsletter implementat monitorizează comportamentul utiliz
 
 ### 2. Intervale Inteligente de Afișare
 - Prima afișare: după 3 știri vizualizate
-- A doua afișare: după 6 știri vizualizate  
-- A treia afișare: după 9 știri vizualizate
+- A doua afișare: după 9 știri vizualizate  
+- A treia afișare: după 18 știri vizualizate
 - Cooldown de 24 ore între afișări
 
 ### 3. Conformitate GDPR
@@ -150,7 +150,7 @@ interface NewsletterTrackingData {
 ### Testare Manuală
 1. Acceptă cookie-urile de analytics
 2. Vizualizează 3 știri - modal-ul ar trebui să apară
-3. Vizualizează încă 3 știri (total 6) - modal-ul ar trebui să apară din nou
+3. Vizualizează încă 6 știri (total 9) - modal-ul ar trebui să apară din nou
 4. Abonează-te la newsletter - modal-ul nu ar trebui să mai apară
 5. Dezabonează-te - tracking-ul se resetează
 
