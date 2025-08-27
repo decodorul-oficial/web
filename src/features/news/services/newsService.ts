@@ -29,6 +29,7 @@ export type FetchNewsParams = {
 
 export async function fetchLatestNews(params: FetchNewsParams = {}) {
   const { limit = 10, offset = 0, orderBy = 'publicationDate', orderDirection = 'desc' } = params;
+  // Allow higher limits for archive and sitemap purposes
   const limitClamped = Math.max(1, Math.min(100, limit));
 
   // Asigură că cookie-ul mo_session este setat pentru analytics

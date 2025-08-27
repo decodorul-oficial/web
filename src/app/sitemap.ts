@@ -21,6 +21,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
+      url: `${baseUrl}/arhiva`,
+      lastModified: currentDate,
+      changeFrequency: 'daily' as const,
+      priority: 0.8,
+    },
+    {
       url: `${baseUrl}/contact`,
       lastModified: currentDate,
       changeFrequency: 'monthly' as const,
@@ -48,7 +54,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     // Fetch all news (with a reasonable limit for sitemap)
-    const { stiri } = await fetchLatestNews({ limit: 20, orderBy: 'publicationDate', orderDirection: 'desc' });
+    const { stiri } = await fetchLatestNews({ limit: 100, orderBy: 'publicationDate', orderDirection: 'desc' });
     
     const newsPages = stiri.map((news) => {
       const publicationDate = new Date(news.publicationDate);
@@ -75,7 +81,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       };
     });
 
-    return [...staticPages, ...newsPages];
+    // Generate year archive pages
+    const yearArchivePages = [];
+    const years = new Set(stiri.map(news => new Date(news.publicationDate).getFullYear()));
+    
+    for (const year of years) {
+      yearArchivePages.push({
+        url: `${baseUrl}/arhiva/${year}`,
+        lastModified: currentDate,
+        changeFrequency: 'monthly' as const,
+        priority: 0.7,
+      });
+    }
+
+    return [...staticPages, ...yearArchivePages, ...newsPages];
   } catch (error) {
     console.error('Error generating sitemap:', error);
     // Return only static pages if news fetch fails

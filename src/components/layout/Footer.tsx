@@ -54,6 +54,9 @@ export function Footer() {
           
           {/* Right side - Navigation Links */}
           <nav className="flex flex-wrap justify-center md:justify-end gap-4 text-xs">
+            <a href="/arhiva" className="hover:underline">Arhivă</a>
+            <a href="/stiri" className="hover:underline">Căutare</a>
+            <a href="/sinteza-zilnica" className="hover:underline">Sinteza Zilnică</a>
             <a href="/contact" className="hover:underline">Contact</a>
             <a href="/privacy" className="hover:underline">Confidențialitate</a>
             <a href="/cookies" className="hover:underline">Cookies</a>
