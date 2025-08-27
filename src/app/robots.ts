@@ -15,10 +15,12 @@ export default function robots(): MetadataRoute.Robots {
           '/contact',
           '/legal',
           '/privacy',
-          '/cookies'
+          '/cookies',
+          '/api/news-sitemap'
         ],
         disallow: [
-          '/api/',
+          '/api/graphql',
+          '/api/monitorul-oficial',
           '/_next/',
           '/admin/',
           '/login',
@@ -37,10 +39,12 @@ export default function robots(): MetadataRoute.Robots {
           '/contact',
           '/legal',
           '/privacy',
-          '/cookies'
+          '/cookies',
+          '/api/news-sitemap'
         ],
         disallow: [
-          '/api/',
+          '/api/graphql',
+          '/api/monitorul-oficial',
           '/_next/',
           '/admin/',
           '/login',
@@ -59,10 +63,12 @@ export default function robots(): MetadataRoute.Robots {
           '/contact',
           '/legal',
           '/privacy',
-          '/cookies'
+          '/cookies',
+          '/api/news-sitemap'
         ],
         disallow: [
-          '/api/',
+          '/api/graphql',
+          '/api/monitorul-oficial',
           '/_next/',
           '/admin/',
           '/login',
