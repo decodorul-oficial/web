@@ -14,7 +14,7 @@ Google Search Console raportează că 25 de pagini au statusul **"Descoperită �
 
 ### Soluția 1: News Sitemap (Tehnic, extrem de eficient)
 
-**Fișier**: `src/app/news-sitemap.ts`
+**Fișier**: `src/app/api/news-sitemap/route.ts`
 
 #### Caracteristici:
 - **Format special pentru știri**: Urmărește standardul Google News Sitemap
@@ -81,10 +81,10 @@ const recentNews = stiri.filter((news) => {
 # Adăugat /arhiva în allow pentru toate bot-urile
 allow: ['/', '/stiri/*', '/arhiva', '/contact', ...]
 
-# Adăugat news-sitemap.xml
+# Adăugat news-sitemap
 sitemap: [
   'https://www.decodoruloficial.ro/sitemap.xml',
-  'https://www.decodoruloficial.ro/news-sitemap.xml'
+  'https://www.decodoruloficial.ro/api/news-sitemap'
 ]
 ```
 
@@ -130,7 +130,7 @@ sitemap: [
 
 ### 2. **Testare Manuală**
 - Accesează `/arhiva` și verifică toate link-urile
-- Testează `/news-sitemap.xml` în browser
+- Testează `/api/news-sitemap` în browser
 - Verifică că toate știrile sunt accesibile
 
 ### 3. **Analiză Trafic**
