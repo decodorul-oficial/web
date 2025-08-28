@@ -140,4 +140,71 @@ export const GET_DAILY_SYNTHESIS = gql`
   }
 `;
 
+// Query: getStiriByCategory
+export const GET_STIRI_BY_CATEGORY = gql`
+  query GetStiriByCategory($category: String!, $limit: Int, $offset: Int) {
+    getStiriByCategory(
+      category: $category
+      limit: $limit
+      offset: $offset
+      orderBy: "publicationDate"
+      orderDirection: "desc"
+    ) {
+      stiri {
+        id
+        title
+        publicationDate
+        content
+        filename
+        viewCount
+      }
+      pagination {
+        totalCount
+        hasNextPage
+        hasPreviousPage
+        currentPage
+        totalPages
+      }
+    }
+  }
+`;
 
+// Query: getCategories
+export const GET_CATEGORIES = gql`
+  query GetCategories($limit: Int) {
+    getCategories(limit: $limit) {
+      name
+      slug
+      count
+    }
+  }
+`;
+
+// Query: getStiriByCategorySlug
+export const GET_STIRI_BY_CATEGORY_SLUG = gql`
+  query GetCategoryPage($slug: String!, $limit: Int, $offset: Int) {
+    getStiriByCategorySlug(
+      slug: $slug,
+      limit: $limit,
+      offset: $offset,
+      orderBy: "publicationDate",
+      orderDirection: "desc"
+    ) {
+      stiri {
+        id
+        title
+        publicationDate
+        content
+        filename
+        viewCount
+      }
+      pagination {
+        totalCount
+        hasNextPage
+        hasPreviousPage
+        currentPage
+        totalPages
+      }
+    }
+  }
+`;

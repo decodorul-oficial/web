@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next';
-import { fetchLatestNews } from '@/features/news/services/newsService';
+import { fetchLatestNews, fetchCategories, fetchStiriByCategory } from '@/features/news/services/newsService';
 import { createNewsSlug } from '@/lib/utils/slugify';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -94,7 +94,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       });
     }
 
-    return [...staticPages, ...yearArchivePages, ...newsPages];
+    // Categories root and top pages
+    const cats = await fetchCategories(100);
+    const categoryPages: MetadataRoute.Sitemap = cats.flatMap((c) => {
+      const slug = c.slug;
+      const urlBase = `${baseUrl}/categorii/${slug}`;
+      const total = c.count;
+      const perPage = 20;
+      const totalPages = Math.max(1, Math.ceil(total / perPage));
+      // Only include first 5 pages to keep sitemap light
+      const maxPages = Math.min(totalPages, 5);
+      const pages: MetadataRoute.Sitemap = [];
+      for (let p = 1; p <= maxPages; p++) {
+        pages.push({
+          url: p === 1 ? urlBase : `${urlBase}?page=${p}`,
+          lastModified: currentDate,
+          changeFrequency: 'daily',
+          priority: p === 1 ? 0.8 : 0.6,
+        });
+      }
+      return pages;
+    });
+
+    // Include categories root
+    const categoriesRoot = [{
+      url: `${baseUrl}/categorii`,
+      lastModified: currentDate,
+      changeFrequency: 'daily' as const,
+      priority: 0.7,
+    }];
+
+    return [...staticPages, ...categoriesRoot, ...yearArchivePages, ...categoryPages, ...newsPages];
   } catch (error) {
     console.error('Error generating sitemap:', error);
     // Return only static pages if news fetch fails

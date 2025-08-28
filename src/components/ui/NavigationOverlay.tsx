@@ -15,7 +15,7 @@ export function NavigationOverlay() {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+    <div className="fixed inset-0 z-[90] flex items-center justify-center">
       {/* Backdrop simplu fără blur pentru a nu afecta vizibilitatea textului din loader-ul principal */}
       <div className="absolute inset-0 bg-white/50 backdrop-blur-sm transition-all duration-200" />
       <div className="relative z-10 flex items-center gap-3 rounded-lg border bg-white px-6 py-3 shadow-lg">

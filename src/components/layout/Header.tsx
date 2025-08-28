@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { SearchSpotlight } from '@/components/search/SearchSpotlight';
 import { MobileMenu } from '@/components/layout/MobileMenu';
 import { usePathname } from 'next/navigation';
+import { fetchCategories } from '@/features/news/services/newsService';
 
 const navItems: { href: string; label: string }[] = [
   { href: '/', label: 'Acasă' },
@@ -18,13 +19,7 @@ const navItems: { href: string; label: string }[] = [
   //{ href: '/login', label: 'Login' }
 ];
 
-const categories = [
-  { slug: 'administratie', name: 'Administrație' },
-  { slug: 'economie', name: 'Economie' },
-  { slug: 'legislatie', name: 'Legislație' },
-  { slug: 'transport', name: 'Transport' },
-  { slug: 'energie', name: 'Energie' }
-];
+type Category = { slug: string; name: string; count: number };
 
 function CategoryIcon({ slug }: { slug: string }) {
   const common = 'h-4 w-4 text-brand-info';
@@ -68,25 +63,49 @@ function CategoryIcon({ slug }: { slug: string }) {
   }
 }
 
+function capitalizeFirst(input: string): string {
+  if (!input) return '';
+  return input.charAt(0).toUpperCase() + input.slice(1);
+}
+
 export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [megaOpen, setMegaOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const megaRef = useRef<HTMLDivElement | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
-      if (!dropdownRef.current) return;
-      if (!dropdownRef.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) setOpen(false);
+      if (megaRef.current && !megaRef.current.contains(target)) setMegaOpen(false);
     }
-    document.addEventListener('click', onDocClick);
+    document.addEventListener('click', onDocClick, true);
     return () => document.removeEventListener('click', onDocClick);
+  }, []);
+  
+  useEffect(() => {
+    let mounted = true;
+    setIsLoadingCategories(true);
+    fetchCategories(100)
+      .then((cats) => {
+        if (!mounted) return;
+        const mapped = cats.map((c) => ({ slug: c.slug, name: c.name, count: c.count }));
+        setCategories(mapped);
+      })
+      .catch(() => {})
+      .finally(() => { if (mounted) setIsLoadingCategories(false); });
+    return () => { mounted = false; };
   }, []);
   
   // Ensure pathname is always defined before using it
   const safePathname = pathname || '';
   
   return (
-    <header className="sticky top-0 z-40 border-b bg-white/80 backdrop-blur">
+    <header className="sticky top-0 z-[95] border-b bg-white/80 backdrop-blur">
       <div className="container-responsive flex h-[var(--header-height)] items-center justify-between">
         <Link href="/" className="flex items-center gap-3 font-bold tracking-tight">
           <Image src="/logo.png" alt="Decodorul Oficial" width={32} height={32} className="h-8 w-8 object-contain" />
@@ -123,6 +142,29 @@ export function Header() {
             );
           })}
 
+          {/* Full width Mega Menu trigger */}
+          {isLoadingCategories ? (
+            <div className="h-5 w-24 rounded bg-gray-200 animate-pulse" aria-hidden />
+          ) : categories.length > 0 ? (
+            <div className="relative" ref={dropdownRef}>
+              <button
+                className="text-sm font-medium text-gray-600 hover:text-brand-info transition-colors"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setMegaOpen((v) => !v);
+                }}
+                aria-expanded={megaOpen}
+              >
+                Categorii
+              </button>
+            </div>
+          ) : (
+            <button className="text-sm font-medium text-gray-400 cursor-not-allowed" disabled>
+              Categorii
+            </button>
+          )}
+
           {/* Search */}
           <SearchSpotlight />
 
@@ -132,6 +174,53 @@ export function Header() {
           <MobileMenu />
         </div>
       </div>
+      {/* Mega Menu Panel */}
+      {megaOpen && categories.length > 0 && (
+        <div
+          ref={megaRef}
+          className="fixed inset-x-0 top-[var(--header-height)] z-[100] border-b border-t bg-white shadow-xl ring-1 ring-black/5 overflow-hidden rounded-b-xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="container-responsive py-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-gray-700">Categorii</span>
+              <button
+                aria-label="Închide"
+                className="p-2 rounded hover:bg-gray-100 text-gray-600"
+                onClick={() => setMegaOpen(false)}
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            <div className="mt-2 max-h-[50vh] overflow-y-auto pr-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 xl:gap-2">
+                {categories.map((c) => (
+                  <Link
+                    key={c.slug}
+                    href={`/categorii/${c.slug}`}
+                    className="group flex items-start gap-2.5 rounded-md border border-transparent p-1.5 hover:border-gray-200 hover:bg-gray-50 transition-colors"
+                    onClick={() => setMegaOpen(false)}
+                  >
+                    <div className="mt-1">
+                      <CategoryIcon slug={c.slug} />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-gray-800 group-hover:text-brand-info">
+                        {capitalizeFirst(c.name)}
+                      </div>
+                      <div className="text-xs text-gray-500">{c.count} articole</div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

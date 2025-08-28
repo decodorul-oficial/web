@@ -80,4 +80,29 @@ export type GetDailySynthesisParams = {
   date: string; // Format: YYYY-MM-DD
 };
 
+// Types for categories
+export type CategoryCount = {
+  name: string;
+  slug: string;
+  count: number;
+};
+
+export type GetCategoriesResponse = {
+  getCategories: CategoryCount[];
+};
+
+// Types for category listing
+export type GetStiriByCategoryResponse = {
+  getStiriByCategory: {
+    stiri: NewsItem[];
+    pagination: {
+      totalCount: number;
+      currentPage: number;
+      totalPages: number;
+      hasNextPage: boolean;
+      hasPreviousPage: boolean;
+    };
+  };
+};
+
 

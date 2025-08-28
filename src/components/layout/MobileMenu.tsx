@@ -2,17 +2,13 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { fetchCategories } from '@/features/news/services/newsService';
 
-const categories = [
-  { slug: 'administratie', name: 'Administrație' },
-  { slug: 'economie', name: 'Economie' },
-  { slug: 'legislatie', name: 'Legislație' },
-  { slug: 'transport', name: 'Transport' },
-  { slug: 'energie', name: 'Energie' }
-];
+type Category = { slug: string; name: string; count: number };
 
 export function MobileMenu() {
   const [open, setOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
   
   useEffect(() => {
     const el = document.querySelector('.disclaimer-banner') as HTMLElement | null;
@@ -23,6 +19,18 @@ export function MobileMenu() {
       if (el) el.style.display = '';
     };
   }, [open]);
+  
+  useEffect(() => {
+    let mounted = true;
+    fetchCategories(100)
+      .then((cats) => {
+        if (!mounted) return;
+        const mapped = cats.map((c) => ({ slug: c.slug, name: c.name, count: c.count }));
+        setCategories(mapped);
+      })
+      .catch(() => {});
+    return () => { mounted = false; };
+  }, []);
   
   return (
     <div className="flex items-center gap-3 md:hidden">
@@ -45,7 +53,7 @@ export function MobileMenu() {
       {open &&
         createPortal(
           <div className="fixed left-0 right-0 bottom-0 top-[var(--header-height)] z-[1000] bg-white/80 backdrop-blur" onClick={() => setOpen(false)}>
-            <div className="absolute left-0 top-0 h-full w-full p-4" onClick={(e) => e.stopPropagation()}>
+            <div className="absolute left-0 top-0 h-full w-full p-4 overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}>
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-base font-semibold">Meniu</span>
                 <button className="p-1" onClick={() => setOpen(false)} aria-label="Închide">
@@ -62,24 +70,24 @@ export function MobileMenu() {
                 <Link href="/sinteza-zilnica" className="block rounded px-2 py-2 hover:bg-gray-50" onClick={() => setOpen(false)}>
                   Sinteza Zilnică
                 </Link>
-                {/* comentez butoanele
-                <details open>
-                  <summary className="cursor-pointer select-none rounded px-2 py-2 hover:bg-gray-50">Category</summary>
-                  <div className="ml-2 mt-1 space-y-1">
-                    {categories.map((c) => (
-                      <Link key={c.slug} href={`/categorii/${c.slug}`} className="block rounded px-2 py-1 hover:bg-gray-50" onClick={() => setOpen(false)}>
-                        {c.name}
-                      </Link>
-                    ))}
-                  </div>
-                </details>
-                
-                <Link href="/join" className="block rounded px-2 py-2 hover:bg-gray-50" onClick={() => setOpen(false)}>
-                  Join
-                </Link>
-                <Link href="/login" className="block rounded px-2 py-2 hover:bg-gray-50" onClick={() => setOpen(false)}>
-                  Login
-                </Link>*/}
+                {categories.length > 0 && (
+                  <details>
+                    <summary className="cursor-pointer select-none rounded px-2 py-2 hover:bg-gray-50">Categorii</summary>
+                    <div className="ml-2 mt-1">
+                      {categories.map((c, idx) => (
+                        <div key={c.slug} className={`border-b border-gray-200 ${idx === categories.length - 1 ? 'border-b-0' : ''}`}>
+                          <Link
+                            href={`/categorii/${c.slug}`}
+                            className="block px-2 py-2 hover:bg-gray-50 capitalize"
+                            onClick={() => setOpen(false)}
+                          >
+                            {c.name} <span className="text-xs text-gray-500">({c.count})</span>
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                )}
               </nav>
             </div>
           </div>,

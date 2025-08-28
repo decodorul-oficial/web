@@ -6,7 +6,10 @@ import {
   SEARCH_STIRI, 
   GET_MOST_READ_STIRI, 
   SEARCH_STIRI_BY_KEYWORDS,
-  GET_DAILY_SYNTHESIS
+  GET_DAILY_SYNTHESIS,
+  GET_STIRI_BY_CATEGORY,
+  GET_CATEGORIES,
+  GET_STIRI_BY_CATEGORY_SLUG
 } from '../graphql/queries';
 import { 
   GetStiriResponse, 
@@ -16,7 +19,10 @@ import {
   SearchStiriByKeywordsResponse,
   SearchStiriByKeywordsParams,
   GetDailySynthesisResponse,
-  GetDailySynthesisParams
+  GetDailySynthesisParams,
+  GetStiriByCategoryResponse,
+  GetCategoriesResponse,
+  CategoryCount
 } from '../types';
 import { ensureSessionCookie } from '@/lib/utils/sessionCookie';
 
@@ -203,6 +209,97 @@ export async function getDailySynthesis(params: GetDailySynthesisParams): Promis
   } catch (error) {
     console.error('Error fetching daily synthesis:', error);
     throw error;
+  }
+}
+
+// Fetch categories with counts
+export async function fetchCategories(limit: number = 100): Promise<CategoryCount[]> {
+  try {
+    const client = getGraphQLClient();
+    const data = await client.request<GetCategoriesResponse>(GET_CATEGORIES, { limit });
+    return data.getCategories;
+  } catch (primaryError: any) {
+    console.error('fetchCategories failed:', primaryError);
+    try {
+      const { data } = await requestWithEndpointFallback<GetCategoriesResponse>(
+        GET_CATEGORIES,
+        { limit },
+        process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT
+      );
+      return data.getCategories;
+    } catch (fallbackError) {
+      console.error('Endpoint fallback also failed (fetchCategories):', fallbackError);
+      return [];
+    }
+  }
+}
+
+// Fetch news by category with pagination
+export async function fetchStiriByCategory(params: { category: string; limit?: number; offset?: number }): Promise<GetStiriByCategoryResponse['getStiriByCategory']> {
+  const { category, limit = 20, offset = 0 } = params;
+  const limitClamped = Math.max(1, Math.min(100, limit));
+
+  // Ensure session cookie for analytics
+  ensureSessionCookie();
+
+  try {
+    const client = getGraphQLClient();
+    const data = await client.request<GetStiriByCategoryResponse>(GET_STIRI_BY_CATEGORY, {
+      category,
+      limit: limitClamped,
+      offset
+    });
+    return data.getStiriByCategory;
+  } catch (primaryError: any) {
+    console.error('fetchStiriByCategory failed:', primaryError);
+    try {
+      const { data } = await requestWithEndpointFallback<GetStiriByCategoryResponse>(
+        GET_STIRI_BY_CATEGORY,
+        { category, limit: limitClamped, offset },
+        process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT
+      );
+      return data.getStiriByCategory;
+    } catch (fallbackError) {
+      console.error('Endpoint fallback also failed (fetchStiriByCategory):', fallbackError);
+      return {
+        stiri: [],
+        pagination: { totalCount: 0, currentPage: 1, totalPages: 1, hasNextPage: false, hasPreviousPage: false }
+      };
+    }
+  }
+}
+
+// Fetch news by category slug with pagination
+export async function fetchStiriByCategorySlug(params: { slug: string; limit?: number; offset?: number }): Promise<GetStiriByCategoryResponse['getStiriByCategory']> {
+  const { slug, limit = 20, offset = 0 } = params;
+  const limitClamped = Math.max(1, Math.min(100, limit));
+
+  ensureSessionCookie();
+
+  try {
+    const client = getGraphQLClient();
+    const data = await client.request<GetStiriByCategoryResponse>(GET_STIRI_BY_CATEGORY_SLUG, {
+      slug,
+      limit: limitClamped,
+      offset
+    });
+    return (data as any).getStiriByCategorySlug;
+  } catch (primaryError: any) {
+    console.error('fetchStiriByCategorySlug failed:', primaryError);
+    try {
+      const { data } = await requestWithEndpointFallback<GetStiriByCategoryResponse>(
+        GET_STIRI_BY_CATEGORY_SLUG,
+        { slug, limit: limitClamped, offset },
+        process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT
+      );
+      return (data as any).getStiriByCategorySlug;
+    } catch (fallbackError) {
+      console.error('Endpoint fallback also failed (fetchStiriByCategorySlug):', fallbackError);
+      return {
+        stiri: [],
+        pagination: { totalCount: 0, currentPage: 1, totalPages: 1, hasNextPage: false, hasPreviousPage: false }
+      };
+    }
   }
 }
 
