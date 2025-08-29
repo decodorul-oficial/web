@@ -17,8 +17,9 @@ export function DisplayMediaScreenshot({ news, index }: DisplayMediaScreenshotPr
   const [showInstructions, setShowInstructions] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // Check browser compatibility
-  const isDisplayMediaSupported = !!(typeof window !== 'undefined' && navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+  // Check browser compatibility - exclude mobile devices
+  const isMobile = typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const isDisplayMediaSupported = !!(typeof window !== 'undefined' && navigator.mediaDevices && 'getDisplayMedia' in navigator.mediaDevices && !isMobile);
 
   // Extract synthesis from content if available
   const getSynthesis = () => {
@@ -303,36 +304,46 @@ export function DisplayMediaScreenshot({ news, index }: DisplayMediaScreenshotPr
 
       {/* Action Buttons */}
       <div className="mt-3 flex gap-2">
-        <button
-          onClick={captureDisplayMedia}
-          disabled={isCapturing || !isDisplayMediaSupported}
-          className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-            isDisplayMediaSupported 
-              ? 'bg-brand-accent hover:bg-brand-highlight text-white' 
-              : 'bg-gray-400 cursor-not-allowed text-gray-200'
-          } disabled:opacity-50`}
-          title={!isDisplayMediaSupported ? 'Browser-ul nu suportă capturarea ecranului' : ''}
-          aria-label={isDisplayMediaSupported ? 'Capturare screenshot folosind getDisplayMedia' : 'Capturarea ecranului nu este suportată'}
-        >
-          {isCapturing ? (
-            <div className="flex items-center justify-center gap-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              Se capturează...
-            </div>
-          ) : !isDisplayMediaSupported ? (
-            '❌ Nu suportat'
-          ) : (
-            '🖥️ Capture Display'
-          )}
-        </button>
+        {!isMobile && (
+          <>
+            <button
+              onClick={captureDisplayMedia}
+              disabled={isCapturing || !isDisplayMediaSupported}
+              className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isDisplayMediaSupported 
+                  ? 'bg-brand-accent hover:bg-brand-highlight text-white' 
+                  : 'bg-gray-400 cursor-not-allowed text-gray-200'
+              } disabled:opacity-50`}
+              title={!isDisplayMediaSupported ? 'Browser-ul nu suportă capturarea ecranului' : ''}
+              aria-label={isDisplayMediaSupported ? 'Capturare screenshot folosind getDisplayMedia' : 'Capturarea ecranului nu este suportată'}
+            >
+              {isCapturing ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Se capturează...
+                </div>
+              ) : !isDisplayMediaSupported ? (
+                '❌ Nu suportat'
+              ) : (
+                '🖥️ Capture Display'
+              )}
+            </button>
+            
+            <button
+              onClick={() => setShowInstructions(true)}
+              className="bg-brand-soft hover:bg-brand-highlight text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+              aria-label="Afișează instrucțiunile pentru capturarea ecranului"
+            >
+              📖 Instrucțiuni
+            </button>
+          </>
+        )}
         
-        <button
-          onClick={() => setShowInstructions(true)}
-          className="bg-brand-soft hover:bg-brand-highlight text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-          aria-label="Afișează instrucțiunile pentru capturarea ecranului"
-        >
-          📖 Instrucțiuni
-        </button>
+        {isMobile && (
+          <div className="flex-1 bg-blue-500/20 border border-blue-300 text-blue-700 px-3 py-2 rounded-lg text-sm text-center">
+            📱 Folosește butonul violet de sus pentru screenshot pe mobil
+          </div>
+        )}
         
         <button
           onClick={openPreview}
@@ -409,13 +420,21 @@ export function DisplayMediaScreenshot({ news, index }: DisplayMediaScreenshotPr
         <p className="text-white/80 text-xs">
           {news.publicationDate ? new Date(news.publicationDate).toLocaleDateString('ro-RO') : 'Data indisponibilă'}
         </p>
-        <p className="text-white/60 text-xs mt-1">
-          💡 Folosește "Capture Display" pentru a captura doar card-ul știrii folosind getDisplayMedia
-        </p>
-        {!isDisplayMediaSupported && (
-          <p className="text-red-300 text-xs mt-1">
-            ⚠️ Browser-ul nu suportă capturarea ecranului. Încearcă Chrome, Firefox sau Edge.
+        {isMobile ? (
+          <p className="text-white/60 text-xs mt-1">
+            📱 Folosește butonul violet pentru screenshot direct în Photos
           </p>
+        ) : (
+          <>
+            <p className="text-white/60 text-xs mt-1">
+              💡 Folosește "Capture Display" pentru a captura doar card-ul știrii folosind getDisplayMedia
+            </p>
+            {!isDisplayMediaSupported && (
+              <p className="text-red-300 text-xs mt-1">
+                ⚠️ Browser-ul nu suportă capturarea ecranului. Încearcă Chrome, Firefox sau Edge.
+              </p>
+            )}
+          </>
         )}
       </div>
     </div>
