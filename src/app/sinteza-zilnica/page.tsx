@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { getDailySynthesis } from '@/features/news/services/newsService';
@@ -105,7 +105,6 @@ const isWeekendDate = (dateString: string): boolean => {
 
 function SintezaZilnicaContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   
   // State pentru sinteza și navigare
   const [synthesis, setSynthesis] = useState<DailySynthesis | null>(null);
@@ -115,32 +114,89 @@ function SintezaZilnicaContent() {
   const [weekendInfo, setWeekendInfo] = useState<{ message: string; visible: boolean } | null>(null);
   // Replaced custom datepicker with BusinessDayDatePicker
   const [showInfoToast, setShowInfoToast] = useState(false);
+  const [autoRedirectInfo, setAutoRedirectInfo] = useState<string | null>(null);
 
-  // Inițializare din URL params sau data curentă
+  // Funcție helper pentru a găsi cea mai recentă zi cu sinteza disponibilă
+  const findLatestDateWithSynthesis = useCallback(async (startDate: Date, maxDaysBack: number = 7): Promise<string | null> => {
+    const currentCheck = new Date(startDate);
+    let daysChecked = 0;
+    
+    while (daysChecked < maxDaysBack) {
+      // Sărim weekendurile
+      if (!isWeekend(currentCheck)) {
+        const dateString = toLocalDateString(currentCheck);
+        
+        try {
+          const response = await getDailySynthesis({ date: dateString });
+          if (response.getDailySynthesis) {
+            return dateString;
+          }
+        } catch {
+          // Continuă căutarea chiar dacă există o eroare pentru această dată
+          console.log(`No synthesis found for ${dateString}`);
+        }
+      }
+      
+      // Mergi la ziua anterioară
+      currentCheck.setDate(currentCheck.getDate() - 1);
+      daysChecked++;
+    }
+    
+    return null;
+  }, []);
+
+  // Inițializare din URL params sau data curentă cu verificare automată
   useEffect(() => {
     const urlDate = searchParams.get('date');
     const today = getCurrentValidDate();
     
-    let finalDate = toLocalDateString(today);
-    
-    // Dacă există o dată în URL, verifică dacă este validă
-    if (urlDate) {
-      if (isWeekendDate(urlDate)) {
-        // Dacă data din URL este weekend, afișează un mesaj și folosește data curentă validă
-        setError('Data selectată este weekend. Sintezele sunt disponibile doar pentru zilele lucrătoare. Se afișează sinteza pentru ultima zi lucrătoare.');
-        finalDate = toLocalDateString(today);
-      } else if (isFutureDate(urlDate)) {
-        // Dacă data din URL este în viitor, afișează un mesaj și folosește data curentă validă
-        setError('Data selectată este în viitor. Sintezele sunt disponibile doar pentru zilele trecute. Se afișează sinteza pentru ultima zi lucrătoare.');
-        finalDate = toLocalDateString(today);
+    const initializePage = async () => {
+      let finalDate = toLocalDateString(today);
+      let shouldCheckForSynthesis = false;
+      
+      // Dacă există o dată în URL, verifică dacă este validă
+      if (urlDate) {
+        if (isWeekendDate(urlDate)) {
+          // Dacă data din URL este weekend, afișează un mesaj și folosește data curentă validă
+          setError('Data selectată este weekend. Sintezele sunt disponibile doar pentru zilele lucrătoare. Se afișează sinteza pentru ultima zi lucrătoare.');
+          finalDate = toLocalDateString(today);
+          shouldCheckForSynthesis = true;
+        } else if (isFutureDate(urlDate)) {
+          // Dacă data din URL este în viitor, afișează un mesaj și folosește data curentă validă
+          setError('Data selectată este în viitor. Sintezele sunt disponibile doar pentru zilele trecute. Se afișează sinteza pentru ultima zi lucrătoare.');
+          finalDate = toLocalDateString(today);
+          shouldCheckForSynthesis = true;
+        } else {
+          // Data din URL este validă, o folosim direct
+          finalDate = urlDate;
+        }
       } else {
-        // Data din URL este validă
-        finalDate = urlDate;
+        // Nu există dată în URL, verificăm automat pentru ziua curentă
+        shouldCheckForSynthesis = true;
       }
-    }
+      
+      // Verifică dacă există sinteza pentru data calculată (doar pentru ziua curentă sau când venim din erori)
+      if (shouldCheckForSynthesis) {
+        const dateWithSynthesis = await findLatestDateWithSynthesis(parseLocalDate(finalDate));
+        if (dateWithSynthesis && dateWithSynthesis !== finalDate) {
+          const daysBack = Math.floor((parseLocalDate(finalDate).getTime() - parseLocalDate(dateWithSynthesis).getTime()) / (1000 * 60 * 60 * 24));
+          if (daysBack === 1) {
+            setAutoRedirectInfo('Pentru ziua curentă nu este încă disponibilă sinteza. Se afișează sinteza pentru ziua anterioară.');
+          } else if (daysBack > 1) {
+            setAutoRedirectInfo(`Pentru ziua curentă nu este încă disponibilă sinteza. Se afișează sinteza pentru ${formatDisplayDate(dateWithSynthesis)} (${daysBack} zile în urmă).`);
+          }
+          finalDate = dateWithSynthesis;
+        } else if (!dateWithSynthesis) {
+          // Nu s-a găsit nicio sinteză în ultimele 7 zile
+          setError('Nu s-a găsit nicio sinteză în ultimele 7 zile lucrătoare. Vă rugăm să selectați manual o dată anterioară.');
+        }
+      }
+      
+      setCurrentDate(finalDate);
+    };
     
-    setCurrentDate(finalDate);
-  }, [searchParams]);
+    initializePage();
+  }, [searchParams, findLatestDateWithSynthesis]);
 
   // Funcția pentru încărcarea sintezei
   const loadSynthesis = useCallback(async (date: string) => {
@@ -152,6 +208,12 @@ function SintezaZilnicaContent() {
     try {
       const response = await getDailySynthesis({ date });
       setSynthesis(response.getDailySynthesis);
+      
+      // Dacă sinteza s-a încărcat cu succes și avem un mesaj informativ despre redirect, îl afișăm ca o eroare informativă
+      if (response.getDailySynthesis && autoRedirectInfo) {
+        setError(autoRedirectInfo);
+        setAutoRedirectInfo(null); // Resetează mesajul pentru că l-am afișat
+      }
       
       // Actualizează URL-ul cu data curentă fără a declanșa o navigare Next.js
       // pentru a evita loader-ul global. Folosim History API (pushState).
@@ -165,10 +227,11 @@ function SintezaZilnicaContent() {
       console.error('Error loading synthesis:', err);
       setError('A apărut o eroare la încărcarea sintezei. Vă rugăm să încercați din nou.');
       setSynthesis(null);
+      setAutoRedirectInfo(null); // Resetează mesajul informativ în caz de eroare
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, [autoRedirectInfo]);
 
   // Efect pentru încărcarea sintezei când se schimbă data
   useEffect(() => {
@@ -213,6 +276,8 @@ function SintezaZilnicaContent() {
       });
     }
     
+    // Resetează mesajul de auto-redirect dacă există
+    setAutoRedirectInfo(null);
     setCurrentDate(newDateString);
   };
 
@@ -231,6 +296,8 @@ function SintezaZilnicaContent() {
       });
     }
     
+    // Resetează mesajul de auto-redirect dacă există
+    setAutoRedirectInfo(null);
     setCurrentDate(newDateString);
   };
 
@@ -304,7 +371,10 @@ function SintezaZilnicaContent() {
             <div className="flex flex-col items-center gap-1 text-center relative">
               <BusinessDayDatePicker
                 value={currentDate}
-                onChange={(d) => setCurrentDate(d)}
+                onChange={(d) => {
+                  setAutoRedirectInfo(null); // Resetează mesajul când utilizatorul selectează manual o dată
+                  setCurrentDate(d);
+                }}
                 disableWeekends={true}
                 disableFuture={true}
                 centered={true}
