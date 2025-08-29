@@ -18,7 +18,7 @@ export function DisplayMediaScreenshot({ news, index }: DisplayMediaScreenshotPr
   const cardRef = useRef<HTMLDivElement>(null);
 
   // Check browser compatibility
-  const isDisplayMediaSupported = navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia;
+  const isDisplayMediaSupported = !!(typeof window !== 'undefined' && navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
 
   // Extract synthesis from content if available
   const getSynthesis = () => {
@@ -94,7 +94,6 @@ export function DisplayMediaScreenshot({ news, index }: DisplayMediaScreenshotPr
       // Request screen capture - user will select what to share
       const stream = await navigator.mediaDevices.getDisplayMedia({
         video: {
-          mediaSource: 'screen',
           width: { ideal: 1920 },
           height: { ideal: 1080 }
         },
