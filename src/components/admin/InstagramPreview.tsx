@@ -57,17 +57,10 @@ export function InstagramPreview({ news }: InstagramPreviewProps) {
             {/* Logo */}
             <div className={styles.logoContainer}>
               <div className={styles.logoWrapper}>
-                <Image 
-                  src="/logo.png" 
-                  alt="Decodorul Oficial" 
-                  width={28} 
-                  height={28} 
-                  className={styles.logoImage}
-                  priority
-                />
+                <span className="text-brand text-sm font-bold">📋</span>
               </div>
               <span className={styles.brandName}>
-                Decodorul Oficial
+                Monitorul Oficial
               </span>
             </div>
             
