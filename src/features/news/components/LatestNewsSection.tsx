@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { fetchLatestNews, fetchNewsByDate } from '@/features/news/services/newsService';
 import { Citation } from '@/components/legal/Citation';
 import { stripHtml } from '@/lib/html/sanitize';
@@ -17,6 +18,8 @@ import { useNewsletterContext } from '@/components/newsletter/NewsletterProvider
 import BusinessDayDatePicker from '@/components/ui/BusinessDayDatePicker';
 
 export function LatestNewsSection() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const { showNewsletterModal } = useNewsletterContext();
   const [stiri, setStiri] = useState<NewsItem[]>([]);
   const [filteredStiri, setFilteredStiri] = useState<NewsItem[]>([]);
@@ -30,17 +33,37 @@ export function LatestNewsSection() {
   
   const itemsPerPage = 10;
 
+  // Inițializare URL params
   useEffect(() => {
-    loadLatestNews();
-  }, []);
-
-  useEffect(() => {
-    if (selectedDate) {
-      loadNewsByDate(selectedDate);
+    const urlDate = searchParams.get('date');
+    const urlPage = parseInt(searchParams.get('page') || '1', 10);
+    
+    if (urlDate) {
+      setSelectedDate(urlDate);
+      setIsFiltered(true);
+      setCurrentPage(urlPage); // Setez pagina din URL
+      loadNewsByDate(urlDate); // Încarcă datele pentru data selectată
     } else {
+      // Dacă nu e nicio dată în URL, încarcă știrile normale
+      setSelectedDate('');
       setIsFiltered(false);
-      setCurrentPage(1);
+      setCurrentPage(urlPage);
+      loadLatestNews();
+    }
+  }, [searchParams]);
+
+  // Effect pentru schimbări manuale ale datei (când utilizatorul selectează o dată)
+  useEffect(() => {
+    const urlDate = searchParams.get('date');
+    // Doar dacă selectedDate diferă de cel din URL (schimbare manuală)
+    // Și DOAR dacă nu e prima încărcare (când selectedDate se setează din URL)
+    if (selectedDate && selectedDate !== urlDate) {
+      loadNewsByDate(selectedDate);
+    } else if (!selectedDate && !urlDate && isFiltered) {
+      // Cazul când se șterge data manual (nu din URL)
+      setIsFiltered(false);
       setFilteredStiri([]);
+      loadLatestNews();
     }
   }, [selectedDate]);
 
@@ -53,7 +76,10 @@ export function LatestNewsSection() {
       if (newsData.length > 0) {
         setFeatured(newsData[0]);
       }
-      setTotalPages(Math.ceil((newsData.length - 1) / itemsPerPage));
+      // Setez totalPages DOAR dacă nu sunt în modul filtrat
+      if (!isFiltered) {
+        setTotalPages(Math.ceil((newsData.length - 1) / itemsPerPage));
+      }
     } catch (error) {
       console.error('Error loading latest news:', error);
     } finally {
@@ -61,14 +87,14 @@ export function LatestNewsSection() {
     }
   };
 
-  const loadNewsByDate = async (date: string) => {
+  const loadNewsByDate = async (date: string): Promise<void> => {
     try {
       setIsLoading(true);
       // Optimizat pentru a fi mai rapid
       const newsByDate = await fetchNewsByDate(date, undefined, 100);
       setFilteredStiri(newsByDate);
       setIsFiltered(true);
-      setCurrentPage(1);
+      // Calculez totalPages pentru datele filtrate
       setTotalPages(Math.ceil(newsByDate.length / itemsPerPage));
     } catch (error) {
       console.error('Error loading news by date:', error);
@@ -77,9 +103,30 @@ export function LatestNewsSection() {
     }
   };
 
+  // Funcție pentru actualizare URL
+  const updateURL = useCallback((newDate?: string, newPage?: number) => {
+    const params = new URLSearchParams();
+    
+    const dateToUse = newDate !== undefined ? newDate : selectedDate;
+    const pageToUse = newPage !== undefined ? newPage : currentPage;
+    
+    if (dateToUse) {
+      params.set('date', dateToUse);
+    }
+    
+    if (pageToUse > 1) {
+      params.set('page', pageToUse.toString());
+    }
+    
+    const newURL = params.toString() ? `/?${params.toString()}` : '/';
+    router.push(newURL, { scroll: false });
+  }, [selectedDate, currentPage, router]);
+
   const handleDateChangeFlow = (date: string) => {
     setSelectedDate(date);
     setShowDateInput(false);
+    setCurrentPage(1); // Resetez pagina la 1 pentru selecția manuală
+    updateURL(date, 1);
   };
 
   const clearDateFilter = () => {
@@ -88,6 +135,7 @@ export function LatestNewsSection() {
     setCurrentPage(1);
     setFilteredStiri([]);
     setShowDateInput(false);
+    updateURL('', 1);
   };
 
   const toggleDateInput = () => {
@@ -223,7 +271,11 @@ export function LatestNewsSection() {
     return (
       <div className="flex items-center justify-center gap-2">
         <button
-          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+          onClick={() => {
+            const newPage = Math.max(1, currentPage - 1);
+            setCurrentPage(newPage);
+            updateURL(undefined, newPage);
+          }}
           disabled={currentPage === 1}
           className="p-2 text-gray-500 hover:text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
           title="Pagina anterioară"
@@ -248,7 +300,10 @@ export function LatestNewsSection() {
               pages.push(
                 <button
                   key={1}
-                  onClick={() => setCurrentPage(1)}
+                  onClick={() => {
+                    setCurrentPage(1);
+                    updateURL(undefined, 1);
+                  }}
                   className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
                 >
                   1
@@ -269,7 +324,10 @@ export function LatestNewsSection() {
               pages.push(
                 <button
                   key={i}
-                  onClick={() => setCurrentPage(i)}
+                  onClick={() => {
+                    setCurrentPage(i);
+                    updateURL(undefined, i);
+                  }}
                   className={`px-3 py-1 text-sm rounded transition-colors ${
                     i === currentPage
                       ? 'bg-brand-accent text-white font-medium'
@@ -292,13 +350,16 @@ export function LatestNewsSection() {
               }
               
               pages.push(
-                <button
-                  key={totalPages}
-                  onClick={() => setCurrentPage(totalPages)}
-                  className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
-                >
-                  {totalPages}
-                </button>
+                              <button
+                key={totalPages}
+                onClick={() => {
+                  setCurrentPage(totalPages);
+                  updateURL(undefined, totalPages);
+                }}
+                className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+              >
+                {totalPages}
+              </button>
               );
             }
 
@@ -307,7 +368,11 @@ export function LatestNewsSection() {
         </div>
         
         <button
-          onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+          onClick={() => {
+            const newPage = Math.min(totalPages, currentPage + 1);
+            setCurrentPage(newPage);
+            updateURL(undefined, newPage);
+          }}
           disabled={currentPage === totalPages}
           className="p-2 text-gray-500 hover:text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
           title="Pagina următoare"

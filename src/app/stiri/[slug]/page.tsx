@@ -13,7 +13,7 @@ import { Rss } from 'lucide-react';
 import { notFound, redirect } from 'next/navigation';
 import { SessionCookieInitializer } from '@/components/session/SessionCookieInitializer';
 import { NewsViewTrackingWrapper } from '@/features/news/components/NewsViewTrackingWrapper';
-import { extractParteaFromFilename } from '@/lib/utils/monitorulOficial';
+import { extractParteaFromFilename, generateMonitorulOficialUrl } from '@/lib/utils/monitorulOficial';
 import { NewsletterCtaInline } from '@/components/newsletter/NewsletterCtaInline';
 import { TablesRenderer } from '@/features/news/components/TablesRenderer';
 import { ShareButtons, FloatingShareSidebar, ArticleShareSection } from '@/components/ui/ShareButtons';
@@ -351,21 +351,21 @@ export default async function NewsDetailPage(props: PageProps) {
               
               {category && (
                 <span>
-                  <span className="font-medium">Categoria:</span> {category}
+                  <span className="font-medium">Categoria:</span> {category.charAt(0).toUpperCase() + category.slice(1).toLowerCase()}
                 </span>
               )}
             </div>
 
             {Array.isArray(keywords) && keywords.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                <span className="text-sm font-medium text-gray-700">Cuvinte cheie:</span>
+                <span className="text-sm font-medium text-gray-700">Cuvinte Cheie:</span>
                 {keywords.map((keyword) => (
                   <Link
                     key={keyword}
                     href={`/stiri?keywords=${encodeURIComponent(keyword)}`}
                     className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors cursor-pointer"
                   >
-                    {keyword}
+                    {keyword.charAt(0).toUpperCase() + keyword.slice(1).toLowerCase()}
                   </Link>
                 ))}
               </div>
@@ -398,9 +398,35 @@ export default async function NewsDetailPage(props: PageProps) {
               
               <section className="article-content prose prose-lg max-w-none" itemProp="articleBody">
                 {summary && (
-                  <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-400 rounded">
-                    <h2 className="text-lg font-semibold text-blue-900 mb-2">Sinteză</h2>
-                    <p className="text-blue-800" itemProp="description">{summary}</p>
+                  <div className="mb-6 p-4 bg-gray-50 border-l-4 border-brand-accent rounded">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-2">Sinteză</h2>
+                    <p className="text-gray-800" itemProp="description">{summary}</p>
+                  </div>
+                )}
+
+                {/* Link către documentul oficial */}
+                {(citationFields.sourceUrl || generateMonitorulOficialUrl(news.filename)) && (
+                  <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <svg className="h-4 w-4 text-brand-accent" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-4.5A1.125 1.125 0 0 1 10.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H6A2.25 2.25 0 0 0 3.75 4.5v12.75A2.25 2.25 0 0 0 6 19.5h12.75A2.25 2.25 0 0 0 21 17.25V16.5m-7.5-9-3 3m0 0 3 3m-3-3H15" />
+                        </svg>
+                        <span className="text-sm font-medium text-gray-700">Document Oficial:</span>
+                      </div>
+                      <a 
+                        href={citationFields.sourceUrl || generateMonitorulOficialUrl(news.filename)!} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm font-medium text-brand-accent hover:text-brand-info transition-colors no-underline"
+                        style={{ textDecoration: 'none' }}
+                      >
+                        Vezi în Monitorul Oficial
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                        </svg>
+                      </a>
+                    </div>
                   </div>
                 )}
                 

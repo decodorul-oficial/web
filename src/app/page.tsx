@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { LatestNewsSection } from '@/features/news/components/LatestNewsSection';
+import { LatestNewsSectionWithParams } from '@/features/news/components/LatestNewsSectionWithParams';
 import { SessionCookieInitializer } from '@/components/session/SessionCookieInitializer';
 
 export const dynamic = 'force-dynamic';
@@ -121,7 +121,7 @@ export default function HomePage() {
       <Header />
       <SessionCookieInitializer />
       <main className="container-responsive flex-1 py-6" role="main">
-          <LatestNewsSection />
+          <LatestNewsSectionWithParams />
       </main>
       <Footer />
     </div>
