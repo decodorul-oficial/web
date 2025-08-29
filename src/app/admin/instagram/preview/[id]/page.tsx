@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { InstagramPreview } from '@/components/admin/InstagramPreview';
-import { MobileScreenshotButtons } from '@/components/admin/MobileScreenshotButtons';
+import { IOSScreenshotButton } from '@/components/admin/IOSScreenshotButton';
 import { fetchNewsById } from '@/features/news/services/newsService';
 import { NewsItem } from '@/features/news/types';
 
@@ -73,8 +73,8 @@ export default function InstagramPreviewPage({ params }: PageProps) {
            }}>
         <InstagramPreview news={news} />
         
-        {/* Mobile Screenshot Buttons - Optimized for iPhone */}
-        <MobileScreenshotButtons news={news} className="mt-4 sm:mt-6" />
+        {/* iOS Screenshot Button - Simplified for reliability */}
+        <IOSScreenshotButton news={news} className="mt-4 sm:mt-6" />
         
         {/* Additional Instructions */}
         <div className="mt-6 sm:mt-8 text-center text-gray-600 text-xs sm:text-sm">

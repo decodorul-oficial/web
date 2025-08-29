@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { NewsItem } from '@/features/news/types';
 import { extractParteaFromFilename } from '@/lib/utils/monitorulOficial';
-import { QuickScreenshotButton } from './QuickScreenshotButton';
+import { IOSScreenshotButton } from './IOSScreenshotButton';
 
 interface DisplayMediaScreenshotProps {
   news: NewsItem;
@@ -297,9 +297,9 @@ export function DisplayMediaScreenshot({ news, index }: DisplayMediaScreenshotPr
         </div>
       </div>
 
-      {/* Quick Screenshot Button - NEW! */}
+      {/* iOS Screenshot Button - Simplified and reliable */}
       <div className="mt-3">
-        <QuickScreenshotButton news={news} index={index} compact={true} />
+        <IOSScreenshotButton news={news} compact={true} />
       </div>
 
       {/* Action Buttons */}

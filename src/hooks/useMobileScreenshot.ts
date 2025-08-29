@@ -108,23 +108,7 @@ export function useMobileScreenshot(options: UseMobileScreenshotOptions = {}) {
       const imageBlob = await captureScreenshot(element);
       const finalFilename = `${customFilename || filename}-${new Date().toISOString().slice(0, 10)}.png`;
 
-      // For iOS devices, try Web Share API first
-      if (typeof window !== 'undefined' && isIOS() && navigator.share && navigator.canShare) {
-        const file = new File([imageBlob], finalFilename, { type: 'image/png' });
-        
-        if (navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            title: 'Monitorul Oficial - Instagram Post',
-            files: [file]
-          });
-          
-          setState({ isCapturing: false, isSuccess: true, error: null });
-          setTimeout(() => setState(prev => ({ ...prev, isSuccess: false })), 3000);
-          return;
-        }
-      }
-
-      // Fallback to download link
+      // Always use download link approach for reliability
       const url = URL.createObjectURL(imageBlob);
       const link = document.createElement('a');
       link.href = url;
@@ -136,13 +120,22 @@ export function useMobileScreenshot(options: UseMobileScreenshotOptions = {}) {
         link.setAttribute('rel', 'noopener noreferrer');
       }
       
-      // Trigger download
+      // Ensure the link is accessible and trigger download
+      link.style.display = 'none';
       document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
       
-      // Cleanup
-      URL.revokeObjectURL(url);
+      // Add a small delay for iOS
+      if (isIOS()) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      link.click();
+      
+      // Clean up after a delay
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 1000);
       
       setState({ isCapturing: false, isSuccess: true, error: null });
       setTimeout(() => setState(prev => ({ ...prev, isSuccess: false })), 3000);
@@ -166,20 +159,31 @@ export function useMobileScreenshot(options: UseMobileScreenshotOptions = {}) {
       const imageBlob = await captureScreenshot(element);
       const file = new File([imageBlob], `${filename}.png`, { type: 'image/png' });
 
-      if (typeof window !== 'undefined' && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title: shareData?.title || 'Monitorul Oficial - Instagram Post',
-          text: shareData?.text || 'Știre din Monitorul Oficial',
-          files: [file],
-          ...shareData
-        });
-        
-        setState({ isCapturing: false, isSuccess: true, error: null });
-        setTimeout(() => setState(prev => ({ ...prev, isSuccess: false })), 3000);
-      } else {
-        // Fallback to save
-        await saveToDevice(element);
+      // Check if Web Share API is really available and working
+      if (typeof window !== 'undefined' && navigator.share && navigator.canShare) {
+        try {
+          // Test if canShare works with files
+          const canShareFiles = navigator.canShare({ files: [file] });
+          
+          if (canShareFiles) {
+            await navigator.share({
+              title: shareData?.title || 'Monitorul Oficial - Instagram Post',
+              text: shareData?.text || 'Știre din Monitorul Oficial',
+              files: [file],
+              ...shareData
+            });
+            
+            setState({ isCapturing: false, isSuccess: true, error: null });
+            setTimeout(() => setState(prev => ({ ...prev, isSuccess: false })), 3000);
+            return;
+          }
+        } catch (shareError) {
+          console.warn('Web Share API failed, falling back to download:', shareError);
+        }
       }
+      
+      // Fallback to save (always works)
+      await saveToDevice(element);
       
     } catch (error) {
       console.error('Share failed:', error);
