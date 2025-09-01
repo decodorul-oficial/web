@@ -208,3 +208,22 @@ export const GET_STIRI_BY_CATEGORY_SLUG = gql`
     }
   }
 `;
+
+// Query: getRelatedStories - pentru știrile relaționate
+export const GET_RELATED_STORIES = gql`
+  query GetRelatedStories($storyId: ID!, $limit: Int, $minScore: Float) {
+    getRelatedStories(storyId: $storyId, limit: $limit, minScore: $minScore) {
+      relatedStories {
+        id
+        title
+        publicationDate
+        content
+        filename
+        viewCount
+        category
+        relevanceScore
+        relevanceReasons
+      }
+    }
+  }
+`;

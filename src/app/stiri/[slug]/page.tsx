@@ -7,8 +7,8 @@ import { NewsItem } from '@/features/news/types';
 import { Citation } from '@/components/legal/Citation';
 import { sanitizeRichText } from '@/lib/html/sanitize';
 import { NavigationEndBeacon } from '@/components/ui/NavigationEndBeacon';
-import { SameDayNewsSection } from '@/features/news/components/SameDayNewsSection';
 import { NewsViewStats } from '@/features/news/components/NewsViewStats';
+import { RelatedStoriesSection } from '@/features/news/components/RelatedStoriesSection';
 import { extractIdFromSlug, isValidNewsSlug, createNewsSlug } from '@/lib/utils/slugify';
 import { Rss } from 'lucide-react';
 import { notFound, redirect } from 'next/navigation';
@@ -456,12 +456,6 @@ export default async function NewsDetailPage(props: PageProps) {
                 {/* Minimal newsletter CTA below full article */}
                 <NewsletterCtaInline />
                 
-                {/* Share section at the end of the article */}
-                <ArticleShareSection
-                  url={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro'}/stiri/${createNewsSlug(news.title, news.id)}`}
-                  title={news.title}
-                  description={summary || news.title}
-                />
               </div>
             </div>
             
@@ -486,12 +480,16 @@ export default async function NewsDetailPage(props: PageProps) {
                 </div>
               </div> */}
               
-              {/* Secțiunea cu știrile din aceeași zi */}
-              {sameDayNews.length > 0 && (
-                <div className="mt-12">
-                  <SameDayNewsSection news={sameDayNews} currentNewsId={id} />
-                </div>
-              )}
+              {/* Secțiunea cu știri relevante sau din aceeași zi */}
+              <div className="mt-12">
+                <RelatedStoriesSection
+                  storyId={news.id}
+                  limit={5}
+                  minScore={1.0}
+                  fallbackNews={sameDayNews}
+                  currentNewsId={id}
+                />
+              </div>
             </aside>
           </div>
 
@@ -500,6 +498,13 @@ export default async function NewsDetailPage(props: PageProps) {
               <TablesRenderer tables={tables} />
             </section>
           )}
+
+           {/* Share section at the end of the article */}
+           <ArticleShareSection
+                  url={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro'}/stiri/${createNewsSlug(news.title, news.id)}`}
+                  title={news.title}
+                  description={summary || news.title}
+                />
         </article>
       </main>
       <Footer />

@@ -9,6 +9,7 @@ export type NewsItem = {
   content: unknown;
   // New field for view count
   viewCount?: number;
+  category?: string;
 };
 
 export type GetStiriResponse = {
@@ -103,6 +104,34 @@ export type GetStiriByCategoryResponse = {
       hasPreviousPage: boolean;
     };
   };
+};
+
+// Types for relevance reasons, which comes as JSON
+export type RelevanceReasons = {
+  common_legal_acts?: string[];
+  common_organizations?: string[];
+  common_topics?: string[];
+  common_keywords?: string[];
+  same_category?: boolean;
+};
+
+// A related story includes full NewsItem details plus relevance data
+export type RelatedStory = NewsItem & {
+  relevanceScore: number;
+  relevanceReasons: RelevanceReasons;
+};
+
+// The response from the GraphQL query for related stories
+export type GetRelatedStoriesResponse = {
+  getRelatedStories: {
+    relatedStories: RelatedStory[];
+  };
+};
+
+export type GetRelatedStoriesParams = {
+  storyId: string;
+  limit?: number;
+  minScore?: number;
 };
 
 

@@ -102,7 +102,7 @@ export function ShareButtons({
   ];
 
   const baseButtonClasses = "flex items-center justify-center p-1.5 sm:p-2 rounded-lg transition-all duration-200 border border-gray-200 bg-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand min-w-[36px] min-h-[36px] sm:min-w-[44px] sm:min-h-[44px]";
-  
+
   const containerClasses = {
     horizontal: "flex items-center gap-1.5 sm:gap-2 flex-wrap",
     vertical: "flex flex-col items-center gap-2",
@@ -186,14 +186,16 @@ export function ArticleShareSection({ url, title, description }: Omit<ShareButto
   return (
     <div className="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900">
-          Ți-a plăcut acest articol?
-        </h3>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-0 sm:gap-2">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+            Ți-a plăcut acest articol?
+          </h3>
+          <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-0 sm:ml-2">
+            Distribuie-l cu prietenii și colegii tăi!
+          </p>
+        </div>
         <Share2 className="w-5 h-5 text-gray-500" />
       </div>
-      <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-4">
-        Distribuie-l cu prietenii și colegii tăi!
-      </p>
       <ShareButtons
         url={url}
         title={title}

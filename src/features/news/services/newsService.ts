@@ -8,7 +8,8 @@ import {
   GET_DAILY_SYNTHESIS,
   GET_STIRI_BY_CATEGORY,
   GET_CATEGORIES,
-  GET_STIRI_BY_CATEGORY_SLUG
+  GET_STIRI_BY_CATEGORY_SLUG,
+  GET_RELATED_STORIES
 } from '../graphql/queries';
 import { 
   GetStiriResponse, 
@@ -21,7 +22,10 @@ import {
   GetDailySynthesisParams,
   GetStiriByCategoryResponse,
   GetCategoriesResponse,
-  CategoryCount
+  CategoryCount,
+  GetRelatedStoriesResponse,
+  GetRelatedStoriesParams,
+  RelatedStory
 } from '../types';
 import { ensureSessionCookie } from '@/lib/utils/sessionCookie';
 
@@ -299,6 +303,32 @@ export async function fetchStiriByCategorySlug(params: { slug: string; limit?: n
         pagination: { totalCount: 0, currentPage: 1, totalPages: 1, hasNextPage: false, hasPreviousPage: false }
       };
     }
+  }
+}
+
+// Fetch related stories based on content similarity and relevance scoring
+export async function fetchRelatedStories(params: GetRelatedStoriesParams): Promise<RelatedStory[]> {
+  const { storyId, limit = 5, minScore = 1.0 } = params;
+  const limitClamped = Math.max(1, Math.min(20, limit)); // Max 20 results for performance
+
+  // Asigură că cookie-ul mo_session este setat pentru analytics
+  ensureSessionCookie();
+
+  try {
+    const client = getGraphQLClient();
+    
+    // Fetch related stories with all details in a single query
+    const data = await client.request<GetRelatedStoriesResponse>(GET_RELATED_STORIES, {
+      storyId,
+      limit: limitClamped,
+      minScore
+    });
+
+    return data.getRelatedStories.relatedStories;
+
+  } catch (error) {
+    console.error('Error fetching related stories:', error);
+    return [];
   }
 }
 

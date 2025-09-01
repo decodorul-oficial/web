@@ -254,7 +254,7 @@ export default function CookiesPolicyPage() {
               <li>Experiența de utilizare poate fi degradată</li>
               <li><strong>Analytics și tracking-ul comportamentului nu vor funcționa</strong></li>
               <li><strong>Persistența căutării:</strong> nu vei putea reveni la aceeași pagină și filtre în secțiunea de știri</li>
-              <li><strong>Navigare între știri:</strong> butonul "back" nu va restaura starea anterioară de căutare</li>
+              <li><strong>Navigare între știri:</strong> butonul &quot;back&quot; nu va restaura starea anterioară de căutare</li>
             </ul>
           </section>
 
