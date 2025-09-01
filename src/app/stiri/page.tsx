@@ -78,7 +78,64 @@ function StiriPageContent() {
   
   const itemsPerPage = 10; // Numărul de rezultate per pagină
   
+  // Key for sessionStorage
+  const STORAGE_KEY = 'stiri-search-state';
 
+  // Funcții pentru persistarea stării în sessionStorage
+  const saveStateToStorage = useCallback(() => {
+    const state = {
+      searchQuery,
+      keywords,
+      searchInput,
+      keywordsInput,
+      orderBy,
+      orderDirection,
+      dateFrom,
+      dateTo,
+      pagination,
+      timestamp: Date.now()
+    };
+    
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (error) {
+      console.warn('Failed to save state to sessionStorage:', error);
+    }
+  }, [searchQuery, keywords, searchInput, keywordsInput, orderBy, orderDirection, dateFrom, dateTo, pagination]);
+
+  // Funcție pentru restaurarea stării din sessionStorage
+  const restoreStateFromStorage = useCallback(() => {
+    try {
+      const savedState = sessionStorage.getItem(STORAGE_KEY);
+      if (savedState) {
+        const state = JSON.parse(savedState);
+        
+        // Verificăm dacă starea nu este prea veche (mai mult de 24 ore)
+        const maxAge = 24 * 60 * 60 * 1000; // 24 ore în milisecunde
+        if (Date.now() - state.timestamp > maxAge) {
+          sessionStorage.removeItem(STORAGE_KEY);
+          return false;
+        }
+        
+        // Restaurăm starea
+        if (state.searchQuery !== undefined) setSearchQuery(state.searchQuery);
+        if (state.keywords !== undefined) setKeywords(state.keywords);
+        if (state.searchInput !== undefined) setSearchInput(state.searchInput);
+        if (state.keywordsInput !== undefined) setKeywordsInput(state.keywordsInput);
+        if (state.orderBy !== undefined) setOrderBy(state.orderBy);
+        if (state.orderDirection !== undefined) setOrderDirection(state.orderDirection);
+        if (state.dateFrom !== undefined) setDateFrom(state.dateFrom);
+        if (state.dateTo !== undefined) setDateTo(state.dateTo);
+        if (state.pagination !== undefined) setPagination(state.pagination);
+        
+        return true;
+      }
+    } catch (error) {
+      console.warn('Failed to restore state from sessionStorage:', error);
+      sessionStorage.removeItem(STORAGE_KEY);
+    }
+    return false;
+  }, []);
 
   // Funcții pentru gestionarea inputurilor de dată
   const handleDateFromChange = (date: string) => {
@@ -98,31 +155,49 @@ function StiriPageContent() {
     setDateTo('');
   };
 
-  // Inițializare din URL params
+  // Inițializare din URL params sau sessionStorage
   useEffect(() => {
-    const urlQuery = searchParams.get('query');
-    const urlKeywords = searchParams.get('keywords');
-    const urlOrderBy = searchParams.get('orderBy');
-    const urlOrderDirection = searchParams.get('orderDirection');
-    const urlDateFrom = searchParams.get('dateFrom');
-    const urlDateTo = searchParams.get('dateTo');
+    // Încercăm să restaurăm starea din sessionStorage
+    const restored = restoreStateFromStorage();
     
-    if (urlQuery) {
-      setSearchQuery(decodeURIComponent(urlQuery));
-      setSearchInput(decodeURIComponent(urlQuery));
+    // Dacă nu am putut restaura din sessionStorage, citim din URL
+    if (!restored) {
+      const urlQuery = searchParams.get('query');
+      const urlKeywords = searchParams.get('keywords');
+      const urlOrderBy = searchParams.get('orderBy');
+      const urlOrderDirection = searchParams.get('orderDirection');
+      const urlDateFrom = searchParams.get('dateFrom');
+      const urlDateTo = searchParams.get('dateTo');
+      const urlPage = searchParams.get('page');
+      
+      if (urlQuery) {
+        setSearchQuery(decodeURIComponent(urlQuery));
+        setSearchInput(decodeURIComponent(urlQuery));
+      }
+      
+      if (urlKeywords) {
+        const decodedKeywords = decodeURIComponent(urlKeywords).split(',').filter(k => k.trim());
+        setKeywords(decodedKeywords);
+        setKeywordsInput(decodedKeywords.join(', '));
+      }
+      
+      if (urlOrderBy) setOrderBy(urlOrderBy);
+      if (urlOrderDirection) setOrderDirection(urlOrderDirection as 'asc' | 'desc');
+      if (urlDateFrom) setDateFrom(urlDateFrom);
+      if (urlDateTo) setDateTo(urlDateTo);
+      
+      // Restaurăm pagina din URL dacă există
+      if (urlPage) {
+        const pageNum = parseInt(urlPage, 10);
+        if (pageNum > 0) {
+          setPagination(prev => ({
+            ...prev,
+            currentPage: pageNum
+          }));
+        }
+      }
     }
-    
-    if (urlKeywords) {
-      const decodedKeywords = decodeURIComponent(urlKeywords).split(',').filter(k => k.trim());
-      setKeywords(decodedKeywords);
-      setKeywordsInput(decodedKeywords.join(', '));
-    }
-    
-    if (urlOrderBy) setOrderBy(urlOrderBy);
-    if (urlOrderDirection) setOrderDirection(urlOrderDirection as 'asc' | 'desc');
-    if (urlDateFrom) setDateFrom(urlDateFrom);
-    if (urlDateTo) setDateTo(urlDateTo);
-  }, [searchParams]);
+  }, [searchParams, restoreStateFromStorage]);
 
   // Funcția de căutare îmbunătățită
   const performSearch = useCallback(async (page: number = 1) => {
@@ -196,9 +271,19 @@ function StiriPageContent() {
   // Efect pentru căutare automată când se schimbă filtrele
   useEffect(() => {
     if (searchQuery || keywords.length > 0 || dateFrom || dateTo) {
-      performSearch(1);
+      // Dacă avem paginare restaurată, folosim pagina curentă, altfel pagina 1
+      const pageToSearch = pagination.currentPage > 1 ? pagination.currentPage : 1;
+      performSearch(pageToSearch);
     }
-  }, [performSearch, searchQuery, keywords.length, dateFrom, dateTo]);
+  }, [performSearch, searchQuery, keywords.length, dateFrom, dateTo, pagination.currentPage]);
+
+  // Efect pentru salvarea stării în sessionStorage
+  useEffect(() => {
+    // Salvăm starea doar dacă avem cel puțin un filtru aplicat
+    if (searchQuery || keywords.length > 0 || dateFrom || dateTo) {
+      saveStateToStorage();
+    }
+  }, [saveStateToStorage, searchQuery, keywords, dateFrom, dateTo, pagination]);
 
   // Actualizare URL când se schimbă filtrele
   const updateURL = useCallback(() => {
@@ -213,10 +298,11 @@ function StiriPageContent() {
     if (orderDirection !== 'desc') params.set('orderDirection', orderDirection);
     if (dateFrom) params.set('dateFrom', dateFrom);
     if (dateTo) params.set('dateTo', dateTo);
+    if (pagination.currentPage > 1) params.set('page', pagination.currentPage.toString());
     
     const newURL = params.toString() ? `?${params.toString()}` : '/stiri';
     router.push(newURL);
-  }, [searchQuery, keywords, orderBy, orderDirection, dateFrom, dateTo, router]);
+  }, [searchQuery, keywords, orderBy, orderDirection, dateFrom, dateTo, pagination.currentPage, router]);
 
   // Handler pentru căutare text (fuzzy/full-text)
   const handleTextSearch = () => {
@@ -264,6 +350,9 @@ function StiriPageContent() {
       hasNextPage: page < totalPages,
       hasPreviousPage: page > 1
     });
+    
+    // Actualizăm URL-ul cu noua pagină
+    updateURL();
   };
 
   // Formatare dată

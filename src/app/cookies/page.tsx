@@ -129,7 +129,28 @@ export default function CookiesPolicyPage() {
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              3.4 Cookie-uri de Newsletter și Marketing
+              3.4 SessionStorage și Stocarea Locală
+            </h2>
+            <p className="text-gray-700 mb-4">
+              Pe lângă cookie-uri, site-ul nostru folosește și <strong>sessionStorage</strong> - o tehnologie de stocare locală în browser care îmbunătățește experiența de navigare:
+            </p>
+            <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-6">
+              <li><strong>Persistența căutării:</strong> salvează filtrele și pagina curentă din secțiunea de căutare avansată știri</li>
+              <li><strong>Navigare fluidă:</strong> permite revenirea la aceeași pagină și filtre când navighezi între știri</li>
+              <li><strong>Stocare temporară:</strong> datele se șterg automat când închizi tab-ul sau browserul</li>
+              <li><strong>Fără date personale:</strong> nu stochează informații care te pot identifica personal</li>
+              <li><strong>Expirare automată:</strong> datele se șterg automat după 24 de ore pentru siguranță</li>
+            </ul>
+            <div className="bg-green-50 border-l-4 border-green-400 p-4 rounded">
+              <p className="text-sm text-green-700">
+                <strong>Avantaje sessionStorage:</strong> SessionStorage este mai sigur decât cookie-urile persistente deoarece datele se șterg automat când închizi browserul și nu sunt transmise la server cu fiecare cerere.
+              </p>
+            </div>
+          </section>
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+              3.5 Cookie-uri de Newsletter și Marketing
             </h2>
             <p className="text-gray-700 mb-4">
               Aceste cookie-uri sunt folosite pentru gestionarea newsletter-ului și a preferințelor tale de marketing:
@@ -150,40 +171,42 @@ export default function CookiesPolicyPage() {
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              4. Cookie-uri Terțe Părți
+              4. Cookie-uri Terțe Părți și SessionStorage
             </h2>
             <p className="text-gray-700 mb-4">
-              Site-ul nostru poate integra servicii de la terțe părți care pot seta propriile cookie-uri:
+              Site-ul nostru poate integra servicii de la terțe părți care pot seta propriile cookie-uri. SessionStorage-ul este folosit exclusiv de noi:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
               <li><strong>Google Analytics:</strong> pentru analiza traficului (cu consimțământul tău)</li>
               <li><strong>Servicii de hosting:</strong> pentru funcționarea tehnică a site-ului</li>
               <li><strong>Servicii de securitate:</strong> pentru protecția împotriva atacurilor</li>
+              <li><strong>SessionStorage local:</strong> folosit exclusiv de noi pentru persistența căutării, nu este partajat cu terți</li>
             </ul>
           </section>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              5. Durata de Viață a Cookie-urilor
+              5. Durata de Viață a Cookie-urilor și SessionStorage
             </h2>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
               <li><strong>Cookie-uri de sesiune:</strong> se șterg automat când închizi browserul</li>
               <li><strong>Cookie-uri persistente:</strong> rămân pe dispozitivul tău pentru o perioadă specificată</li>
               <li><strong>Cookie-ul mo_session:</strong> se setează doar cu consimțământul pentru analytics și se elimină automat când consimțământul este revocat</li>
               <li><strong>Cookie-uri de terțe părți:</strong> respectă politicile de confidențialitate ale furnizorilor respectivi</li>
+              <li><strong>SessionStorage pentru căutare:</strong> se șterge automat când închizi tab-ul sau browserul, cu expirare suplimentară după 24 de ore</li>
             </ul>
           </section>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              6. Cum să Gestionezi Cookie-urile
+              6. Cum să Gestionezi Cookie-urile și SessionStorage
             </h2>
             
             <h3 className="text-xl font-semibold text-gray-800 mb-3">
               6.1 În Browserul Tău
             </h3>
             <p className="text-gray-700 mb-4">
-              Poți controla și șterge cookie-urile din setările browserului tău. Fiecare browser are propriile setări:
+              Poți controla și șterge cookie-urile și sessionStorage-ul din setările browserului tău. Fiecare browser are propriile setări:
             </p>
             <div className="grid md:grid-cols-2 gap-4 mb-6">
               <ul className="list-disc pl-6 space-y-2 text-gray-700">
@@ -200,7 +223,7 @@ export default function CookiesPolicyPage() {
               6.2 Pe Site-ul Nostru
             </h3>
             <p className="text-gray-700 mb-4">
-              Site-ul nostru oferă un banner de consimțământ pentru cookie-urile non-esențiale. Poți:
+              Site-ul nostru oferă un banner de consimțământ pentru cookie-urile non-esențiale. Pentru sessionStorage și cookie-uri poți:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
               <li>Accepta toate cookie-urile (inclusiv analytics, mo_session și newsletter)</li>
@@ -208,6 +231,7 @@ export default function CookiesPolicyPage() {
               <li>Modifica preferințele oricând din footer-ul site-ului</li>
               <li>Revoca consimțământul pentru analytics (cookie-ul mo_session se va elimina automat)</li>
               <li>Gestionează preferințele newsletter-ului din setările tale</li>
+              <li><strong>SessionStorage:</strong> se șterge automat când închizi browserul (nu necesită consimțământ explicit)</li>
             </ul>
             <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mt-4 rounded">
               <p className="text-sm text-blue-700">
@@ -218,10 +242,10 @@ export default function CookiesPolicyPage() {
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              7. Impactul Dezactivării Cookie-urilor
+              7. Impactul Dezactivării Cookie-urilor și SessionStorage
             </h2>
             <p className="text-gray-700 mb-4">
-              Dacă dezactivezi cookie-urile, unele funcționalități ale site-ului pot să nu funcționeze corect:
+              Dacă dezactivezi cookie-urile sau sessionStorage, unele funcționalități ale site-ului pot să nu funcționeze corect:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
               <li>Navigarea poate fi afectată</li>
@@ -229,16 +253,27 @@ export default function CookiesPolicyPage() {
               <li>Unele funcții avansate pot să nu fie disponibile</li>
               <li>Experiența de utilizare poate fi degradată</li>
               <li><strong>Analytics și tracking-ul comportamentului nu vor funcționa</strong></li>
+              <li><strong>Persistența căutării:</strong> nu vei putea reveni la aceeași pagină și filtre în secțiunea de știri</li>
+              <li><strong>Navigare între știri:</strong> butonul "back" nu va restaura starea anterioară de căutare</li>
             </ul>
           </section>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              8. Cookie-uri și Confidențialitatea
+              8. Cookie-uri, SessionStorage și Confidențialitatea
             </h2>
             <p className="text-gray-700 mb-4">
-              Cookie-urile pe care le folosim <strong>nu conțin informații personale identificabile</strong> precum numele, adresa sau numărul de telefon. Ele stochează doar informații tehnice și de utilizare pentru a îmbunătăți serviciul nostru.
+              Cookie-urile și sessionStorage-ul pe care le folosim <strong>nu conțin informații personale identificabile</strong> precum numele, adresa sau numărul de telefon. Ele stochează doar informații tehnice și de utilizare pentru a îmbunătăți serviciul nostru.
             </p>
+            <p className="text-gray-700 mb-4">
+              <strong>SessionStorage pentru căutare:</strong> Stochează doar filtrele de căutare (cuvinte cheie, date, sortare) și numărul paginii curente. Aceste date sunt:
+            </p>
+            <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-4">
+              <li>Stocate local în browserul tău (nu sunt trimise la server)</li>
+              <li>Șterse automat când închizi tab-ul sau browserul</li>
+              <li>Expirate automat după 24 de ore pentru siguranță</li>
+              <li>Fără informații care te pot identifica personal</li>
+            </ul>
             <p className="text-gray-700 mb-4">
               <strong>Cookie-ul mo_session:</strong> Este un identificator unic generat automat (UUID v4) care nu conține informații personale. Este folosit exclusiv pentru:
             </p>
@@ -258,31 +293,32 @@ export default function CookiesPolicyPage() {
               9. Controlul și Revocarea Consimțământului
             </h2>
             <p className="text-gray-700 mb-4">
-              Ai controlul total asupra cookie-urilor de analytics:
+              Ai controlul total asupra cookie-urilor de analytics și sessionStorage-ului:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
               <li><strong>Consimțământ inițial:</strong> Banner-ul de cookie-uri îți permite să accepti sau să respingi analytics</li>
               <li><strong>Revocare:</strong> Poți revoca consimțământul oricând din footer-ul site-ului</li>
               <li><strong>Eliminare automată:</strong> Când revoci consimțământul, cookie-ul mo_session se elimină automat</li>
               <li><strong>Google Analytics:</strong> Script-ul se dezactivează complet când nu ai consimțământ</li>
+              <li><strong>SessionStorage:</strong> Se șterge automat când închizi browserul, nu necesită consimțământ explicit</li>
             </ul>
           </section>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              10. Actualizări ale Politicii de Cookie-uri
+              10. Actualizări ale Politicii de Cookie-uri și SessionStorage
             </h2>
             <p className="text-gray-700 leading-relaxed">
-              Această politică poate fi actualizată periodic pentru a reflecta schimbările în tehnologia de cookie-uri sau în legislația în vigoare. Modificările vor fi comunicate prin actualizarea datei de &quot;Ultima actualizare&quot;.
+              Această politică poate fi actualizată periodic pentru a reflecta schimbările în tehnologia de cookie-uri, sessionStorage sau în legislația în vigoare. Modificările vor fi comunicate prin actualizarea datei de &quot;Ultima actualizare&quot;.
             </p>
           </section>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              11. Contact pentru Cookie-uri
+              11. Contact pentru Cookie-uri și SessionStorage
             </h2>
             <p className="text-gray-700 mb-4">
-              Pentru orice întrebări privind această politică de cookie-uri, ne poți contacta:
+              Pentru orice întrebări privind această politică de cookie-uri și sessionStorage, ne poți contacta:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
               <li><strong>E-mail:</strong> contact@decodoruloficial.ro</li>
@@ -296,7 +332,7 @@ export default function CookiesPolicyPage() {
               12. Informații Suplimentare
             </h2>
             <p className="text-gray-700 leading-relaxed">
-              Pentru informații complete despre cum protejăm confidențialitatea ta, consultă și <a href="/privacy" className="text-brand-info hover:underline">Politica noastră de Confidențialitate</a>.
+              Pentru informații complete despre cum protejăm confidențialitatea ta și despre utilizarea sessionStorage-ului, consultă și <a href="/privacy" className="text-brand-info hover:underline">Politica noastră de Confidențialitate</a>.
             </p>
           </section>
 
@@ -305,17 +341,19 @@ export default function CookiesPolicyPage() {
               13. Conformitatea GDPR
             </h2>
             <p className="text-gray-700 mb-4">
-              Implementarea noastră de cookie-uri respectă complet Regulamentul General privind Protecția Datelor (GDPR):
+              Implementarea noastră de cookie-uri și sessionStorage respectă complet Regulamentul General privind Protecția Datelor (GDPR):
             </p>
             <div className="grid md:grid-cols-2 gap-4">
               <ul className="list-disc pl-6 space-y-2 text-gray-700">
                 <li><strong>Consimțământ explicit:</strong> Cookie-urile de analytics se activează doar cu acordul tău</li>
                 <li><strong>Control total:</strong> Poți revoca consimțământul oricând</li>
                 <li><strong>Eliminare automată:</strong> Cookie-urile se elimină automat când revoci consimțământul</li>
+                <li><strong>SessionStorage sigur:</strong> Nu necesită consimțământ explicit, se șterge automat</li>
               </ul>
               <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                <li><strong>Transparență:</strong> Toate informațiile despre cookie-uri sunt disponibile public</li>
+                <li><strong>Transparență:</strong> Toate informațiile despre cookie-uri și sessionStorage sunt disponibile public</li>
                 <li><strong>Minimizarea datelor:</strong> Colectăm doar datele necesare pentru funcționalitatea site-ului</li>
+                <li><strong>Stocare locală:</strong> SessionStorage nu trimite date la server</li>
               </ul>
             </div>
           </section>
@@ -331,7 +369,7 @@ export default function CookiesPolicyPage() {
               >
                 <h3 className="font-semibold text-gray-800 mb-2">Politica de Confidențialitate</h3>
                 <p className="text-sm text-gray-600">
-                  Informații complete despre protecția datelor personale
+                  Informații complete despre protecția datelor personale și sessionStorage
                 </p>
               </a>
               
@@ -341,7 +379,7 @@ export default function CookiesPolicyPage() {
               >
                 <h3 className="font-semibold text-gray-800 mb-2">Contact</h3>
                 <p className="text-sm text-gray-600">
-                  Cum ne poți contacta pentru întrebări despre cookie-uri
+                  Cum ne poți contacta pentru întrebări despre cookie-uri și sessionStorage
                 </p>
               </a>
             </div>
