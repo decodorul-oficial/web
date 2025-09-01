@@ -11,6 +11,24 @@ interface GenerateMetadataProps {
   params: { year: string; month: string };
 }
 
+interface NewsContent {
+  body?: string;
+  summary?: string;
+  text?: string;
+}
+
+interface NewsItem {
+  id: string;
+  title: string;
+  slug: string;
+  publicationDate: string;
+  summary: string;
+}
+
+interface NewsGroup {
+  [key: string]: NewsItem[];
+}
+
 export async function generateMetadata({ params }: GenerateMetadataProps): Promise<Metadata> {
   const { year, month } = params;
   const monthName = new Date(parseInt(year), parseInt(month) - 1).toLocaleDateString('ro-RO', { month: 'long' });
@@ -109,7 +127,7 @@ export default async function MonthArchivePage({ params }: { params: { year: str
     });
 
     // Group by day
-    const newsByDay = monthNews.reduce((groups: { [key: string]: any[] }, news) => {
+    const newsByDay = monthNews.reduce((groups: NewsGroup, news) => {
       const date = new Date(news.publicationDate);
       const day = date.getDate().toString().padStart(2, '0');
       const dayKey = `${year}-${month}-${day}`;
@@ -118,12 +136,13 @@ export default async function MonthArchivePage({ params }: { params: { year: str
         groups[dayKey] = [];
       }
       
+      const content = news.content as NewsContent;
       groups[dayKey].push({
         id: news.id,
         title: news.title,
         slug: createNewsSlug(news.title, news.id),
         publicationDate: news.publicationDate,
-        summary: (news.content as any)?.body || (news.content as any)?.summary || (news.content as any)?.text
+        summary: content?.body || content?.summary || content?.text || ''
       });
       
       return groups;

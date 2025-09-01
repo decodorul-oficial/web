@@ -12,7 +12,7 @@ export function slugify(title: string, maxLength: number = 60): string {
     'Ă': 'A', 'Â': 'A', 'Î': 'I', 'Ș': 'S', 'Ț': 'T'
   };
   
-  let slug = title
+  const slug = title
     // Replace Romanian diacritics
     .replace(/[ăâîșțĂÂÎȘȚ]/g, (char) => diacriticsMap[char] || char)
     // Convert to lowercase

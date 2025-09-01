@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+
 import { NewsItem } from '@/features/news/types';
 import { HashtagSection } from './HashtagSection';
 import { AutoScreenshot } from './AutoScreenshot';
@@ -10,11 +10,19 @@ interface InstagramPreviewProps {
   news: NewsItem;
 }
 
+interface NewsContent {
+  synthesis?: string;
+  summary?: string;
+  description?: string;
+  category?: string;
+  type?: string;
+}
+
 export function InstagramPreview({ news }: InstagramPreviewProps) {
   // Extract synthesis from content if available
   const getSynthesis = () => {
     if (typeof news.content === 'object' && news.content !== null) {
-      const content = news.content as any;
+      const content = news.content as NewsContent;
       return content.synthesis || content.summary || content.description || '';
     }
     return '';
@@ -30,7 +38,7 @@ export function InstagramPreview({ news }: InstagramPreviewProps) {
   // Extract category from content if available
   const getCategory = () => {
     if (typeof news.content === 'object' && news.content !== null) {
-      const content = news.content as any;
+      const content = news.content as NewsContent;
       const rawCategory = content.category || content.type || '';
       // Capitalize first letter
       return rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1).toLowerCase();

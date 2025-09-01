@@ -10,6 +10,16 @@ interface InstagramCardProps {
   index: number;
 }
 
+interface NewsContent {
+  synthesis?: string;
+  summary?: string;
+  description?: string;
+  category?: string;
+  type?: string;
+  monitorulOficial?: string;
+  moNumberDate?: string;
+}
+
 export function InstagramCard({ news, index }: InstagramCardProps) {
   const [isCapturing, setIsCapturing] = useState(false);
   const [captureSuccess, setCaptureSuccess] = useState(false);
@@ -18,7 +28,7 @@ export function InstagramCard({ news, index }: InstagramCardProps) {
   // Extract synthesis from content if available
   const getSynthesis = () => {
     if (typeof news.content === 'object' && news.content !== null) {
-      const content = news.content as any;
+      const content = news.content as NewsContent;
       return content.synthesis || content.summary || content.description || '';
     }
     return '';
@@ -34,7 +44,7 @@ export function InstagramCard({ news, index }: InstagramCardProps) {
   // Extract category from content if available
   const getCategory = () => {
     if (typeof news.content === 'object' && news.content !== null) {
-      const content = news.content as any;
+      const content = news.content as NewsContent;
       const rawCategory = content.category || content.type || '';
       // Capitalize first letter
       return rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1).toLowerCase();
@@ -50,7 +60,7 @@ export function InstagramCard({ news, index }: InstagramCardProps) {
   // Extract publication date info for subtitle - NO redundant title info
   const getPublicationInfo = () => {
     if (typeof news.content === 'object' && news.content !== null) {
-      const content = news.content as any;
+      const content = news.content as NewsContent;
       
       // Try to get specific publication info
       if (content.monitorulOficial && content.monitorulOficial.trim()) {

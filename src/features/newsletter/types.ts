@@ -10,7 +10,7 @@ export interface NewsletterSubscriber {
   subscribedAt: string;
   unsubscribedAt?: string;
   unsubscribeReason?: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 export interface SubscribeNewsletterInput {
@@ -19,7 +19,7 @@ export interface SubscribeNewsletterInput {
   tags?: string[];
   source?: string;
   consentVersion?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UnsubscribeNewsletterInput {

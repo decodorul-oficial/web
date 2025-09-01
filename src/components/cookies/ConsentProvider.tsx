@@ -31,7 +31,7 @@ export function ConsentProvider({ children }: { children: React.ReactNode }) {
         const parsed = JSON.parse(raw);
         setConsentState(parsed);
       }
-    } catch (error) {
+    } catch {
       // Silent error handling for production
     } finally {
       setIsLoaded(true);
@@ -48,7 +48,7 @@ export function ConsentProvider({ children }: { children: React.ReactNode }) {
       if (consent?.analytics && !c.analytics) {
         removeSessionCookie();
       }
-    } catch (error) {
+    } catch {
       // Silent error handling for production
     }
   }, [consent?.analytics]);
@@ -59,7 +59,7 @@ export function ConsentProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem(STORAGE_KEY);
       // Elimină cookie-ul mo_session când se resetează consimțământul
       removeSessionCookie();
-    } catch (error) {
+    } catch {
       // Silent error handling for production
     }
   }, []);

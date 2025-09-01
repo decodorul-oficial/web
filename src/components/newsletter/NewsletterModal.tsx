@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNewsletter } from '@/features/newsletter/hooks/useNewsletter';
 import { NewsletterModalProps } from '@/features/newsletter/types';
 import { OverlayBackdrop } from '@/components/ui/OverlayBackdrop';
@@ -12,30 +12,30 @@ export const NewsletterModal = ({ isOpen, onClose, onSuccess }: NewsletterModalP
   
   const { subscribe, isLoading, error, success, clearMessages } = useNewsletter();
 
+  const resetForm = useCallback(() => {
+    setEmail('');
+    setConsent(false);
+    setEmailError('');
+    clearMessages();
+  }, [clearMessages]);
+
   useEffect(() => {
-    if (success) {
+    if (success && onSuccess) {
+      onSuccess();
       const timer = setTimeout(() => {
-        onSuccess?.();
         onClose();
         resetForm();
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [success, onSuccess, onClose]);
+  }, [success, onSuccess, onClose, resetForm]);
 
   useEffect(() => {
     if (isOpen) {
       clearMessages();
       resetForm();
     }
-  }, [isOpen, clearMessages]);
-
-  const resetForm = () => {
-    setEmail('');
-    setConsent(false);
-    setEmailError('');
-    clearMessages();
-  };
+  }, [isOpen, clearMessages, resetForm]);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

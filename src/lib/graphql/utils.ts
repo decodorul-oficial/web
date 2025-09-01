@@ -76,10 +76,10 @@ export async function requestWithEndpointFallback<T>(
         console.info('[GraphQL] using endpoint:', endpoint);
       }
       return { data, endpoint };
-    } catch (err: any) {
+    } catch (err: unknown) {
       lastError = err;
       // retry on 404 or network errors; otherwise rethrow
-      const status = err?.response?.status;
+      const status = (err as { response?: { status?: number } })?.response?.status;
       if (status && status !== 404) {
         break;
       }

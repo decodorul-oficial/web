@@ -5,22 +5,13 @@ export type GraphQLClientFactoryOptions = {
   getAuthToken?: () => Promise<string | undefined> | string | undefined;
 };
 
-function normalizeEndpoint(input?: string) {
-  const raw = input ?? process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? 'https://decodorul-oficial-api.vercel.app/api/graphql';
-  // If a host or root is provided, attempt to resolve to a GraphQL path
-  try {
-    const url = new URL(raw);
-    const path = url.pathname.replace(/\/?$/, '');
-    if (path === '' || path === '/') {
-      url.pathname = '/api/graphql';
-    }
-    return url.toString();
-  } catch {
+const normalizeEndpoint = (endpoint?: string): string => {
+  const raw = endpoint ?? process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? 'https://decodorul-oficial-api.vercel.app/api/graphql';
+  if (raw.startsWith('http')) {
     return raw;
   }
+  return raw;
 }
-
-const DEFAULT_ENDPOINT = normalizeEndpoint();
 
 let singletonClient: GraphQLClient | null = null;
 
@@ -73,14 +64,12 @@ export function getGraphQLClient(options?: GraphQLClientFactoryOptions): GraphQL
 
     // Conditional debug logging just before each request
     if (process.env.DEBUG_INTERNAL_API_KEY === 'true') {
-      const originalRequest = client.request.bind(client) as (
-        query: any,
-        variables?: Record<string, unknown>,
-        requestHeaders?: HeadersInit
-      ) => Promise<any>;
-
+      const originalRequest = client.request.bind(client);
+      
+      // Override the request method for debugging
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (client as any).request = async (
-        query: any,
+        query: string,
         variables?: Record<string, unknown>,
         requestHeaders?: HeadersInit
       ) => {

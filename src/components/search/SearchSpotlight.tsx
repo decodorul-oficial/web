@@ -11,7 +11,7 @@ type SpotlightItem = {
   id: string;
   title: string;
   publicationDate: string;
-  content?: any;
+  content?: Record<string, unknown>;
 };
 
 export function SearchSpotlight() {
@@ -90,8 +90,8 @@ export function SearchSpotlight() {
         getAuthToken: () => (typeof window !== 'undefined' ? localStorage.getItem('DO_TOKEN') ?? undefined : undefined)
       });
       // graphql-request nu primește AbortSignal direct; folosim fetch polyfill prin setHeader + abort manual
-      (client as any).setHeader('Authorization', `Bearer ${typeof window !== 'undefined' ? localStorage.getItem('DO_TOKEN') ?? '' : ''}`);
-      (client as any).setHeader('Content-Type', 'application/json');
+      (client as { setHeader: (key: string, value: string) => void }).setHeader('Authorization', `Bearer ${typeof window !== 'undefined' ? localStorage.getItem('DO_TOKEN') ?? '' : ''}`);
+      (client as { setHeader: (key: string, value: string) => void }).setHeader('Content-Type', 'application/json');
 
       const dataPromise = client.request<{ searchStiri: { stiri: SpotlightItem[]; pagination: { totalCount: number } } }>(
         SEARCH_STIRI,
@@ -118,8 +118,8 @@ export function SearchSpotlight() {
       
       // Track search event
       if (!append) trackSearch(q, totalNew);
-    } catch (e: any) {
-      const code = e?.response?.errors?.[0]?.code;
+    } catch (e: unknown) {
+      const code = (e as { response?: { errors?: { code?: string }[] } }).response?.errors?.[0]?.code;
       if (code === 'VALIDATION_ERROR') setError('Limita nu poate depăși 100 sau parametrii nu sunt validați.');
       else if (code === 'RATE_LIMIT_EXCEEDED') setError('Ai atins limita de rată. Te rugăm să încerci din nou în scurt timp.');
       else setError('A apărut o eroare. Încearcă din nou.');
@@ -227,22 +227,35 @@ export function SearchSpotlight() {
                     <div className="text-xs text-gray-500">
                       {new Date(r.publicationDate).toLocaleDateString('ro-RO')}
                     </div>
-                    {(r as any).content && (
+                    {r.content && (
                       <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-600">
-                        {((r as any).content?.summary || (r as any).content?.body) && (
-                          <span className="line-clamp-1 max-w-full text-gray-700">
-                            {(r as any).content?.summary || String((r as any).content?.body ?? '').replace(/<[^>]+>/g, '').slice(0, 140)}
-                          </span>
-                        )}
-                        {(r as any).content?.category && (
-                          <span className="rounded bg-gray-100 px-2 py-0.5">{(r as any).content.category}</span>
-                        )}
-                        {Array.isArray((r as any).content?.keywords) && (r as any).content.keywords.slice(0, 3).map((k: string) => (
-                          <span key={k} className="rounded bg-gray-100 px-2 py-0.5">{k}</span>
-                        ))}
-                        {(r as any).content?.author && (
-                          <span className="ml-auto text-gray-500">Autor: {(r as any).content.author}</span>
-                        )}
+                        {(() => {
+                          const content = r.content as Record<string, unknown>;
+                          const summary = content?.summary;
+                          const body = content?.body;
+                          const category = content?.category;
+                          const keywords = content?.keywords;
+                          const author = content?.author;
+                          
+                          return (
+                            <>
+                              {(summary || body) && (
+                                <span className="line-clamp-1 max-w-full text-gray-700">
+                                  {String(summary || body || '').replace(/<[^>]+>/g, '').slice(0, 140)}
+                                </span>
+                              )}
+                              {category && (
+                                <span className="rounded bg-gray-100 px-2 py-0.5">{String(category)}</span>
+                              )}
+                              {Array.isArray(keywords) && keywords.slice(0, 3).map((k: string) => (
+                                <span key={k} className="rounded bg-gray-100 px-2 py-0.5">{k}</span>
+                              ))}
+                              {author && (
+                                <span className="ml-auto text-gray-500">Autor: {String(author)}</span>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
                     )}
                   </Link>

@@ -87,7 +87,7 @@ export class NewsletterService {
     try {
       const status = await this.getSubscriptionStatus(email);
       return status !== null;
-    } catch (error) {
+    } catch {
       return false;
     }
   }

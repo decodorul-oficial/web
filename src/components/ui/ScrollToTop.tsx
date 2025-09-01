@@ -43,11 +43,11 @@ export function ScrollToTop() {
     const onResize = onScroll;
 
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onResize, { passive: true } as any);
+    window.addEventListener('resize', onResize, { passive: true });
     updatePosition();
     return () => {
       window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onResize as any);
+      window.removeEventListener('resize', onResize);
     };
   }, []);
 

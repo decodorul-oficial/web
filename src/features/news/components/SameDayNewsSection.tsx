@@ -8,7 +8,7 @@ interface SameDayNewsSectionProps {
   currentNewsId: string;
 }
 
-export function SameDayNewsSection({ news, currentNewsId }: SameDayNewsSectionProps) {
+export function SameDayNewsSection({ news }: SameDayNewsSectionProps) {
   if (news.length === 0) {
     return null;
   }
@@ -21,6 +21,7 @@ export function SameDayNewsSection({ news, currentNewsId }: SameDayNewsSectionPr
     });
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString('ro-RO', {
       hour: '2-digit',
@@ -30,10 +31,10 @@ export function SameDayNewsSection({ news, currentNewsId }: SameDayNewsSectionPr
 
   const extractSummary = (content: unknown): string => {
     if (!content || typeof content !== 'object') return '';
-    const c = content as any;
+    const c = content as Record<string, unknown>;
     
     // Încercăm să găsim un sumar din conținut
-    if (c.summary) return c.summary;
+    if (c.summary) return String(c.summary);
     if (c.body) {
       // Dacă avem body, luăm primele 150 de caractere
       const bodyText = typeof c.body === 'string' ? c.body : JSON.stringify(c.body);

@@ -52,7 +52,7 @@ export const UnsubscribeNewsletterForm = ({ initialEmail }: UnsubscribeNewslette
         email: email.trim(),
         reason: finalReason
       });
-    } catch (err) {
+    } catch {
       setError('A apărut o eroare. Te rugăm să încerci din nou.');
       setIsProcessing(false);
     }

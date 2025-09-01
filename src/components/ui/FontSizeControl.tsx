@@ -11,7 +11,6 @@ const FONT_SIZE_STEP = 0.1;
 export function FontSizeControl() {
   const [fontSize, setFontSize] = useState(1);
   const [isVisible, setIsVisible] = useState(false);
-  const [isNearFooter, setIsNearFooter] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -25,26 +24,7 @@ export function FontSizeControl() {
       }
     }
 
-    // Funcția pentru detectarea apropiării de footer
-    const handleScroll = () => {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
-      const footerHeight = 300; // Mărit înălțimea pentru a include newsletter button
-      
-      // Verifică dacă utilizatorul este aproape de footer
-      const isNear = scrollTop + windowHeight >= documentHeight - footerHeight;
-      setIsNearFooter(isNear);
-    };
 
-    // Adaugă event listener pentru scroll
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    
-    // Verifică poziția inițială
-    handleScroll();
-
-    // Cleanup
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Închide popoverul la click în afară sau la apăsarea tastei Escape
@@ -220,11 +200,11 @@ export function FontSizeControl() {
     };
 
     window.addEventListener('scroll', onScrollOrResize, { passive: true });
-    window.addEventListener('resize', onScrollOrResize, { passive: true } as any);
+    window.addEventListener('resize', onScrollOrResize, { passive: true });
     updatePosition();
     return () => {
       window.removeEventListener('scroll', onScrollOrResize);
-      window.removeEventListener('resize', onScrollOrResize as any);
+      window.removeEventListener('resize', onScrollOrResize);
     };
   }, []);
 

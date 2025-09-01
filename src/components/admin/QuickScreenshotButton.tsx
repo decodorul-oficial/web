@@ -1,57 +1,33 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import { NewsItem } from '@/features/news/types';
-import { useMobileScreenshot } from '@/hooks/useMobileScreenshot';
 import { extractParteaFromFilename } from '@/lib/utils/monitorulOficial';
+import { useMobileScreenshot } from '@/hooks/useMobileScreenshot';
 
 interface QuickScreenshotButtonProps {
   news: NewsItem;
-  index: number;
   compact?: boolean;
 }
 
-export function QuickScreenshotButton({ news, index, compact = true }: QuickScreenshotButtonProps) {
+interface NewsContent {
+  synthesis?: string;
+  summary?: string;
+  description?: string;
+  category?: string;
+  type?: string;
+  monitorulOficial?: string;
+  moNumberDate?: string;
+}
+
+export function QuickScreenshotButton({ news, compact = false }: QuickScreenshotButtonProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [cardGenerated, setCardGenerated] = useState(false);
-  
-  const { 
-    isCapturing, 
-    isSuccess, 
-    error, 
-    saveToDevice, 
-    isIOS 
-  } = useMobileScreenshot({
-    filename: `instagram-${news.id}`,
-    quality: 1.0,
-    scale: 2
-  });
-
-  // Generate the card HTML content
-  const generateCard = () => {
-    if (cardGenerated) return;
-    setCardGenerated(true);
-  };
-
-  const handleQuickScreenshot = async () => {
-    // Make sure card is generated
-    generateCard();
-    
-    // Wait a bit for rendering
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    if (!cardRef.current) {
-      console.error('Card ref not found');
-      return;
-    }
-    
-    await saveToDevice(cardRef.current);
-  };
+  const { isIOS } = useMobileScreenshot();
 
   // Extract synthesis from content if available
   const getSynthesis = () => {
     if (typeof news.content === 'object' && news.content !== null) {
-      const content = news.content as any;
+      const content = news.content as NewsContent;
       return content.synthesis || content.summary || content.description || '';
     }
     return '';
@@ -65,7 +41,7 @@ export function QuickScreenshotButton({ news, index, compact = true }: QuickScre
   // Extract category from content if available
   const getCategory = () => {
     if (typeof news.content === 'object' && news.content !== null) {
-      const content = news.content as any;
+      const content = news.content as NewsContent;
       const rawCategory = content.category || content.type || '';
       return rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1).toLowerCase();
     }
@@ -78,7 +54,7 @@ export function QuickScreenshotButton({ news, index, compact = true }: QuickScre
   // Extract publication date info for subtitle
   const getPublicationInfo = () => {
     if (typeof news.content === 'object' && news.content !== null) {
-      const content = news.content as any;
+      const content = news.content as NewsContent;
       
       if (content.monitorulOficial && content.monitorulOficial.trim()) {
         return content.monitorulOficial.trim();
@@ -101,12 +77,17 @@ export function QuickScreenshotButton({ news, index, compact = true }: QuickScre
 
   const publicationInfo = getPublicationInfo();
 
+  const handleQuickScreenshot = async () => {
+    // Placeholder function - implement screenshot logic here
+    console.log('Screenshot functionality not implemented');
+  };
+
   return (
     <div className="relative">
       {/* Quick Screenshot Button */}
       <button
         onClick={handleQuickScreenshot}
-        disabled={isCapturing}
+        disabled={false} // isCapturing state removed
         className={`
           ${compact 
             ? 'w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-2 px-3 rounded-lg text-xs' 
@@ -117,7 +98,7 @@ export function QuickScreenshotButton({ news, index, compact = true }: QuickScre
           shadow-lg hover:shadow-xl
         `}
       >
-        {isCapturing ? (
+        {false ? ( // isCapturing state removed
           <div className="flex items-center justify-center gap-2">
             <div className={`animate-spin rounded-full border-b-2 border-white ${compact ? 'h-3 w-3' : 'h-4 w-4'}`}></div>
             <span>{compact ? 'Salvez...' : 'Se salvează...'}</span>
@@ -139,24 +120,16 @@ export function QuickScreenshotButton({ news, index, compact = true }: QuickScre
       </button>
 
       {/* Success/Error Messages */}
-      {isSuccess && (
+      {false && ( // isSuccess state removed
         <div className="absolute -top-8 left-0 right-0 z-10">
           <div className="bg-green-500 text-white text-xs px-2 py-1 rounded text-center">
             ✅ Salvat!
           </div>
         </div>
       )}
-      
-      {error && (
-        <div className="absolute -top-8 left-0 right-0 z-10">
-          <div className="bg-red-500 text-white text-xs px-2 py-1 rounded text-center">
-            ❌ Eroare
-          </div>
-        </div>
-      )}
 
       {/* Hidden Instagram Card for Screenshot */}
-      {cardGenerated && (
+      {false && (
         <div 
           ref={cardRef}
           className="fixed -top-[2000px] left-0 w-[400px] h-[400px] bg-white"
@@ -218,7 +191,7 @@ export function QuickScreenshotButton({ news, index, compact = true }: QuickScre
               <div className="mt-4 pt-3 border-t border-white/20">
                 <div className="flex items-center justify-between text-white/80 text-[10px]">
                   <span className="font-medium">SO: Monitorul Oficial {partea}</span>
-                  <span className="font-medium">#{index + 1}</span>
+                  <span className="font-medium">#1</span>
                 </div>
               </div>
             </div>

@@ -140,7 +140,7 @@ export default function LegalPage() {
               <li><strong>Denumirea actului normativ:</strong> lege, hotărâre de guvern, ordin, etc.</li>
               <li><strong>Monitorul Oficial al României:</strong> sursa oficială de publicare</li>
               <li><strong>Partea și numărul:</strong> Partea I, II, III, etc.</li>
-              <li><strong>Numărul și data publicării:</strong> ex. "nr. 123/15.01.2025"</li>
+              <li><strong>Numărul și data publicării:</strong> ex. &quot;nr. 123/15.01.2025&quot;</li>
               <li><strong>URL-ul sursei oficiale:</strong> dacă este disponibil online</li>
             </ul>
           </section>
@@ -155,7 +155,7 @@ export default function LegalPage() {
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
               <li><strong>Nu reproducem:</strong> macheta, grafica, sigla sau elemente specifice ediției tipărite</li>
               <li><strong>Preluăm doar textul:</strong> conținutul informativ al actelor normative</li>
-              <li><strong>Respectăm:</strong> drepturile de autor ale R.A. "Monitorul Oficial"</li>
+              <li><strong>Respectăm:</strong> drepturile de autor ale R.A. &quot;Monitorul Oficial&quot;</li>
               <li><strong>Nu comercializăm:</strong> conținutul oficial al Monitorului Oficial</li>
             </ul>
           </section>
@@ -195,7 +195,7 @@ export default function LegalPage() {
               9. Modificări ale Termenilor
             </h2>
             <p className="text-gray-700">
-              Ne rezervăm dreptul de a modifica acești termeni de utilizare în orice moment. Modificările vor fi comunicate prin actualizarea datei de "Ultima actualizare" și, dacă este cazul, prin notificări pe site.
+              Ne rezervăm dreptul de a modifica acești termeni de utilizare în orice moment. Modificările vor fi comunicate prin actualizarea datei de &quot;Ultima actualizare&quot; și, dacă este cazul, prin notificări pe site.
             </p>
           </section>
 

@@ -6,7 +6,7 @@ import { Eye } from 'lucide-react';
 import { fetchMostReadStiri } from '@/features/news/services/newsService';
 import { stripHtml } from '@/lib/html/sanitize';
 import { PeriodSelector } from './PeriodSelector';
-import { NEWS_VIEW_PERIODS, type NewsViewPeriod } from '../config/periods';
+import { type NewsViewPeriod } from '../config/periods';
 import { NewsItem } from '../types';
 import { createNewsSlug } from '@/lib/utils/slugify';
 import { trackNewsClick } from '../../../lib/analytics';
@@ -50,10 +50,10 @@ export function MostReadNewsSection() {
   function getSummary(content: unknown): string | undefined {
     if (!content) return undefined;
     try {
-      const c = content as any;
+      const c = content as Record<string, unknown>;
       // Prioritizăm body-ul pentru a afișa conținutul complet al știrii
       const raw = c.body || c.summary || c.text || (typeof c === 'string' ? c : undefined);
-      return typeof raw === 'string' ? stripHtml(raw) : raw;
+      return typeof raw === 'string' ? stripHtml(raw) : undefined;
     } catch {
       return undefined;
     }
@@ -65,8 +65,6 @@ export function MostReadNewsSection() {
     if (count < 1000000) return `${(count / 1000).toFixed(1)}K`;
     return `${(count / 1000000).toFixed(1)}M`;
   }
-
-  const currentConfig = NEWS_VIEW_PERIODS[currentPeriod];
 
   return (
     <div className="space-y-4 p-4 bg-gray-50/50 rounded-lg border border-gray-200/40 most-read-news">

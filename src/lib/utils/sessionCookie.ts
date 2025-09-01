@@ -1,7 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 
 const SESSION_COOKIE_NAME = 'mo_session';
-const SESSION_COOKIE_MAX_AGE = 365 * 24 * 60 * 60; // 1 an în secunde
 
 /**
  * Generează un UUID v4 pentru sesiune

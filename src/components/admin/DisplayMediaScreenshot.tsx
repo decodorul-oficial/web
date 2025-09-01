@@ -10,6 +10,17 @@ interface DisplayMediaScreenshotProps {
   index: number;
 }
 
+// Define proper types for the content object
+interface NewsContent {
+  synthesis?: string;
+  summary?: string;
+  description?: string;
+  category?: string;
+  type?: string;
+  monitorulOficial?: string;
+  moNumberDate?: string;
+}
+
 export function DisplayMediaScreenshot({ news, index }: DisplayMediaScreenshotProps) {
   const [isCapturing, setIsCapturing] = useState(false);
   const [captureSuccess, setCaptureSuccess] = useState(false);
@@ -24,7 +35,7 @@ export function DisplayMediaScreenshot({ news, index }: DisplayMediaScreenshotPr
   // Extract synthesis from content if available
   const getSynthesis = () => {
     if (typeof news.content === 'object' && news.content !== null) {
-      const content = news.content as any;
+      const content = news.content as NewsContent;
       return content.synthesis || content.summary || content.description || '';
     }
     return '';
@@ -40,7 +51,7 @@ export function DisplayMediaScreenshot({ news, index }: DisplayMediaScreenshotPr
   // Extract category from content if available
   const getCategory = () => {
     if (typeof news.content === 'object' && news.content !== null) {
-      const content = news.content as any;
+      const content = news.content as NewsContent;
       const rawCategory = content.category || content.type || '';
       return rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1).toLowerCase();
     }
@@ -55,7 +66,7 @@ export function DisplayMediaScreenshot({ news, index }: DisplayMediaScreenshotPr
   // Extract publication date info
   const getPublicationInfo = () => {
     if (typeof news.content === 'object' && news.content !== null) {
-      const content = news.content as any;
+      const content = news.content as NewsContent;
       
       if (content.monitorulOficial && content.monitorulOficial.trim()) {
         return content.monitorulOficial.trim();
@@ -368,7 +379,7 @@ export function DisplayMediaScreenshot({ news, index }: DisplayMediaScreenshotPr
                 <li><strong>Application window</strong> - pentru fereastra browser-ului</li>
                 <li><strong>Browser tab</strong> - pentru tab-ul curent</li>
               </ul>
-              <p>2. Apasă <strong>"Share"</strong> pentru a începe capturarea</p>
+              <p>2. Apasă <strong>&quot;Share&quot;</strong> pentru a începe capturarea</p>
               <p>3. Se va captura <strong>doar card-ul știrii</strong>, nu tot ecranul</p>
               <p>4. Imaginea va fi descărcată automat cu numele <code>instagram-card-[ID].png</code></p>
               <p className="text-sm text-gray-500 mt-2">
@@ -427,7 +438,7 @@ export function DisplayMediaScreenshot({ news, index }: DisplayMediaScreenshotPr
         ) : (
           <>
             <p className="text-white/60 text-xs mt-1">
-              💡 Folosește "Capture Display" pentru a captura doar card-ul știrii folosind getDisplayMedia
+              💡 Folosește &quot;Capture Display&quot; pentru a captura doar card-ul știrii folosind getDisplayMedia
             </p>
             {!isDisplayMediaSupported && (
               <p className="text-red-300 text-xs mt-1">

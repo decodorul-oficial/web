@@ -36,6 +36,12 @@ export const metadata: Metadata = {
   },
 };
 
+interface NewsContent {
+  body?: string;
+  summary?: string;
+  text?: string;
+}
+
 interface NewsGroup {
   date: string;
   formattedDate: string;
@@ -106,12 +112,13 @@ export default async function ArhivaPage() {
         };
       }
 
+      const content = news.content as NewsContent;
       groups[date].news.push({
         id: news.id,
         title: news.title,
         slug: createNewsSlug(news.title, news.id),
         publicationDate: news.publicationDate,
-        summary: (news.content as any)?.body || (news.content as any)?.summary || (news.content as any)?.text
+        summary: content?.body || content?.summary || content?.text
       });
 
       return groups;

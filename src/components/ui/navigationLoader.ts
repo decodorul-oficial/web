@@ -5,7 +5,7 @@ type Listener = (visible: boolean) => void;
 class NavigationLoaderStore {
   private pendingCount = 0;
   private listeners: Set<Listener> = new Set();
-  private safetyTimer: any = null;
+  private safetyTimer: NodeJS.Timeout | null = null;
   private lastStartAt = 0;
 
   private notify() {

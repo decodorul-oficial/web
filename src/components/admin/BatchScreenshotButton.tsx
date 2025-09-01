@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { NewsItem } from '@/features/news/types';
 import { useMobileScreenshot } from '@/hooks/useMobileScreenshot';
 import { extractParteaFromFilename } from '@/lib/utils/monitorulOficial';
@@ -8,6 +8,18 @@ import { extractParteaFromFilename } from '@/lib/utils/monitorulOficial';
 interface BatchScreenshotButtonProps {
   news: NewsItem[];
   filterToday?: boolean;
+}
+
+
+
+interface NewsContent {
+  synthesis?: string;
+  summary?: string;
+  description?: string;
+  category?: string;
+  type?: string;
+  monitorulOficial?: string;
+  moNumberDate?: string;
 }
 
 export function BatchScreenshotButton({ news, filterToday = true }: BatchScreenshotButtonProps) {
@@ -41,7 +53,7 @@ export function BatchScreenshotButton({ news, filterToday = true }: BatchScreens
     // Extract synthesis
     const getSynthesis = () => {
       if (typeof newsItem.content === 'object' && newsItem.content !== null) {
-        const content = newsItem.content as any;
+        const content = newsItem.content as NewsContent;
         return content.synthesis || content.summary || content.description || '';
       }
       return '';
@@ -55,7 +67,7 @@ export function BatchScreenshotButton({ news, filterToday = true }: BatchScreens
     // Extract category
     const getCategory = () => {
       if (typeof newsItem.content === 'object' && newsItem.content !== null) {
-        const content = newsItem.content as any;
+        const content = newsItem.content as NewsContent;
         const rawCategory = content.category || content.type || '';
         return rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1).toLowerCase();
       }
@@ -68,7 +80,7 @@ export function BatchScreenshotButton({ news, filterToday = true }: BatchScreens
     // Extract publication info
     const getPublicationInfo = () => {
       if (typeof newsItem.content === 'object' && newsItem.content !== null) {
-        const content = newsItem.content as any;
+        const content = newsItem.content as NewsContent;
         
         if (content.monitorulOficial && content.monitorulOficial.trim()) {
           return content.monitorulOficial.trim();

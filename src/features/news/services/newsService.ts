@@ -3,7 +3,6 @@ import { requestWithEndpointFallback } from '@/lib/graphql/utils';
 import { 
   GET_STIRI, 
   GET_STIRE_BY_ID, 
-  SEARCH_STIRI, 
   GET_MOST_READ_STIRI, 
   SEARCH_STIRI_BY_KEYWORDS,
   GET_DAILY_SYNTHESIS,
@@ -50,7 +49,7 @@ export async function fetchLatestNews(params: FetchNewsParams = {}) {
       orderDirection
     });
     return data.getStiri;
-  } catch (primaryError: any) {
+  } catch (primaryError: unknown) {
     if (process.env.NODE_ENV !== 'production') console.debug('fetchLatestNews primary failed; retrying endpoint', primaryError);
     try {
       const { data } = await requestWithEndpointFallback<GetStiriResponse>(
@@ -132,7 +131,7 @@ export async function fetchMostReadStiri(params: MostReadStiriParams = {}) {
       period
     });
     return data.getMostReadStiri;
-  } catch (primaryError: any) {
+  } catch (primaryError: unknown) {
     if (process.env.NODE_ENV !== 'production') console.debug('fetchMostReadStiri primary failed; retrying endpoint', primaryError);
     try {
       const { data } = await requestWithEndpointFallback<MostReadStiriResponse>(
@@ -177,7 +176,7 @@ export async function searchStiriByKeywords(params: SearchStiriByKeywordsParams)
       publicationDateTo
     });
     return data.searchStiriByKeywords;
-  } catch (primaryError: any) {
+  } catch (primaryError: unknown) {
     console.error('searchStiriByKeywords failed:', primaryError);
     
     // Try endpoint fallback with proper headers
@@ -218,7 +217,7 @@ export async function fetchCategories(limit: number = 100): Promise<CategoryCoun
     const client = getGraphQLClient();
     const data = await client.request<GetCategoriesResponse>(GET_CATEGORIES, { limit });
     return data.getCategories;
-  } catch (primaryError: any) {
+  } catch (primaryError: unknown) {
     console.error('fetchCategories failed:', primaryError);
     try {
       const { data } = await requestWithEndpointFallback<GetCategoriesResponse>(
@@ -250,7 +249,7 @@ export async function fetchStiriByCategory(params: { category: string; limit?: n
       offset
     });
     return data.getStiriByCategory;
-  } catch (primaryError: any) {
+  } catch (primaryError: unknown) {
     console.error('fetchStiriByCategory failed:', primaryError);
     try {
       const { data } = await requestWithEndpointFallback<GetStiriByCategoryResponse>(
@@ -283,8 +282,8 @@ export async function fetchStiriByCategorySlug(params: { slug: string; limit?: n
       limit: limitClamped,
       offset
     });
-    return (data as any).getStiriByCategorySlug;
-  } catch (primaryError: any) {
+    return (data as unknown as { getStiriByCategorySlug: GetStiriByCategoryResponse['getStiriByCategory'] }).getStiriByCategorySlug;
+  } catch (primaryError: unknown) {
     console.error('fetchStiriByCategorySlug failed:', primaryError);
     try {
       const { data } = await requestWithEndpointFallback<GetStiriByCategoryResponse>(
@@ -292,7 +291,7 @@ export async function fetchStiriByCategorySlug(params: { slug: string; limit?: n
         { slug, limit: limitClamped, offset },
         process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT
       );
-      return (data as any).getStiriByCategorySlug;
+      return (data as unknown as { getStiriByCategorySlug: GetStiriByCategoryResponse['getStiriByCategory'] }).getStiriByCategorySlug;
     } catch (fallbackError) {
       console.error('Endpoint fallback also failed (fetchStiriByCategorySlug):', fallbackError);
       return {

@@ -10,7 +10,7 @@ export type ContentTable = {
 };
 
 export function TablesRenderer({ tables }: { tables: ContentTable[] }) {
-  const normalizedTables = Array.isArray(tables) ? tables : [];
+  const normalizedTables = useMemo(() => Array.isArray(tables) ? tables : [], [tables]);
 
   const computeHeaders = (rows: TableRow[]): string[] => {
     const headers: string[] = [];
@@ -38,7 +38,7 @@ export function TablesRenderer({ tables }: { tables: ContentTable[] }) {
 
   // Keep refs for each table element and instance for cleanup
   const tableElsRef = useRef<(HTMLTableElement | null)[]>([]);
-  const dataTableInstancesRef = useRef<any[]>([]);
+  const dataTableInstancesRef = useRef<unknown[]>([]);
 
   const tableOptions = useMemo(() => {
     return (normalizedTables || []).map((t) => {
@@ -87,13 +87,13 @@ export function TablesRenderer({ tables }: { tables: ContentTable[] }) {
     let isCancelled = false;
     // Dynamic import on client only
     import('simple-datatables')
-      .then((mod: any) => {
+      .then((mod: { DataTable?: unknown }) => {
         if (isCancelled) return;
-        const SimpleDataTables = mod?.DataTable ? mod : (window as any).simpleDatatables;
+        const SimpleDataTables = mod?.DataTable ? mod : (window as Record<string, unknown>).simpleDatatables as { DataTable?: unknown };
 
         // Cleanup any previous instances before creating new ones
         for (const inst of dataTableInstancesRef.current) {
-          try { inst?.destroy?.(); } catch {}
+          try { (inst as { destroy?: () => void })?.destroy?.(); } catch {}
         }
         dataTableInstancesRef.current = [];
 
@@ -101,15 +101,21 @@ export function TablesRenderer({ tables }: { tables: ContentTable[] }) {
           const tableEl = tableElsRef.current[idx];
           if (!tableEl) return;
           try {
-            const instance = SimpleDataTables?.DataTable
-              ? new SimpleDataTables.DataTable(tableEl, tableOptions[idx])
-              : new (mod as any).DataTable(tableEl, tableOptions[idx]);
+            let instance: unknown;
+            if (SimpleDataTables?.DataTable) {
+              instance = new (SimpleDataTables.DataTable as new (el: HTMLTableElement, options: unknown) => unknown)(tableEl, tableOptions[idx]);
+            } else if (mod?.DataTable) {
+              instance = new (mod.DataTable as new (el: HTMLTableElement, options: unknown) => unknown)(tableEl, tableOptions[idx]);
+            } else {
+              console.warn('DataTable not available');
+              return;
+            }
             dataTableInstancesRef.current[idx] = instance;
 
             // Ensure numeric labels are visible by mirroring aria-label to data-page
             try {
               const pager = tableEl.closest('.datatable-wrapper')?.querySelectorAll('.datatable-pagination .datatable-pagination-list-item-link');
-              pager?.forEach((btn: any) => {
+              pager?.forEach((btn: Element) => {
                 const page = btn?.getAttribute?.('aria-label')?.replace(/\D+/g, '') || '';
                 if (page) btn.setAttribute('data-page', page);
               });
@@ -127,7 +133,7 @@ export function TablesRenderer({ tables }: { tables: ContentTable[] }) {
     return () => {
       isCancelled = true;
       for (const inst of dataTableInstancesRef.current) {
-        try { inst?.destroy?.(); } catch {}
+        try { (inst as { destroy?: () => void })?.destroy?.(); } catch {}
       }
       dataTableInstancesRef.current = [];
     };

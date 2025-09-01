@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { fetchNewsById, fetchNewsByDate } from '@/features/news/services/newsService';
+import { NewsItem } from '@/features/news/types';
 import { Citation } from '@/components/legal/Citation';
 import { sanitizeRichText } from '@/lib/html/sanitize';
 import { NavigationEndBeacon } from '@/components/ui/NavigationEndBeacon';
@@ -15,22 +16,41 @@ import { SessionCookieInitializer } from '@/components/session/SessionCookieInit
 import { NewsViewTrackingWrapper } from '@/features/news/components/NewsViewTrackingWrapper';
 import { extractParteaFromFilename, generateMonitorulOficialUrl } from '@/lib/utils/monitorulOficial';
 import { NewsletterCtaInline } from '@/components/newsletter/NewsletterCtaInline';
-import { TablesRenderer } from '@/features/news/components/TablesRenderer';
+import { TablesRenderer, ContentTable } from '@/features/news/components/TablesRenderer';
 import { ShareButtons, FloatingShareSidebar, ArticleShareSection } from '@/components/ui/ShareButtons';
 
 
-type PageProps = { params: { slug: string } };
+interface PageProps {
+  params: { slug: string };
+}
+
+interface NewsContent {
+  summary?: string;
+  body?: string;
+  text?: string;
+  author?: string;
+  category?: string;
+  keywords?: string[];
+  act?: string;
+  actName?: string;
+  partea?: string;
+  monitorulOficial?: string;
+  moNumberDate?: string;
+  sourceUrl?: string;
+  url?: string;
+  [key: string]: unknown;
+}
 
 export const dynamic = 'force-dynamic';
 
 function extractField<T = string>(content: unknown, key: string): T | undefined {
   if (!content || typeof content !== 'object') return undefined;
-  const c: any = content;
+  const c = content as NewsContent;
   return c?.[key] as T | undefined;
 }
 
 function getCitationFields(content: unknown, filename?: string) {
-  const c = (content ?? {}) as any;
+  const c = (content ?? {}) as NewsContent;
   
   // Extract partea from filename if available, otherwise fallback to content or default
   const extractedPartea = extractParteaFromFilename(filename);
@@ -48,7 +68,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = params;
   
   let id: string;
-  let news: any;
+  let news: NewsItem | null = null;
   
   // Check if this is a numeric ID (old format)
   if (/^\d+$/.test(slug)) {
@@ -71,12 +91,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const title = news.title;
   const summary = extractField<string>(news.content, 'summary') || news.title;
-  const publicationDate = new Date(news.publicationDate);
-  const formattedDate = publicationDate.toLocaleDateString('ro-RO', { 
-    day: '2-digit', 
-    month: '2-digit', 
-    year: 'numeric' 
-  });
   
   const keywords = [
     'Monitorul Oficial',
@@ -161,7 +175,7 @@ export default async function NewsDetailPage(props: PageProps) {
   const { slug } = props.params;
   
   let id: string;
-  let news: any;
+  let news: NewsItem | null = null;
   
   // Check if this is a numeric ID (old format)
   if (/^\d+$/.test(slug)) {
@@ -204,7 +218,7 @@ export default async function NewsDetailPage(props: PageProps) {
   }
 
   // Obținem știrile din aceeași zi - optimizat pentru a fi mai rapid
-  let sameDayNews: any[] = [];
+  let sameDayNews: NewsItem[] = [];
   if (news) {
     // Folosim Promise.all pentru a încărca datele în paralel
     const [newsData, sameDayData] = await Promise.all([
@@ -228,7 +242,7 @@ export default async function NewsDetailPage(props: PageProps) {
   const author = extractField<string>(news.content, 'author');
   const category = extractField<string>(news.content, 'category');
   const keywords = extractField<string[]>(news.content, 'keywords');
-  const tables = extractField<any[]>(news.content, 'tables') || [];
+  const tables = extractField<ContentTable[]>(news.content, 'tables') || [];
 
   return (
     <div className="flex min-h-screen flex-col">

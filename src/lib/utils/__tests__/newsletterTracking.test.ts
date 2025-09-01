@@ -1,10 +1,8 @@
 import {
   getNewsletterTrackingData,
-  saveNewsletterTrackingData,
   incrementNewsViewed,
   isNewsAlreadyTracked,
   shouldShowNewsletterModal,
-  markNewsletterModalShown,
   markNewsletterSubscribed,
   isNewsletterSubscribed,
   resetNewsletterTracking,

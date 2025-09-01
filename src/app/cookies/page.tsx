@@ -63,7 +63,7 @@ export default function CookiesPolicyPage() {
               1. Ce Sunt Cookie-urile?
             </h2>
             <p className="text-gray-700 leading-relaxed">
-              Cookie-urile sunt fișiere text mici pe care site-ul le stochează pe dispozitivul tău (computer, tabletă, telefon) când îl vizitezi. Acestea permit site-ului să-și "amintească" de acțiunile tale și preferințele tale pentru o perioadă de timp.
+              Cookie-urile sunt fișiere text mici pe care site-ul le stochează pe dispozitivul tău (computer, tabletă, telefon) când îl vizitezi. Acestea permit site-ului să-și &quot;amintească&quot; de acțiunile tale și preferințele tale pentru o perioadă de timp.
             </p>
           </section>
 
@@ -273,7 +273,7 @@ export default function CookiesPolicyPage() {
               10. Actualizări ale Politicii de Cookie-uri
             </h2>
             <p className="text-gray-700 leading-relaxed">
-              Această politică poate fi actualizată periodic pentru a reflecta schimbările în tehnologia de cookie-uri sau în legislația în vigoare. Modificările vor fi comunicate prin actualizarea datei de "Ultima actualizare".
+              Această politică poate fi actualizată periodic pentru a reflecta schimbările în tehnologia de cookie-uri sau în legislația în vigoare. Modificările vor fi comunicate prin actualizarea datei de &quot;Ultima actualizare&quot;.
             </p>
           </section>
 

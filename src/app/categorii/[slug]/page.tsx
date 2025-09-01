@@ -8,7 +8,7 @@ import { Footer } from '@/components/layout/Footer';
 import { fetchCategories, fetchStiriByCategorySlug } from '@/features/news/services/newsService';
 import { NewsItem } from '@/features/news/types';
 import { createNewsSlug } from '@/lib/utils/slugify';
-import { Eye, ChevronLeft, ChevronRight, Gavel } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Gavel } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { stripHtml } from '@/lib/html/sanitize';
@@ -18,6 +18,21 @@ import { extractParteaFromFilename } from '@/lib/utils/monitorulOficial';
 type PageProps = {
   params: { slug: string };
 };
+
+interface NewsContent {
+  body?: string;
+  summary?: string;
+  text?: string;
+  act?: string;
+  actName?: string;
+  partea?: string;
+  monitorulOficial?: string;
+  moNumberDate?: string;
+  sourceUrl?: string;
+  url?: string;
+  lucide_icon?: string;
+  lucideIcon?: string;
+}
 
 function formatCategorySlugToName(slug: string): string {
   return slug.replace(/-/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
@@ -103,17 +118,17 @@ export default function CategoryPage({ params }: PageProps) {
     if (!content) return undefined;
     try {
       const c = (() => {
-        const raw = content as any;
+        const raw = content as NewsContent | string;
         if (typeof raw === 'string') {
           try {
-            return JSON.parse(raw);
+            return JSON.parse(raw) as NewsContent;
           } catch {
             return raw;
           }
         }
         return raw;
       })();
-      const raw = c.body || c.summary || c.text || (typeof c === 'string' ? c : undefined);
+      const raw = typeof c === 'string' ? c : (c.body || c.summary || c.text);
       return typeof raw === 'string' ? stripHtml(raw) : raw;
     } catch {
       return undefined;
@@ -122,15 +137,15 @@ export default function CategoryPage({ params }: PageProps) {
 
   function getCitationFields(content: unknown, filename?: string) {
     const c = (() => {
-      const raw = content as any;
+      const raw = content as NewsContent | string;
       if (typeof raw === 'string') {
         try {
-          return JSON.parse(raw);
+          return JSON.parse(raw) as NewsContent;
         } catch {
-          return {} as any;
+          return {} as NewsContent;
         }
       }
-      return (raw ?? {}) as any;
+      return (raw ?? {}) as NewsContent;
     })();
     const extractedPartea = extractParteaFromFilename(filename);
     return {
@@ -152,15 +167,15 @@ export default function CategoryPage({ params }: PageProps) {
   function getLucideIconForContent(content: unknown, fallback: LucideIcon): LucideIcon {
     try {
       const c = (() => {
-        const raw = content as any;
+        const raw = content as NewsContent | string;
         if (typeof raw === 'string') {
           try {
-            return JSON.parse(raw);
+            return JSON.parse(raw) as NewsContent;
           } catch {
-            return {} as any;
+            return {} as NewsContent;
           }
         }
-        return (raw ?? {}) as any;
+        return (raw ?? {}) as NewsContent;
       })();
       const iconName = c?.lucide_icon ?? c?.lucideIcon;
       if (typeof iconName === 'string' && iconName.trim().length > 0) {
@@ -233,7 +248,7 @@ export default function CategoryPage({ params }: PageProps) {
                     </h4>
                     <p className="line-clamp-2 text-sm text-gray-600 mb-2">{getSummary(n.content)?.slice(0, 180)}...</p>
                     <div className="mt-1 text-xs text-gray-600">
-                      <Citation {...getCitationFields(n.content, (n as any).filename)} />
+                      <Citation {...getCitationFields(n.content, (n as NewsItem & { filename?: string }).filename)} />
                     </div>
                   </div>
                 </article>

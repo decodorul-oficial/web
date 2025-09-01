@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useConsent } from '../../../components/cookies/ConsentProvider';
 import { useNewsletterContext } from '../../../components/newsletter/NewsletterProvider';
 import { 

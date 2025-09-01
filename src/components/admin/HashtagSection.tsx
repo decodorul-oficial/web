@@ -1,22 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { NewsItem } from '@/features/news/types';
 
 interface HashtagSectionProps {
   news: NewsItem;
 }
 
+interface NewsContent {
+  category?: string;
+  type?: string;
+  keywords?: string[];
+}
+
 export function HashtagSection({ news }: HashtagSectionProps) {
   const [copied, setCopied] = useState(false);
 
   // Extract keywords and category for hashtags
-  const getHashtags = () => {
+  const getHashtags = (): string[] => {
     const hashtags = ['#DecodorulOficial', '#MonitorulOficial', '#LegislațieRomână'];
     
     // Add category hashtag if available
     if (typeof news.content === 'object' && news.content !== null) {
-      const content = news.content as any;
+      const content = news.content as NewsContent;
       const category = content.category || content.type || '';
       if (category) {
         const categoryHashtag = `#${category.charAt(0).toUpperCase() + category.slice(1).toLowerCase()}`;
@@ -26,7 +32,7 @@ export function HashtagSection({ news }: HashtagSectionProps) {
 
     // Add keywords from content if available
     if (typeof news.content === 'object' && news.content !== null) {
-      const content = news.content as any;
+      const content = news.content as NewsContent;
       if (content.keywords && Array.isArray(content.keywords)) {
         content.keywords.forEach((keyword: string) => {
           const hashtag = `#${keyword.charAt(0).toUpperCase() + keyword.slice(1).toLowerCase()}`;

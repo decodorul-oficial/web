@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next';
-import { fetchLatestNews, fetchCategories, fetchStiriByCategory } from '@/features/news/services/newsService';
+import { fetchLatestNews, fetchCategories } from '@/features/news/services/newsService';
 import { createNewsSlug } from '@/lib/utils/slugify';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

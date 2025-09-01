@@ -63,7 +63,7 @@ export default function PrivacyPolicyPage() {
               1. Informații Generale
             </h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              Decodorul Oficial (denumit în continuare "site-ul", "noi", "nostru") respectă confidențialitatea utilizatorilor săi și se angajează să protejeze datele personale conform Regulamentului General privind Protecția Datelor (GDPR) și legislației române în vigoare.
+              Decodorul Oficial (denumit în continuare &quot;site-ul&quot;, &quot;noi&quot;, &quot;nostru&quot;) respectă confidențialitatea utilizatorilor săi și se angajează să protejeze datele personale conform Regulamentului General privind Protecția Datelor (GDPR) și legislației române în vigoare.
             </p>
             <p className="text-gray-700 leading-relaxed">
               Această politică de confidențialitate explică cum colectăm, utilizăm, stocăm și protejăm informațiile tale personale când vizitezi site-ul nostru.
@@ -211,7 +211,7 @@ export default function PrivacyPolicyPage() {
               11. Modificări ale Politicii
             </h2>
             <p className="text-gray-700 leading-relaxed">
-              Ne rezervăm dreptul de a actualiza această politică de confidențialitate. Modificările vor fi comunicate prin actualizarea datei de "Ultima actualizare" și, dacă este cazul, prin notificări pe site.
+              Ne rezervăm dreptul de a actualiza această politică de confidențialitate. Modificările vor fi comunicate prin actualizarea datei de &quot;Ultima actualizare&quot; și, dacă este cazul, prin notificări pe site.
             </p>
           </section>
 

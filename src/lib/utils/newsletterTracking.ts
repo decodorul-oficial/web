@@ -1,8 +1,7 @@
-import { getSessionCookie, setSessionCookie } from './sessionCookie';
+import { getSessionCookie } from './sessionCookie';
 
 const NEWSLETTER_TRACKING_KEY = 'newsletter_tracking';
 const NEWSLETTER_SUBSCRIPTION_KEY = 'newsletter_subscribed';
-const NEWS_VIEWED_TRACKING_KEY = 'news_viewed_tracking';
 
 interface NewsletterTrackingData {
   newsViewed: number;

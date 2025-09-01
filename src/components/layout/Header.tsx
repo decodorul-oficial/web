@@ -70,7 +70,6 @@ function capitalizeFirst(input: string): string {
 
 export function Header() {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const megaRef = useRef<HTMLDivElement | null>(null);
@@ -80,7 +79,9 @@ export function Header() {
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
       const target = e.target as Node;
-      if (dropdownRef.current && !dropdownRef.current.contains(target)) setOpen(false);
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
+        // Removed setOpen(false) since 'open' is not used
+      }
       if (megaRef.current && !megaRef.current.contains(target)) setMegaOpen(false);
     }
     document.addEventListener('click', onDocClick, true);
@@ -114,7 +115,7 @@ export function Header() {
         <nav className="hidden items-center gap-6 md:flex">
           {/* Home */}
           <Link
-            href={navItems[0].href as any}
+            href={navItems[0].href}
             className={`text-sm font-medium transition-colors hover:text-brand-info ${safePathname === navItems[0].href ? 'text-brand-info' : 'text-gray-600'}`}
           >
             {navItems[0].label}
@@ -122,7 +123,7 @@ export function Header() {
 
           {/* Cautare Avansata */}
           <Link
-            href={navItems[1].href as any}
+            href={navItems[1].href}
             className={`text-sm font-medium transition-colors hover:text-brand-info ${safePathname === navItems[1].href ? 'text-brand-info' : 'text-gray-600'}`}
           >
             {navItems[1].label}
@@ -134,7 +135,7 @@ export function Header() {
             return (
               <Link
                 key={item.href}
-                href={item.href as any}
+                href={item.href}
                 className={`text-sm font-medium transition-colors hover:text-brand-info ${active ? 'text-brand-info' : 'text-gray-600'}`}
               >
                 {item.label}
