@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { navigationLoader } from './navigationLoader';
 
@@ -11,9 +11,9 @@ export function NavigationInterceptor() {
   // de query care provoacă fetch-uri costisitoare, de ex:
   // { pathname: '/stiri', keys: ['search', 'filters'] }
   // { pathname: '/rapoarte', keys: '*' } // toate schimbările de query la această rută
-  const HEAVY_QUERY_ALLOWLIST: Array<{ pathname: string; keys?: string[] | '*' }> = [];
+  const HEAVY_QUERY_ALLOWLIST = useMemo<Array<{ pathname: string; keys?: string[] | '*' }>>(() => [], []);
 
-  const shouldTriggerForQueryChange = (prevUrl: URL, nextUrl: URL): boolean => {
+  const shouldTriggerForQueryChange = useCallback((prevUrl: URL, nextUrl: URL): boolean => {
     if (prevUrl.pathname !== nextUrl.pathname) return false;
     if (prevUrl.search === nextUrl.search) return false;
     for (const rule of HEAVY_QUERY_ALLOWLIST) {
@@ -29,14 +29,14 @@ export function NavigationInterceptor() {
       }
     }
     return false;
-  };
+  }, [HEAVY_QUERY_ALLOWLIST]);
 
   useEffect(() => {
     let lastPathname = location.pathname;
 
     const onClickCapture = (e: MouseEvent) => {
       if (e.defaultPrevented) return;
-      if ((e as any).button !== 0) return; // only left click
+      if ((e as MouseEvent).button !== 0) return; // only left click
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const target = e.target as HTMLElement | null;
       if (!target) return;
@@ -57,7 +57,7 @@ export function NavigationInterceptor() {
 
     const origPush = history.pushState;
     const origReplace = history.replaceState;
-    history.pushState = function (this: History, ...args: any[]) {
+    history.pushState = function (this: History, ...args: Parameters<typeof history.pushState>) {
       try {
         const urlArg = args[2];
         if (typeof urlArg !== 'undefined') {
@@ -74,9 +74,9 @@ export function NavigationInterceptor() {
       } catch {
         setTimeout(() => navigationLoader.start(), 0);
       }
-      return origPush.apply(this, args as any);
-    } as any;
-    history.replaceState = function (this: History, ...args: any[]) {
+      return origPush.apply(this, args);
+    };
+    history.replaceState = function (this: History, ...args: Parameters<typeof history.replaceState>) {
       try {
         const urlArg = args[2];
         if (typeof urlArg !== 'undefined') {
@@ -93,8 +93,8 @@ export function NavigationInterceptor() {
       } catch {
         setTimeout(() => navigationLoader.start(), 0);
       }
-      return origReplace.apply(this, args as any);
-    } as any;
+      return origReplace.apply(this, args);
+    };
 
     const onPop = () => {
       const nextPath = location.pathname;
@@ -116,7 +116,7 @@ export function NavigationInterceptor() {
       history.pushState = origPush;
       history.replaceState = origReplace;
     };
-  }, []);
+  }, [shouldTriggerForQueryChange]);
 
   // When the pathname changes on client, end overlay (page-level beacons can extend it if needed)
   useEffect(() => {

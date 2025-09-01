@@ -6,7 +6,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { searchStiriByKeywords } from '@/features/news/services/newsService';
 import { NewsItem } from '@/features/news/types';
-import { Search, Filter, Bell, Calendar, Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Filter, Calendar, Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { createNewsSlug } from '@/lib/utils/slugify';
 import { SearchStiriByKeywordsParams } from '@/features/news/types';
@@ -558,9 +558,9 @@ function StiriPageContent() {
                             item.content &&
                             typeof item.content === 'object' &&
                             'summary' in item.content &&
-                            typeof (item.content as any).summary === 'string'
+                            typeof (item.content as unknown as Record<string, unknown>).summary === 'string'
                           ) {
-                            summary = (item.content as any).summary;
+                            summary = (item.content as unknown as Record<string, unknown>).summary as string;
                           }
                           // Trunchiem la 200 caractere și adăugăm "..."
                           if (summary.length > 300) {
@@ -619,9 +619,9 @@ function StiriPageContent() {
                                 item.content &&
                                 typeof item.content === 'object' &&
                                 'summary' in item.content &&
-                                typeof (item.content as any).summary === 'string'
+                                typeof (item.content as unknown as Record<string, unknown>).summary === 'string'
                               ) {
-                                summary = (item.content as any).summary;
+                                summary = (item.content as unknown as Record<string, unknown>).summary as string;
                               }
                               return summary || item.title;
                             })()}
@@ -642,6 +642,7 @@ function StiriPageContent() {
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Nu s-au găsit rezultate</h3>
                   <div className="text-gray-600 space-y-2">
                     {searchQuery && (
+                      // eslint-disable-next-line react/no-unescaped-entities
                       <p>Nu s-au găsit știri pentru căutarea text: <span className="font-medium">"{searchQuery}"</span></p>
                     )}
                     {keywords.length > 0 && (
@@ -688,7 +689,7 @@ function StiriPageContent() {
                       const pages = [];
                       const maxVisiblePages = 5;
                       let startPage = Math.max(1, pagination.currentPage - Math.floor(maxVisiblePages / 2));
-                      let endPage = Math.min(pagination.totalPages, startPage + maxVisiblePages - 1);
+                      const endPage = Math.min(pagination.totalPages, startPage + maxVisiblePages - 1);
                       
                       // Ajustăm startPage dacă nu avem suficiente pagini la sfârșit
                       if (endPage - startPage + 1 < maxVisiblePages) {

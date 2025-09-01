@@ -70,7 +70,7 @@ export function MostReadNewsSection() {
     <div className="space-y-4 p-4 bg-gray-50/50 rounded-lg border border-gray-200/40 most-read-news">
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-          Most reads
+          Cele mai citite
           {/* <span className="ml-2 text-xs font-normal text-gray-400">
             ({currentConfig.labelRo.toLowerCase()})
           </span> */}

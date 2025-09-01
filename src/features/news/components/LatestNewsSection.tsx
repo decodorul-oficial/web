@@ -1,21 +1,69 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type FC } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { fetchLatestNews, fetchNewsByDate } from '@/features/news/services/newsService';
 import { Citation } from '@/components/legal/Citation';
 import { stripHtml } from '@/lib/html/sanitize';
 import { MostReadNewsSection } from './MostReadNewsSection';
-import { Gavel, Landmark, Calendar, X, ChevronLeft, ChevronRight, Mail } from 'lucide-react';
+import { Gavel, Landmark, X, ChevronLeft, ChevronRight, Mail } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import type { LucideProps } from 'lucide-react';
 import { createNewsSlug } from '@/lib/utils/slugify';
 import { trackNewsClick } from '../../../lib/analytics';
 import type { NewsItem } from '@/features/news/types';
 import { extractParteaFromFilename } from '@/lib/utils/monitorulOficial';
 import { useNewsletterContext } from '@/components/newsletter/NewsletterProvider';
 import BusinessDayDatePicker from '@/components/ui/BusinessDayDatePicker';
+
+// Tip pentru componenta de iconiță Lucide
+type LucideIcon = FC<LucideProps>;
+
+// Interfață pentru structura conținutului unei știri
+interface NewsContent {
+  body?: string;
+  summary?: string;
+  text?: string;
+  act?: string;
+  actName?: string;
+  partea?: string;
+  monitorulOficial?: string;
+  moNumberDate?: string;
+  sourceUrl?: string;
+  url?: string;
+  lucide_icon?: string;
+  lucideIcon?: string;
+}
+
+// Interfață pentru câmpurile de citare
+interface CitationFields {
+  act: string | undefined;
+  partea: string;
+  numarSiData: string | undefined;
+  sourceUrl: string | undefined;
+}
+
+/**
+ * Funcție helper pentru a parsa în siguranță conținutul unei știri,
+ * care poate fi un obiect sau un string JSON.
+ * @param content - Conținutul de parsat.
+ * @returns Un obiect cu conținutul parsat sau un obiect gol.
+ */
+function parseContent(content: unknown): Partial<NewsContent> {
+    if (typeof content === 'string') {
+        try {
+            const parsed = JSON.parse(content);
+            return typeof parsed === 'object' && parsed !== null ? parsed : {};
+        } catch {
+            return {};
+        }
+    }
+    if (typeof content === 'object' && content !== null) {
+        return content as Partial<NewsContent>;
+    }
+    return {};
+}
 
 export function LatestNewsSection() {
   const searchParams = useSearchParams();
@@ -24,59 +72,24 @@ export function LatestNewsSection() {
   const [stiri, setStiri] = useState<NewsItem[]>([]);
   const [filteredStiri, setFilteredStiri] = useState<NewsItem[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>('');
-  const [isFiltered, setIsFiltered] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isFiltered, setIsFiltered] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [featured, setFeatured] = useState<NewsItem | null>(null);
-  const [showDateInput, setShowDateInput] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [showDateInput, setShowDateInput] = useState<boolean>(false);
   
   const itemsPerPage = 10;
 
-  // Inițializare URL params
-  useEffect(() => {
-    const urlDate = searchParams.get('date');
-    const urlPage = parseInt(searchParams.get('page') || '1', 10);
-    
-    if (urlDate) {
-      setSelectedDate(urlDate);
-      setIsFiltered(true);
-      setCurrentPage(urlPage); // Setez pagina din URL
-      loadNewsByDate(urlDate); // Încarcă datele pentru data selectată
-    } else {
-      // Dacă nu e nicio dată în URL, încarcă știrile normale
-      setSelectedDate('');
-      setIsFiltered(false);
-      setCurrentPage(urlPage);
-      loadLatestNews();
-    }
-  }, [searchParams]);
-
-  // Effect pentru schimbări manuale ale datei (când utilizatorul selectează o dată)
-  useEffect(() => {
-    const urlDate = searchParams.get('date');
-    // Doar dacă selectedDate diferă de cel din URL (schimbare manuală)
-    // Și DOAR dacă nu e prima încărcare (când selectedDate se setează din URL)
-    if (selectedDate && selectedDate !== urlDate) {
-      loadNewsByDate(selectedDate);
-    } else if (!selectedDate && !urlDate && isFiltered) {
-      // Cazul când se șterge data manual (nu din URL)
-      setIsFiltered(false);
-      setFilteredStiri([]);
-      loadLatestNews();
-    }
-  }, [selectedDate]);
-
-  const loadLatestNews = async () => {
+  const loadLatestNews = useCallback(async () => {
     try {
       setIsLoading(true);
-      // Optimizat pentru a fi mai rapid
       const { stiri: newsData } = await fetchLatestNews({ limit: 100, orderBy: 'publicationDate', orderDirection: 'desc' });
       setStiri(newsData);
       if (newsData.length > 0) {
         setFeatured(newsData[0]);
       }
-      // Setez totalPages DOAR dacă nu sunt în modul filtrat
       if (!isFiltered) {
         setTotalPages(Math.ceil((newsData.length - 1) / itemsPerPage));
       }
@@ -85,25 +98,52 @@ export function LatestNewsSection() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const loadNewsByDate = async (date: string): Promise<void> => {
+  }, [isFiltered]);
+  
+  const loadNewsByDate = useCallback(async (date: string): Promise<void> => {
     try {
       setIsLoading(true);
-      // Optimizat pentru a fi mai rapid
       const newsByDate = await fetchNewsByDate(date, undefined, 100);
       setFilteredStiri(newsByDate);
       setIsFiltered(true);
-      // Calculez totalPages pentru datele filtrate
       setTotalPages(Math.ceil(newsByDate.length / itemsPerPage));
     } catch (error) {
       console.error('Error loading news by date:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  // Funcție pentru actualizare URL
+  // Inițializare din URL params
+  useEffect(() => {
+    const urlDate = searchParams.get('date');
+    const urlPage = parseInt(searchParams.get('page') || '1', 10);
+    
+    if (urlDate) {
+      setSelectedDate(urlDate);
+      setIsFiltered(true);
+      setCurrentPage(urlPage);
+      void loadNewsByDate(urlDate);
+    } else {
+      setSelectedDate('');
+      setIsFiltered(false);
+      setCurrentPage(urlPage);
+      void loadLatestNews();
+    }
+  }, [searchParams, loadNewsByDate, loadLatestNews]);
+
+  // Effect pentru schimbări manuale ale datei
+  useEffect(() => {
+    const urlDate = searchParams.get('date');
+    if (selectedDate && selectedDate !== urlDate) {
+      void loadNewsByDate(selectedDate);
+    } else if (!selectedDate && !urlDate && isFiltered) {
+      setIsFiltered(false);
+      setFilteredStiri([]);
+      void loadLatestNews();
+    }
+  }, [selectedDate, isFiltered, loadNewsByDate, loadLatestNews, searchParams]);
+
   const updateURL = useCallback((newDate?: string, newPage?: number) => {
     const params = new URLSearchParams();
     
@@ -125,7 +165,7 @@ export function LatestNewsSection() {
   const handleDateChangeFlow = (date: string) => {
     setSelectedDate(date);
     setShowDateInput(false);
-    setCurrentPage(1); // Resetez pagina la 1 pentru selecția manuală
+    setCurrentPage(1);
     updateURL(date, 1);
   };
 
@@ -138,26 +178,17 @@ export function LatestNewsSection() {
     updateURL('', 1);
   };
 
-  const toggleDateInput = () => {
-    setShowDateInput(!showDateInput);
-  };
-
-  const openDateInput = () => {
-    setShowDateInput(true);
-  };
-
-  const getCurrentPageItems = () => {
+  const getCurrentPageItems = (): NewsItem[] => {
     if (isFiltered) {
       const startIndex = (currentPage - 1) * itemsPerPage;
       return filteredStiri.slice(startIndex, startIndex + itemsPerPage);
     } else {
-      // Pentru Latest News, afișăm știrile de la a 2-a încolo (prima este featured)
       const startIndex = (currentPage - 1) * itemsPerPage;
       return stiri.slice(startIndex + 1, startIndex + 1 + itemsPerPage);
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('ro-RO', { 
       day: '2-digit', 
       month: '2-digit', 
@@ -165,58 +196,32 @@ export function LatestNewsSection() {
     });
   };
 
-  const formatSelectedDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ro-RO', { 
-      day: '2-digit', 
-      month: '2-digit', 
-      year: 'numeric' 
-    });
-  };
-
-  function getSummary(content: unknown): string | undefined {
-    if (!content) return undefined;
-    try {
-      const c = (() => {
-        const raw = content as any;
-        if (typeof raw === 'string') {
-          try {
-            return JSON.parse(raw);
-          } catch {
-            return raw;
-          }
-        }
-        return raw;
-      })();
-      // Prioritizăm body-ul pentru a afișa conținutul complet al știrii
-      const raw = c.body || c.summary || c.text || (typeof c === 'string' ? c : undefined);
-      return typeof raw === 'string' ? stripHtml(raw) : raw;
-    } catch {
-      return undefined;
+  function getSummary(content: unknown): string {
+    const c = parseContent(content);
+    let rawText: string;
+    
+    if (c.body || c.summary || c.text) {
+        rawText = c.body || c.summary || c.text || '';
+    } else if (typeof content === 'string' && !content.startsWith('{')) {
+        // Cazul în care conținutul este un string simplu, nu un JSON.
+        rawText = content;
+    } else {
+        rawText = '';
     }
+    
+    return stripHtml(rawText);
   }
 
-  function getCitationFields(content: unknown, filename?: string) {
-    const c = (() => {
-      const raw = content as any;
-      if (typeof raw === 'string') {
-        try {
-          return JSON.parse(raw);
-        } catch {
-          return {} as any;
-        }
-      }
-      return (raw ?? {}) as any;
-    })();
-    
-    // Extract partea from filename if available, otherwise fallback to content or default
+  function getCitationFields(content: unknown, filename?: string): CitationFields {
+    const c = parseContent(content);
     const extractedPartea = extractParteaFromFilename(filename);
     
     return {
-      act: c?.act || c?.actName || undefined,
-      partea: extractedPartea || c?.partea || 'Partea I',
-      numarSiData: c?.monitorulOficial || c?.moNumberDate || undefined,
-      sourceUrl: c?.sourceUrl || c?.url || undefined
-    } as const;
+      act: c.act || c.actName || undefined,
+      partea: extractedPartea || c.partea || 'Partea I',
+      numarSiData: c.monitorulOficial || c.moNumberDate || undefined,
+      sourceUrl: c.sourceUrl || c.url || undefined
+    };
   }
 
   function toPascalCase(value: string): string {
@@ -228,40 +233,27 @@ export function LatestNewsSection() {
   }
 
   function getLucideIconForContent(content: unknown, fallback: LucideIcon): LucideIcon {
-    try {
-      const c = (() => {
-        const raw = content as any;
-        if (typeof raw === 'string') {
-          try {
-            return JSON.parse(raw);
-          } catch {
-            return {} as any;
-          }
-        }
-        return (raw ?? {}) as any;
-      })();
-      const iconName = c?.lucide_icon ?? c?.lucideIcon;
-      if (typeof iconName === 'string' && iconName.trim().length > 0) {
-        const candidates = Array.from(
-          new Set([
-            iconName,
-            toPascalCase(iconName),
-            iconName.charAt(0).toUpperCase() + iconName.slice(1),
-            iconName.replace(/[-_ ]+/g, ''),
-          ])
-        );
-        for (const candidate of candidates) {
-          const Icon = (LucideIcons as Record<string, unknown>)[candidate];
-          if (Icon) return Icon as LucideIcon;
-        }
+    const c = parseContent(content);
+    const iconName = c.lucide_icon ?? c.lucideIcon;
+
+    if (typeof iconName === 'string' && iconName.trim().length > 0) {
+      const candidates = Array.from(
+        new Set([
+          iconName,
+          toPascalCase(iconName),
+          iconName.charAt(0).toUpperCase() + iconName.slice(1),
+          iconName.replace(/[-_ ]+/g, ''),
+        ])
+      );
+      for (const candidate of candidates) {
+        const Icon = (LucideIcons as unknown as Record<string, LucideIcon>)[candidate];
+        if (Icon) return Icon;
       }
-    } catch {
-      // ignore and fall back
     }
     return fallback;
   }
 
-  const handleNewsClick = (news: NewsItem, section: string) => {
+  const handleNewsClick = (news: NewsItem, section: string): void => {
     trackNewsClick(news.id, news.title, section);
   };
 
@@ -288,14 +280,12 @@ export function LatestNewsSection() {
             const pages = [];
             const maxVisiblePages = 5;
             let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
             
-            // Ajustăm startPage dacă nu avem suficiente pagini la sfârșit
             if (endPage - startPage + 1 < maxVisiblePages) {
               startPage = Math.max(1, endPage - maxVisiblePages + 1);
             }
 
-            // Prima pagină
             if (startPage > 1) {
               pages.push(
                 <button
@@ -319,7 +309,6 @@ export function LatestNewsSection() {
               }
             }
 
-            // Paginile vizibile
             for (let i = startPage; i <= endPage; i++) {
               pages.push(
                 <button
@@ -339,7 +328,6 @@ export function LatestNewsSection() {
               );
             }
 
-            // Ultima pagină
             if (endPage < totalPages) {
               if (endPage < totalPages - 1) {
                 pages.push(
@@ -350,19 +338,18 @@ export function LatestNewsSection() {
               }
               
               pages.push(
-                              <button
-                key={totalPages}
-                onClick={() => {
-                  setCurrentPage(totalPages);
-                  updateURL(undefined, totalPages);
-                }}
-                className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
-              >
-                {totalPages}
-              </button>
+                <button
+                  key={totalPages}
+                  onClick={() => {
+                    setCurrentPage(totalPages);
+                    updateURL(undefined, totalPages);
+                  }}
+                  className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                >
+                  {totalPages}
+                </button>
               );
             }
-
             return pages;
           })()}
         </div>
@@ -390,7 +377,6 @@ export function LatestNewsSection() {
       <div className="relative grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 order-1">
           {isLoading ? (
-            // Skeleton loader pentru știrea principală
             <article className="mb-8 animate-pulse">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 <div className="h-48 rounded bg-gray-200 md:h-full" />
@@ -411,9 +397,8 @@ export function LatestNewsSection() {
                 </div>
               </div>
             </article>
-          ) : featured ? (
+          ) : featured && (
             <article className="mb-8">
-              {/* Layout pentru mobile și tabletă */}
               <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:hidden">
                 <div className="h-48 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 md:h-full flex items-center justify-center">
                   {(() => {
@@ -432,16 +417,7 @@ export function LatestNewsSection() {
                     </Link>
                   </h2>
                   <p className="mb-4 text-gray-600 leading-relaxed">
-                    {(() => {
-                      const content = getSummary(featured.content);
-                      if (!content) return null;
-                      // Limităm conținutul la ~1200 caractere pentru a face înălțimea să fie egală cu secțiunea "Most reads"
-                      const maxChars = 300;
-                      if (content.length > maxChars) {
-                        return content.slice(0, maxChars) + '...';
-                      }
-                      return content;
-                    })()}
+                    {getSummary(featured.content).slice(0, 300) + '...'}
                   </p>
                   <div className="mb-4 text-sm text-gray-500">
                     {formatDate(featured.publicationDate)}
@@ -450,7 +426,6 @@ export function LatestNewsSection() {
                 </div>
               </div>
               
-              {/* Layout pentru desktop cu float pentru pătrat */}
               <div className="hidden lg:block">
                 <div className="float-left mr-6 mb-4">
                   <div className="h-48 w-64 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 flex items-center justify-center">
@@ -471,16 +446,7 @@ export function LatestNewsSection() {
                     </Link>
                   </h2>
                   <p className="mb-4 text-gray-600 leading-relaxed">
-                    {(() => {
-                      const content = getSummary(featured.content);
-                      if (!content) return null;
-                      // Limităm conținutul la ~1200 caractere pentru a face înălțimea să fie egală cu secțiunea "Most reads"
-                      const maxChars = 880;
-                      if (content.length > maxChars) {
-                        return content.slice(0, maxChars) + '...';
-                      }
-                      return content;
-                    })()}
+                    {getSummary(featured.content).slice(0, 880) + '...'}
                   </p>
                   <div className="mb-4 text-sm text-gray-500">
                     {formatDate(featured.publicationDate)}
@@ -490,10 +456,9 @@ export function LatestNewsSection() {
                 <div className="clear-left"></div>
               </div>
             </article>
-          ) : null}
+          )}
         </div>
 
-        {/* Separator vertical subtil între stirea principală și Most Reads */}
         <div className="hidden lg:block absolute left-[calc(66.666667%-1px)] top-0 bottom-0 w-px bg-gray-200/60"></div>
 
         <div className="space-y-6 order-3 lg:order-2 hidden lg:block">
@@ -501,27 +466,24 @@ export function LatestNewsSection() {
         </div>
       </div>
 
-      {/* Separator orizontal subtil sub secțiunile principale */}
       <div className="border-t border-gray-200/60 pt-8"></div>
 
       <div className="space-y-6 order-2 lg:order-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          {/* Header și informații despre filtrare */}
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-semibold">
-              {isFiltered ? 'Știri după dată' : 'Latest News'}
+              {isFiltered ? 'Știri după dată' : 'Știri recente'}
             </h3>
             {isFiltered && (
               <div className="hidden md:flex items-center gap-2 text-sm text-gray-600">
                 <span>pentru</span>
                 <span className="font-medium text-brand-accent">
-                  {formatSelectedDate(selectedDate)}
+                  {formatDate(selectedDate)}
                 </span>
               </div>
             )}
           </div>
           
-          {/* Controale pentru dată */}
           <div className={`flex items-center gap-3 ${isFiltered ? 'w-full md:w-auto' : ''}`}>
             <div className={`relative ${isFiltered ? 'flex-1 md:flex-initial' : ''}`}>
               <BusinessDayDatePicker
@@ -549,7 +511,6 @@ export function LatestNewsSection() {
           </div>
         ) : (
           <>
-            {/* Paginare în partea de sus */}
             {renderPagination()}
             
             <div className="divide-y">
@@ -577,7 +538,7 @@ export function LatestNewsSection() {
                           {n.title}
                         </Link>
                       </h4>
-                      <p className="line-clamp-2 text-sm text-gray-600 mb-2">{getSummary(n.content)?.slice(0, 180)}...</p>
+                      <p className="line-clamp-2 text-sm text-gray-600 mb-2">{getSummary(n.content).slice(0, 180)}...</p>
                       <div className="mt-1 text-xs text-gray-600">
                         <Citation {...getCitationFields(n.content, n.filename)} />
                       </div>
@@ -605,7 +566,6 @@ export function LatestNewsSection() {
               ))}
             </div>
 
-            {/* Paginare în partea de jos */}
             <div className="mt-6">
               {renderPagination()}
             </div>
@@ -614,7 +574,7 @@ export function LatestNewsSection() {
               <div className="text-center py-8">
                 <div className="text-gray-500">
                   {isFiltered 
-                    ? `Nu s-au găsit știri pentru data ${formatSelectedDate(selectedDate)}`
+                    ? `Nu s-au găsit știri pentru data ${formatDate(selectedDate)}`
                     : 'Nu s-au găsit știri'
                   }
                 </div>
@@ -624,12 +584,9 @@ export function LatestNewsSection() {
         )}
       </div>
 
-      {/* Most Reads section for mobile - appears after Latest News */}
       <div className="block lg:hidden">
         <MostReadNewsSection />
       </div>
     </section>
   );
 }
-
-
