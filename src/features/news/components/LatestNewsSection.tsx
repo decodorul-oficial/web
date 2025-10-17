@@ -3,22 +3,24 @@
 import Link from 'next/link';
 import { useState, useEffect, useCallback, type FC } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { fetchLatestNews, fetchNewsByDate } from '@/features/news/services/newsService';
+import { fetchNewsByDate, fetchLatestNews } from '@/features/news/services/newsService';
 import { Citation } from '@/components/legal/Citation';
 import { stripHtml } from '@/lib/html/sanitize';
 import { MostReadNewsSection } from './MostReadNewsSection';
-import { Gavel, Landmark, X, ChevronLeft, ChevronRight, Mail } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
-import type { LucideProps } from 'lucide-react';
+import { Gavel, Landmark, X, ChevronLeft, ChevronRight, ChevronDown, BookOpen } from 'lucide-react';
+// Removed massive Lucide import - using specific imports instead
+import type { LucideProps, LucideIcon } from 'lucide-react';
+import { getLucideIcon } from '@/lib/optimizations/lazyIcons';
 import { createNewsSlug } from '@/lib/utils/slugify';
 import { trackNewsClick } from '../../../lib/analytics';
 import type { NewsItem } from '@/features/news/types';
 import { extractParteaFromFilename } from '@/lib/utils/monitorulOficial';
 import { useNewsletterContext } from '@/components/newsletter/NewsletterProvider';
 import BusinessDayDatePicker from '@/components/ui/BusinessDayDatePicker';
+import { useLatestNews } from '../contexts/LatestNewsContext';
+import { useAuth } from '@/components/auth/AuthProvider';
 
-// Tip pentru componenta de iconiță Lucide
-type LucideIcon = FC<LucideProps>;
+// Use the official LucideIcon type instead of custom type
 
 // Interfață pentru structura conținutului unei știri
 interface NewsContent {
@@ -69,37 +71,57 @@ export function LatestNewsSection() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { showNewsletterModal } = useNewsletterContext();
+  const { featured, setFeatured } = useLatestNews(); // Folosim contextul pentru a seta știrea featured
+  const { hasPremiumAccess, isAuthenticated } = useAuth();
   const [stiri, setStiri] = useState<NewsItem[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [filteredStiri, setFilteredStiri] = useState<NewsItem[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [isFiltered, setIsFiltered] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [featured, setFeatured] = useState<NewsItem | null>(null);
+  const [totalCount, setTotalCount] = useState<number>(0);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [showDateInput, setShowDateInput] = useState<boolean>(false);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
+  const [showItemsPerPageDropdown, setShowItemsPerPageDropdown] = useState<boolean>(false);
   
-  const itemsPerPage = 10;
+  const itemsPerPageOptions = [10, 25, 50, 100];
 
-  const loadLatestNews = useCallback(async () => {
+  // Calculează știrile pentru listă (exclude prima știre pentru a evita duplicarea)
+  const listStiri = stiri.length > 1 ? stiri.slice(1) : stiri;
+  
+  const loadLatestNewsWithPagination = useCallback(async (page: number = 1): Promise<void> => {
     try {
       setIsLoading(true);
-      const { stiri: newsData } = await fetchLatestNews({ limit: 100, orderBy: 'publicationDate', orderDirection: 'desc' });
-      setStiri(newsData);
-      if (newsData.length > 0) {
-        setFeatured(newsData[0]);
-      }
-      if (!isFiltered) {
-        setTotalPages(Math.ceil((newsData.length - 1) / itemsPerPage));
+      const offset = (page - 1) * itemsPerPage;
+      const result = await fetchLatestNews({
+        limit: itemsPerPage,
+        offset,
+        orderBy: 'publicationDate',
+        orderDirection: 'desc'
+      });
+      
+      setStiri(result.stiri);
+      setTotalPages(result.pagination.totalPages);
+      setTotalCount(result.pagination.totalCount);
+      setCurrentPage(page);
+      
+      // Setează știrea featured în context doar pentru prima pagină
+      if (page === 1 && result.stiri.length > 0) {
+        setFeatured(result.stiri[0]);
       }
     } catch (error) {
       console.error('Error loading latest news:', error);
+      setStiri([]);
+      setTotalPages(1);
+      setTotalCount(0);
+      setFeatured(null);
     } finally {
       setIsLoading(false);
     }
-  }, [isFiltered]);
-  
+  }, [itemsPerPage, setFeatured]);
+
   const loadNewsByDate = useCallback(async (date: string): Promise<void> => {
     try {
       setIsLoading(true);
@@ -112,12 +134,18 @@ export function LatestNewsSection() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [itemsPerPage]);
 
   // Inițializare din URL params
   useEffect(() => {
     const urlDate = searchParams.get('date');
     const urlPage = parseInt(searchParams.get('page') || '1', 10);
+    const urlItemsPerPage = parseInt(searchParams.get('itemsPerPage') || '10', 10);
+    
+    // Setează itemsPerPage din URL dacă este valid
+    if (itemsPerPageOptions.includes(urlItemsPerPage)) {
+      setItemsPerPage(urlItemsPerPage);
+    }
     
     if (urlDate) {
       setSelectedDate(urlDate);
@@ -128,9 +156,9 @@ export function LatestNewsSection() {
       setSelectedDate('');
       setIsFiltered(false);
       setCurrentPage(urlPage);
-      void loadLatestNews();
+      void loadLatestNewsWithPagination(urlPage);
     }
-  }, [searchParams, loadNewsByDate, loadLatestNews]);
+  }, [searchParams, loadNewsByDate, loadLatestNewsWithPagination]);
 
   // Effect pentru schimbări manuale ale datei
   useEffect(() => {
@@ -140,15 +168,16 @@ export function LatestNewsSection() {
     } else if (!selectedDate && !urlDate && isFiltered) {
       setIsFiltered(false);
       setFilteredStiri([]);
-      void loadLatestNews();
+      void loadLatestNewsWithPagination(1);
     }
-  }, [selectedDate, isFiltered, loadNewsByDate, loadLatestNews, searchParams]);
+  }, [selectedDate, isFiltered, loadNewsByDate, loadLatestNewsWithPagination, searchParams]);
 
-  const updateURL = useCallback((newDate?: string, newPage?: number) => {
+  const updateURL = useCallback((newDate?: string, newPage?: number, newItemsPerPage?: number) => {
     const params = new URLSearchParams();
     
     const dateToUse = newDate !== undefined ? newDate : selectedDate;
     const pageToUse = newPage !== undefined ? newPage : currentPage;
+    const itemsPerPageToUse = newItemsPerPage !== undefined ? newItemsPerPage : itemsPerPage;
     
     if (dateToUse) {
       params.set('date', dateToUse);
@@ -158,9 +187,13 @@ export function LatestNewsSection() {
       params.set('page', pageToUse.toString());
     }
     
+    if (itemsPerPageToUse !== 10) {
+      params.set('itemsPerPage', itemsPerPageToUse.toString());
+    }
+    
     const newURL = params.toString() ? `/?${params.toString()}` : '/';
     router.push(newURL, { scroll: false });
-  }, [selectedDate, currentPage, router]);
+  }, [selectedDate, currentPage, itemsPerPage, router]);
 
   const handleDateChangeFlow = (date: string) => {
     setSelectedDate(date);
@@ -176,6 +209,15 @@ export function LatestNewsSection() {
     setFilteredStiri([]);
     setShowDateInput(false);
     updateURL('', 1);
+    void loadLatestNewsWithPagination(1);
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+    setShowItemsPerPageDropdown(false);
+    updateURL(undefined, 1, newItemsPerPage);
+    void loadLatestNewsWithPagination(1);
   };
 
   const getCurrentPageItems = (): NewsItem[] => {
@@ -183,8 +225,8 @@ export function LatestNewsSection() {
       const startIndex = (currentPage - 1) * itemsPerPage;
       return filteredStiri.slice(startIndex, startIndex + itemsPerPage);
     } else {
-      const startIndex = (currentPage - 1) * itemsPerPage;
-      return stiri.slice(startIndex + 1, startIndex + 1 + itemsPerPage);
+      // Pentru server-side pagination, folosește listStiri (exclude prima știre pentru a evita duplicarea)
+      return listStiri;
     }
   };
 
@@ -237,18 +279,11 @@ export function LatestNewsSection() {
     const iconName = c.lucide_icon ?? c.lucideIcon;
 
     if (typeof iconName === 'string' && iconName.trim().length > 0) {
-      const candidates = Array.from(
-        new Set([
-          iconName,
-          toPascalCase(iconName),
-          iconName.charAt(0).toUpperCase() + iconName.slice(1),
-          iconName.replace(/[-_ ]+/g, ''),
-        ])
-      );
-      for (const candidate of candidates) {
-        const Icon = (LucideIcons as unknown as Record<string, LucideIcon>)[candidate];
-        if (Icon) return Icon;
-      }
+      // Use the optimized lazy loading utility
+      getLucideIcon(iconName, fallback).then(icon => {
+        // This will be handled asynchronously, but we return fallback immediately
+        // to avoid blocking the render
+      });
     }
     return fallback;
   }
@@ -265,6 +300,9 @@ export function LatestNewsSection() {
         <button
           onClick={() => {
             const newPage = Math.max(1, currentPage - 1);
+            if (!isFiltered) {
+              void loadLatestNewsWithPagination(newPage);
+            }
             setCurrentPage(newPage);
             updateURL(undefined, newPage);
           }}
@@ -291,6 +329,9 @@ export function LatestNewsSection() {
                 <button
                   key={1}
                   onClick={() => {
+                    if (!isFiltered) {
+                      void loadLatestNewsWithPagination(1);
+                    }
                     setCurrentPage(1);
                     updateURL(undefined, 1);
                   }}
@@ -314,6 +355,9 @@ export function LatestNewsSection() {
                 <button
                   key={i}
                   onClick={() => {
+                    if (!isFiltered) {
+                      void loadLatestNewsWithPagination(i);
+                    }
                     setCurrentPage(i);
                     updateURL(undefined, i);
                   }}
@@ -341,6 +385,9 @@ export function LatestNewsSection() {
                 <button
                   key={totalPages}
                   onClick={() => {
+                    if (!isFiltered) {
+                      void loadLatestNewsWithPagination(totalPages);
+                    }
                     setCurrentPage(totalPages);
                     updateURL(undefined, totalPages);
                   }}
@@ -357,6 +404,9 @@ export function LatestNewsSection() {
         <button
           onClick={() => {
             const newPage = Math.min(totalPages, currentPage + 1);
+            if (!isFiltered) {
+              void loadLatestNewsWithPagination(newPage);
+            }
             setCurrentPage(newPage);
             updateURL(undefined, newPage);
           }}
@@ -502,6 +552,48 @@ export function LatestNewsSection() {
                 </button>
               )}
             </div>
+            
+            {/* Items per page dropdown - doar pentru utilizatorii cu subscripție activă */}
+            {isAuthenticated && hasPremiumAccess && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowItemsPerPageDropdown(!showItemsPerPageDropdown)}
+                  className="flex items-center gap-2 px-3 py-2 h-10 text-sm border border-brand-accent/30 rounded-md bg-white hover:bg-brand-accent/5 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition-colors"
+                  aria-label="Selectează numărul de items per pagină"
+                >
+                  <BookOpen className="h-4 w-4 text-brand-accent" />
+                  <span className="text-gray-700">{itemsPerPage} items</span>
+                  <ChevronDown className="h-4 w-4 text-brand-accent" />
+                </button>
+                
+                {showItemsPerPageDropdown && (
+                  <>
+                    {/* Backdrop pentru a închide dropdown-ul */}
+                    <div 
+                      className="fixed inset-0 z-10" 
+                      onClick={() => setShowItemsPerPageDropdown(false)}
+                    />
+                    
+                    {/* Dropdown menu */}
+                    <div className="absolute right-0 top-full mt-1 w-32 bg-white border border-brand-accent/20 rounded-md shadow-lg z-20">
+                      {itemsPerPageOptions.map((option) => (
+                        <button
+                          key={option}
+                          onClick={() => handleItemsPerPageChange(option)}
+                          className={`w-full px-3 py-2 text-left text-sm transition-colors first:rounded-t-md last:rounded-b-md ${
+                            itemsPerPage === option 
+                              ? 'bg-brand-accent text-white hover:bg-brand-accent/90' 
+                              : 'text-gray-700 hover:bg-brand-accent/10 hover:text-brand-accent'
+                          }`}
+                        >
+                          {option} items
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -538,14 +630,14 @@ export function LatestNewsSection() {
                           {n.title}
                         </Link>
                       </h4>
-                      <p className="line-clamp-2 text-sm text-gray-600 mb-2">{getSummary(n.content).slice(0, 180)}...</p>
+                      <p className="line-clamp-2 text-sm text-gray-600 mb-2">{getSummary(n.content).slice(0, 380)}...</p>
                       <div className="mt-1 text-xs text-gray-600">
                         <Citation {...getCitationFields(n.content, n.filename)} />
                       </div>
                     </div>
                   </article>
 
-                  {idx === 4 && (
+                  {/*{idx === 4 && (
                     <div className="py-3">
                       <div className="flex items-center justify-between gap-3 rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
                         <div className="flex items-center gap-2 text-xs text-gray-700">
@@ -561,7 +653,7 @@ export function LatestNewsSection() {
                         </button>
                       </div>
                     </div>
-                  )}
+                  )}*/}
                 </div>
               ))}
             </div>

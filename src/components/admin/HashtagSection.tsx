@@ -65,10 +65,10 @@ export function HashtagSection({ news }: HashtagSectionProps) {
   const hashtagText = hashtags.join(' ');
   
   // Create the official website link
-  const officialLink = `https://decodoruloficial.ro/stiri/${news.id}`;
+  const officialLink = `https://www.decodoruloficial.ro/`;
   
   // Combine hashtags and link for copying
-  const fullTextToCopy = `${hashtagText}\n\n🔗 ${officialLink}`;
+  const fullTextToCopy = `🔗${officialLink}\n\n ${hashtagText}\n`;
 
   const handleCopyHashtags = async () => {
     try {

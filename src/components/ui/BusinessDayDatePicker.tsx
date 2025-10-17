@@ -19,6 +19,7 @@ export interface BusinessDayDatePickerProps {
   disableFuture?: boolean; // default: true
   centered?: boolean; // default: true (render as centered modal)
   showBackdrop?: boolean; // default: true
+  zIndex?: number; // custom z-index for popover
 }
 
 function toLocalDateString(date: Date): string {
@@ -62,7 +63,8 @@ export default function BusinessDayDatePicker(props: BusinessDayDatePickerProps)
     disableWeekends = true,
     disableFuture = true,
     centered = true,
-    showBackdrop = true
+    showBackdrop = true,
+    zIndex = 50
   } = props;
 
   const initialMonth = useMemo(() => {
@@ -173,10 +175,11 @@ export default function BusinessDayDatePicker(props: BusinessDayDatePickerProps)
           className={
             centered
               ? 'fixed inset-0 z-[3000] flex items-center justify-center p-4'
-              : `absolute z-50 mt-2 min-w-[320px] rounded-lg border border-gray-200 bg-white p-4 shadow-lg ${
+              : `absolute mt-2 min-w-[320px] rounded-lg border border-gray-200 bg-white p-4 shadow-lg ${
                   popoverAlign === 'right' ? 'right-0' : 'left-0'
                 }`
           }
+          style={{ zIndex }}
         >
           {centered && showBackdrop && (
             <OverlayBackdrop position="absolute" onClick={() => setIsOpen(false)} />

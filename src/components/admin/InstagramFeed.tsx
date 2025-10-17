@@ -46,7 +46,7 @@ export function InstagramFeed() {
       <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 space-y-4">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-xl font-semibold text-gray-700">
               Ultimele {news.length} știri
             </h2>
             <p className="text-brand-soft text-sm">
@@ -56,7 +56,7 @@ export function InstagramFeed() {
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="flex items-center gap-2 bg-brand-info hover:bg-brand-highlight text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 bg-brand-info hover:bg-brand-highlight text-gray-700 px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
           >
             {refreshing ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -71,7 +71,7 @@ export function InstagramFeed() {
 
         {/* Batch Screenshot Section */}
         <div className="border-t border-white/20 pt-4">
-          <h3 className="text-lg font-medium text-white mb-3">🚀 Operațiuni în Batch</h3>
+          <h3 className="text-lg font-medium text-gray-700 mb-3">🚀 Operațiuni în Batch</h3>
           <BatchScreenshotButton news={news} filterToday={true} />
         </div>
       </div>
@@ -85,7 +85,7 @@ export function InstagramFeed() {
 
       {news.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-white/60 text-lg">
+          <div className="text-gray-700/60 text-lg">
             Nu s-au găsit știri disponibile
           </div>
         </div>

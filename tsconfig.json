@@ -44,6 +44,12 @@
       ],
       "@/types/*": [
         "src/types/*"
+      ],
+      "@/contexts/*": [
+        "src/contexts/*"
+      ],
+      "@/services/*": [
+        "src/services/*"
       ]
     }
   },

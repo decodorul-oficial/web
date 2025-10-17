@@ -7,7 +7,7 @@ export const useNewsletter = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const subscribe = useCallback(async (input: SubscribeNewsletterInput) => {
+  const subscribe = useCallback(async (input: SubscribeNewsletterInput, recaptchaToken?: string) => {
     setIsLoading(true);
     setError(null);
     setSuccess(null);
@@ -22,6 +22,12 @@ export const useNewsletter = () => {
         return { success: true, alreadySubscribed: true };
       }
 
+      // Pregătește header-uri suplimentare pentru reCAPTCHA
+      const additionalHeaders: Record<string, string> = {};
+      if (recaptchaToken) {
+        additionalHeaders['X-Captcha-Token'] = recaptchaToken;
+      }
+
       // Dacă email-ul există dar este unsubscribed, API-ul va face resubscribe automat
       // Dacă email-ul nu există, API-ul va crea o nouă înscriere
       const result = await NewsletterService.subscribe({
@@ -31,7 +37,7 @@ export const useNewsletter = () => {
         source: input.source || 'web',
         consentVersion: input.consentVersion || 'v1.0',
         metadata: input.metadata || {}
-      });
+      }, additionalHeaders);
 
       // Mesaj diferit în funcție de dacă era unsubscribed sau nou
       if (currentStatus && currentStatus.status === 'unsubscribed') {

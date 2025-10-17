@@ -6,6 +6,7 @@ import { getGraphQLClient } from '@/lib/graphql/client';
 import { SEARCH_STIRI } from '@/features/news/graphql/queries';
 import { ensureSessionCookie } from '@/lib/utils/sessionCookie';
 import { trackSearch } from '@/lib/analytics';
+import { OverlayBackdrop } from '@/components/ui/OverlayBackdrop';
 
 type SpotlightItem = {
   id: string;
@@ -171,12 +172,13 @@ export function SearchSpotlight() {
 
       {open &&
         createPortal(
-          <div
-            className="fixed inset-0 z-[1000] flex items-start justify-center bg-black/40 p-4"
-            onClick={() => setOpen(false)}
-          >
+          <div className="fixed inset-0 z-[1000] flex items-start justify-center p-4">
+            <OverlayBackdrop 
+              onClick={() => setOpen(false)}
+              zIndexClass="z-[20]"
+            />
             <div
-              className="mt-20 w-full max-w-xl overflow-hidden rounded-xl bg-white shadow-2xl"
+              className="mt-20 w-full max-w-xl overflow-hidden rounded-xl bg-white shadow-2xl relative z-20"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-2 border-b p-3">

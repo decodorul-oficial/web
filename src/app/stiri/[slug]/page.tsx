@@ -16,9 +16,33 @@ import { SessionCookieInitializer } from '@/components/session/SessionCookieInit
 import { NewsViewTrackingWrapper } from '@/features/news/components/NewsViewTrackingWrapper';
 import { extractParteaFromFilename, generateMonitorulOficialUrl } from '@/lib/utils/monitorulOficial';
 import { NewsletterCtaInline } from '@/components/newsletter/NewsletterCtaInline';
-import { TablesRenderer, ContentTable } from '@/features/news/components/TablesRenderer';
 import { ShareButtons, FloatingShareSidebar, ArticleShareSection } from '@/components/ui/ShareButtons';
+import { FavoriteButton } from '@/components/ui/FavoriteButton';
+import { ExportButton } from '@/components/ui/ExportButton';
+import { CommentParentType } from '@/features/comments/types';
+import dynamic from 'next/dynamic';
+import type { ContentTable } from '@/features/news/components/TablesRenderer';
 
+// Lazy load heavy components
+const TablesRenderer = dynamic(() => import('@/features/news/components/TablesRenderer').then(mod => ({ default: mod.TablesRenderer })), {
+  ssr: false,
+  loading: () => <div className="animate-pulse h-32 bg-gray-200 rounded"></div>
+});
+
+const AuthenticatedLegislativeNetworkSection = dynamic(() => import('@/components/legislative/AuthenticatedLegislativeNetworkSection').then(mod => ({ default: mod.AuthenticatedLegislativeNetworkSection })), {
+  ssr: false,
+  loading: () => <div className="animate-pulse h-64 bg-gray-200 rounded"></div>
+});
+
+const CommentsSection = dynamic(() => import('@/features/comments').then(mod => ({ default: mod.CommentsSection })), {
+  ssr: false,
+  loading: () => <div className="animate-pulse h-32 bg-gray-200 rounded"></div>
+});
+
+const DocumentConnectionsSection = dynamic(() => import('@/features/news/components/DocumentConnectionsSection').then(mod => ({ default: mod.DocumentConnectionsSection })), {
+  ssr: false,
+  loading: () => <div className="animate-pulse h-24 bg-gray-200 rounded"></div>
+});
 
 interface PageProps {
   params: { slug: string };
@@ -41,7 +65,7 @@ interface NewsContent {
   [key: string]: unknown;
 }
 
-export const dynamic = 'force-dynamic';
+export const dynamicParams = false;
 
 function extractField<T = string>(content: unknown, key: string): T | undefined {
   if (!content || typeof content !== 'object') return undefined;
@@ -84,8 +108,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   
   if (!news) {
     return {
-      title: 'Știrea nu a fost găsită | Decodorul Oficial',
-      description: 'Știrea căutată nu a fost găsită pe site-ul Decodorul Oficial.',
+      title: 'Știrea nu a fost găsită | ' + (process.env.NEXT_PUBLIC_SITE_NAME),
+      description: 'Știrea căutată nu a fost găsită pe site-ul ' + (process.env.NEXT_PUBLIC_SITE_NAME) + '.',
     };
   }
 
@@ -265,18 +289,18 @@ export default async function NewsDetailPage(props: PageProps) {
                 "url": `${process.env.NEXT_PUBLIC_BASE_URL || "https://www.decodoruloficial.ro"}/logo_with_bg.png`,
                 "width": 1200,
                 "height": 630,
-                "alt": `Logo Decodorul Oficial - ${news.title}`
+                "alt": `Logo ${process.env.NEXT_PUBLIC_SITE_NAME || 'Decodorul Oficial'} - ${news.title}`
               },
               "datePublished": news.publicationDate,
               "dateModified": news.updatedAt || news.publicationDate,
               "author": {
                 "@type": "Organization",
-                "name": author || "Decodorul Oficial",
+                "name": author || process.env.NEXT_PUBLIC_SITE_NAME || "Decodorul Oficial",
                 "url": process.env.NEXT_PUBLIC_BASE_URL || "https://www.decodoruloficial.ro"
               },
               "publisher": {
                 "@type": "Organization",
-                "name": "Decodorul Oficial",
+                "name": process.env.NEXT_PUBLIC_SITE_NAME || "Decodorul Oficial",
                 "url": process.env.NEXT_PUBLIC_BASE_URL || "https://www.decodoruloficial.ro",
                 "logo": {
                   "@type": "ImageObject",
@@ -315,6 +339,7 @@ export default async function NewsDetailPage(props: PageProps) {
           url={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro'}/stiri/${createNewsSlug(news.title, news.id)}`}
           title={news.title}
           description={summary || news.title}
+          newsId={news.id}
         />
         
         {/* Breadcrumb: desktop shows full, mobile shows "Înapoi la listă" */}
@@ -354,30 +379,35 @@ export default async function NewsDetailPage(props: PageProps) {
             
             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
               <time dateTime={news.publicationDate} itemProp="datePublished">
-                <span className="font-medium">Data publicării:</span> {formattedDate}
+                <span className="font-medium text-gray-400">Data publicării:</span>{' '}
+                <span className="text-gray-900">{formattedDate}</span>
               </time>
               
               {author && (
                 <span itemProp="author" itemScope itemType="https://schema.org/Person">
-                  <span className="font-medium">Autor:</span> <span itemProp="name">{author}</span>
+                  <span className="font-medium text-gray-400">Autor:</span>{' '}
+                  <span itemProp="name" className="text-gray-900">{author}</span>
                 </span>
               )}
               
               {category && (
                 <span>
-                  <span className="font-medium">Categoria:</span> {category.charAt(0).toUpperCase() + category.slice(1).toLowerCase()}
+                  <span className="font-medium text-gray-400">Categoria:</span>{' '}
+                  <span className="text-gray-900">
+                    {category.charAt(0).toUpperCase() + category.slice(1).toLowerCase()}
+                  </span>
                 </span>
               )}
             </div>
 
             {Array.isArray(keywords) && keywords.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                <span className="text-sm font-medium text-gray-700">Cuvinte Cheie:</span>
+                <span className="text-sm font-medium text-gray-400">Cuvinte Cheie:</span>
                 {keywords.map((keyword) => (
                   <Link
                     key={keyword}
                     href={`/stiri?keywords=${encodeURIComponent(keyword)}`}
-                    className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors cursor-pointer"
+                    className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-900 hover:bg-gray-200 hover:text-brand-info transition-colors cursor-pointer"
                   >
                     {keyword.charAt(0).toUpperCase() + keyword.slice(1).toLowerCase()}
                   </Link>
@@ -385,20 +415,43 @@ export default async function NewsDetailPage(props: PageProps) {
               </div>
             )}
 
-            {/* Share buttons after title and metadata */}
+            {/* Share buttons and favorite button after title and metadata */}
             <div className="flex items-center justify-between pt-4 border-t border-gray-200">
               <div className="text-sm text-gray-500">
                 <span className="hidden sm:inline">Distribuie această știre:</span>
                 <span className="sm:hidden">Distribuie:</span>
               </div>
-              <ShareButtons
-                url={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro'}/stiri/${createNewsSlug(news.title, news.id)}`}
-                title={news.title}
-                description={summary || news.title}
-                variant="horizontal"
-                showLabels={false}
-                className="flex-shrink-0"
-              />
+              <div className="flex items-center gap-3">
+                <FavoriteButton
+                  newsId={news.id}
+                  newsTitle={news.title}
+                  size="md"
+                  showLabel={false}
+                />
+                <ExportButton
+                  newsId={news.id}
+                  newsTitle={news.title}
+                  newsContent={{
+                    summary,
+                    body,
+                    author,
+                    category,
+                    keywords,
+                    publicationDate: news.publicationDate,
+                    sourceUrl: process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro' + '/stiri/' + createNewsSlug(news.title, news.id) || undefined
+                  }}
+                  size="md"
+                  showLabel={false}
+                />
+                <ShareButtons
+                  url={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro'}/stiri/${createNewsSlug(news.title, news.id)}`}
+                  title={news.title}
+                  description={summary || news.title}
+                  variant="horizontal"
+                  showLabels={false}
+                  className="flex-shrink-0"
+                />
+              </div>
             </div>
           </header>
 
@@ -451,6 +504,7 @@ export default async function NewsDetailPage(props: PageProps) {
                 {typeof news.content === 'string' && <p>{news.content}</p>}
               </section>
               
+              
               <div className="space-y-3">
                 <Citation {...citationFields} />
                 {/* Minimal newsletter CTA below full article */}
@@ -499,12 +553,27 @@ export default async function NewsDetailPage(props: PageProps) {
             </section>
           )}
 
+          {/* Istoricul modificărilor legislative - premium gated */}
+          <DocumentConnectionsSection newsId={news.id} relationType="modifică" limit={20} />
+
+          {/* Secțiunea Harta Conexiunilor Legislative */}
+          <AuthenticatedLegislativeNetworkSection documentId={news.id} />
+              
            {/* Share section at the end of the article */}
            <ArticleShareSection
                   url={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro'}/stiri/${createNewsSlug(news.title, news.id)}`}
                   title={news.title}
                   description={summary || news.title}
                 />
+
+          {/* Comments Section */}
+          <section className="mt-12 pt-8 border-t border-gray-200">
+            <CommentsSection
+              parentType={CommentParentType.STIRE}
+              parentId={news.id}
+              className="width-full mx-auto"
+            />
+          </section>
         </article>
       </main>
       <Footer />

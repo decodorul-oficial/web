@@ -190,7 +190,7 @@ export default function LinkedInCallback() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-info mx-auto mb-4"></div>
             <h2 className="text-lg font-medium text-gray-900 mb-2">Se încarcă...</h2>
             <p className="text-sm text-gray-600">Se procesează parametrii...</p>
           </div>

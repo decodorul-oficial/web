@@ -85,7 +85,11 @@ export function TablesRenderer({ tables }: { tables: ContentTable[] }) {
 
   useEffect(() => {
     let isCancelled = false;
-    // Dynamic import on client only
+    
+    // Only load simple-datatables if we have tables to render
+    if (normalizedTables.length === 0) return;
+    
+    // Dynamic import on client only with better error handling
     import('simple-datatables')
       .then((mod: { DataTable?: unknown }) => {
         if (isCancelled) return;

@@ -15,10 +15,25 @@ export default {
           DEFAULT: '#0B132B',
           accent: '#1C2541',
           highlight: '#3A506B',
-          info: '#5BC0BE',
+          info: '#38a8a5', // Turcoaz 5BC0BE
           soft: '#A1C6EA'
         }
-      }
+      },
+      animation: {
+        'pulse-brand': 'pulse-brand 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+      },
+      keyframes: {
+        'pulse-brand': {
+          '0%, 100%': {
+            opacity: '1',
+            transform: 'scale(1)',
+          },
+          '50%': {
+            opacity: '0.8',
+            transform: 'scale(1.05)',
+          },
+        },
+      },
     }
   },
   plugins: [

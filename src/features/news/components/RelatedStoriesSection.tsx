@@ -4,8 +4,8 @@ import Link from 'next/link';
 import { useState, useEffect, useCallback, type FC } from 'react';
 import { fetchRelatedStories } from '@/features/news/services/newsService';
 import { Gavel, TrendingUp, Eye } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
+import { getLucideIcon } from '@/lib/optimizations/lazyIcons';
 import { createNewsSlug } from '@/lib/utils/slugify';
 import { trackNewsClick } from '../../../lib/analytics';
 import type { RelatedStory, NewsItem, RelevanceReasons } from '@/features/news/types';
@@ -132,20 +132,8 @@ export function RelatedStoriesSection({ storyId, limit = 5, minScore = 1.0, fall
     const c = parseContent(content);
     const iconName = c.lucide_icon ?? c.lucideIcon;
 
-    if (typeof iconName === 'string' && iconName.trim().length > 0) {
-      const candidates = Array.from(
-        new Set([
-          iconName,
-          toPascalCase(iconName),
-          iconName.charAt(0).toUpperCase() + iconName.slice(1),
-          iconName.replace(/[-_ ]+/g, ''),
-        ])
-      );
-      for (const candidate of candidates) {
-        const Icon = (LucideIcons as unknown as Record<string, LucideIcon>)[candidate];
-        if (Icon) return Icon;
-      }
-    }
+    // For now, just return the fallback icon
+    // The lazy loading can be implemented later if needed
     return fallback;
   }
 
@@ -225,7 +213,7 @@ export function RelatedStoriesSection({ storyId, limit = 5, minScore = 1.0, fall
                       <div className="h-8 w-8 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 flex items-center justify-center">
                         <Icon className="h-4 w-4 text-white" />
                       </div>
-                      <Tooltip>
+                      {/*<Tooltip>
                         <TooltipTrigger asChild>
                           <div className="mt-1 flex items-center justify-center gap-1 text-xs text-brand-accent cursor-pointer">
                             <TrendingUp className="h-3 w-3" />
@@ -235,7 +223,7 @@ export function RelatedStoriesSection({ storyId, limit = 5, minScore = 1.0, fall
                         <TooltipContent>
                           {formatRelevanceReasons(story.relevanceReasons)}
                         </TooltipContent>
-                      </Tooltip>
+                      </Tooltip> */}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="text-sm font-medium text-gray-900 line-clamp-3 group-hover:text-brand-info">

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNewsletter } from '@/features/newsletter/hooks/useNewsletter';
 import { NewsletterModalProps } from '@/features/newsletter/types';
 import { OverlayBackdrop } from '@/components/ui/OverlayBackdrop';
+import { useRecaptchaContext } from '@/components/auth/RecaptchaProvider';
 
 export const NewsletterModal = ({ isOpen, onClose, onSuccess }: NewsletterModalProps) => {
   const [email, setEmail] = useState('');
@@ -11,6 +12,7 @@ export const NewsletterModal = ({ isOpen, onClose, onSuccess }: NewsletterModalP
   const [emailError, setEmailError] = useState('');
   
   const { subscribe, isLoading, error, success, clearMessages } = useNewsletter();
+  const { executeRecaptcha, isLoaded: recaptchaLoaded, error: recaptchaError } = useRecaptchaContext();
 
   const resetForm = useCallback(() => {
     setEmail('');
@@ -60,6 +62,16 @@ export const NewsletterModal = ({ isOpen, onClose, onSuccess }: NewsletterModalP
       return;
     }
 
+    // Execute reCAPTCHA for newsletter subscription
+    let recaptchaToken: string | null = null;
+    if (recaptchaLoaded) {
+      recaptchaToken = await executeRecaptcha('newsletter_subscribe');
+      if (!recaptchaToken) {
+        alert('Verificarea reCAPTCHA a eșuat. Vă rugăm să încercați din nou.');
+        return;
+      }
+    }
+
     const result = await subscribe({
       email: email.trim(),
       locale: 'ro-RO',
@@ -70,7 +82,7 @@ export const NewsletterModal = ({ isOpen, onClose, onSuccess }: NewsletterModalP
         utm: 'newsletter-modal',
         timestamp: new Date().toISOString()
       }
-    });
+    }, recaptchaToken || undefined);
 
     if (result.success) {
       // Formularul se va reseta automat după 2 secunde

@@ -2,54 +2,76 @@
 
 
 import { NewsItem } from '@/features/news/types';
-import { HashtagSection } from './HashtagSection';
 import { AutoScreenshot } from './AutoScreenshot';
 import styles from './InstagramPreview.module.css';
+import { useMemo } from 'react';
 
 interface InstagramPreviewProps {
   news: NewsItem;
 }
 
 interface NewsContent {
-  synthesis?: string;
+  keywords?: string[];
+  lucide_icon?: string;
+  body?: string;
   summary?: string;
-  description?: string;
+  author?: string;
   category?: string;
   type?: string;
 }
 
 export function InstagramPreview({ news }: InstagramPreviewProps) {
   // Extract synthesis from content if available
-  const getSynthesis = () => {
+  const getPropertyFromNewsContent = (key: keyof NewsContent): string => {
     if (typeof news.content === 'object' && news.content !== null) {
       const content = news.content as NewsContent;
-      return content.synthesis || content.summary || content.description || '';
+      const value = content[key] || '';
+      switch (key) {
+        case 'category':
+          if (typeof value === 'string' && value.length > 0) {
+            return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+          }
+          return '';
+        default:
+          return typeof value === 'string' ? value : '';
+      }
     }
     return '';
   };
 
-  const synthesis = getSynthesis();
-  
+  const synthesis = getPropertyFromNewsContent('summary');
+  const category = getPropertyFromNewsContent('category');
+  const body = getPropertyFromNewsContent('body');
+  const keywords = getPropertyFromNewsContent('keywords');
+  const author = getPropertyFromNewsContent('author');
+
+      // Truncate synthesis to fit the card
+      const truncatedSynthesis = synthesis.length > 250 
+        ? synthesis.substring(0, 1200) + '...' 
+        : synthesis;
   // Truncate synthesis to fit the card
-  const truncatedSynthesis = synthesis.length > 250 
-    ? synthesis.substring(0, 300) + '...' 
-    : synthesis;
+  // Parse HTML string, extract text content, truncate, then re-apply basic formatting
 
-  // Extract category from content if available
-  const getCategory = () => {
-    if (typeof news.content === 'object' && news.content !== null) {
-      const content = news.content as NewsContent;
-      const rawCategory = content.category || content.type || '';
-      // Capitalize first letter
-      return rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1).toLowerCase();
-    }
-    return '';
-  };
 
-  const category = getCategory();
+  function truncateHtmlText(html: string, maxLength: number): string {
+    // Create a temporary DOM element to parse HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    // Get the plain text content
+    const text = tempDiv.textContent || tempDiv.innerText || '';
+    // Truncate the text
+    const truncated = text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    // Optionally, wrap in <p> for basic formatting
+    return `<p>${truncated.replace(/\n/g, '<br/>')}</p>`;
+  }
 
+  const truncatedBody = useMemo(() => {
+    if (!body) return '';
+    return truncateHtmlText(body, 750);
+  }, [body]);
+  
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full max-w-xl mx-auto">
       {/* Instagram Card - Optimized for Screenshot */}
       <AutoScreenshot filename={`instagram-${news.id}`}>
         <div className={styles.instagramCard}>
@@ -67,9 +89,9 @@ export function InstagramPreview({ news }: InstagramPreviewProps) {
               <div className={styles.logoWrapper}>
                 <span className="text-brand text-sm font-bold">📋</span>
               </div>
-              <span className={styles.brandName}>
-                Monitorul Oficial
-              </span>
+              {/*<span className={styles.brandName}>
+                Decodorul Oficial
+              </span>*/}
             </div>
             
             {/* Category Badge */}
@@ -88,10 +110,16 @@ export function InstagramPreview({ news }: InstagramPreviewProps) {
             </h1>
             
             {/* Synthesis */}
-            {truncatedSynthesis && (
+            {/* {truncatedSynthesis && (
               <p className={styles.synthesis}>
                 {truncatedSynthesis}
               </p>
+            )} */}
+            {body && (
+              <div
+                className={styles.body}
+                dangerouslySetInnerHTML={{ __html: truncatedBody }}
+              />
             )}
           </div>
 
@@ -100,13 +128,7 @@ export function InstagramPreview({ news }: InstagramPreviewProps) {
             <div className={styles.footerContent}>
               <div className={styles.footerLeft}>
                 <span className={styles.footerIcon}>📋</span>
-                <span className={styles.footerText}>Monitorul Oficial</span>
-              </div>
-              <div className={styles.footerRight}>
-                <span className="text-xs">Publicat:</span>
-                <span className={styles.footerDate}>
-                  {news.publicationDate ? new Date(news.publicationDate).toLocaleDateString('ro-RO') : 'Data indisponibilă'}
-                </span>
+                <span className={styles.footerText}>{author}</span>
               </div>
             </div>
           </div>
@@ -118,18 +140,6 @@ export function InstagramPreview({ news }: InstagramPreviewProps) {
         </div>
       </AutoScreenshot>
 
-      {/* Back Button */}
-      <div className="mt-4 flex justify-center">
-        <button
-          onClick={() => window.history.back()}
-          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-colors"
-        >
-          ← Înapoi la lista de știri
-        </button>
-      </div>
-
-      {/* Hashtag Section */}
-      <HashtagSection news={news} />
     </div>
   );
 }

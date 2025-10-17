@@ -18,6 +18,7 @@ interface NewsContent {
   type?: string;
   monitorulOficial?: string;
   moNumberDate?: string;
+  author?: string;
 }
 
 export function InstagramCard({ news, index }: InstagramCardProps) {
@@ -84,6 +85,18 @@ export function InstagramCard({ news, index }: InstagramCardProps) {
   };
 
   const publicationInfo = getPublicationInfo();
+
+  // Extract author from content and truncate after 12 characters
+  const getAuthor = () => {
+    if (typeof news.content === 'object' && news.content !== null) {
+      const content = news.content as NewsContent;
+      const author = content.author || 'Monitorul Oficial';
+      return author.length > 12 ? author.substring(0, 12) + '...' : author;
+    }
+    return 'Monitorul Oficial';
+  };
+
+  const author = getAuthor();
 
   const captureScreenshot = async () => {
     if (!cardRef.current) return;
@@ -175,11 +188,11 @@ export function InstagramCard({ news, index }: InstagramCardProps) {
               <div className="text-white text-[10px] leading-tight min-w-0">
                 {publicationInfo ? (
                   <div>
-                    <div className="font-semibold text-[10px] leading-tight">Monitorul Oficial</div>
+                    <div className="font-semibold text-[10px] leading-tight">{author}</div>
                     <div className="text-white/80 text-[10px] leading-tight truncate">{publicationInfo}</div>
                   </div>
                 ) : (
-                  <span className="font-semibold text-[10px] leading-tight">Monitorul Oficial</span>
+                  <span className="font-semibold text-[10px] leading-tight">{author}</span>
                 )}
               </div>
             </div>
@@ -256,11 +269,15 @@ export function InstagramCard({ news, index }: InstagramCardProps) {
         </div>
       )}
 
-      {/* Card Info */}
+      {/* Publication Date - Outside the card so it doesn't appear in screenshots */}
       <div className="mt-2 text-center">
-        <p className="text-white/80 text-xs">
-          {news.publicationDate ? new Date(news.publicationDate).toLocaleDateString('ro-RO') : 'Data indisponibilă'}
-        </p>
+        <span className="text-white/70 text-xs">
+          📅 {news.publicationDate ? new Date(news.publicationDate).toLocaleDateString('ro-RO', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric' 
+          }) : 'Data indisponibilă'}
+        </span>
       </div>
     </div>
   );

@@ -9,6 +9,41 @@ const nextConfig = {
       }
     ]
   },
+  // Performance optimizations
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'react-force-graph-2d', 'simple-datatables']
+  },
+  // Bundle analyzer for debugging
+  webpack: (config, { dev, isServer }) => {
+    // Optimize bundle splitting
+    if (!dev && !isServer) {
+      config.optimization.splitChunks = {
+        ...config.optimization.splitChunks,
+        cacheGroups: {
+          ...config.optimization.splitChunks.cacheGroups,
+          lucide: {
+            name: 'lucide',
+            test: /[\\/]node_modules[\\/]lucide-react[\\/]/,
+            chunks: 'all',
+            priority: 10,
+          },
+          forceGraph: {
+            name: 'force-graph',
+            test: /[\\/]node_modules[\\/]react-force-graph-2d[\\/]/,
+            chunks: 'all',
+            priority: 10,
+          },
+          dataTables: {
+            name: 'data-tables',
+            test: /[\\/]node_modules[\\/]simple-datatables[\\/]/,
+            chunks: 'all',
+            priority: 10,
+          }
+        }
+      };
+    }
+    return config;
+  },
   // SEO optimizations - redirects are now handled in the page component
   
   // Fix Permissions-Policy warning by removing browsing-topics exclude  interest-cohort=()

@@ -10,6 +10,8 @@ export type NewsItem = {
   // New field for view count
   viewCount?: number;
   category?: string;
+  // Optional favorite flag, populated only for eligible users
+  isFavorite?: boolean;
 };
 
 export type GetStiriResponse = {
@@ -63,6 +65,7 @@ export type SearchStiriByKeywordsParams = {
 
 // Types for daily synthesis
 export type DailySynthesis = {
+  id: string;
   synthesisDate: string;
   title: string;
   content: string; // HTML content
@@ -134,4 +137,52 @@ export type GetRelatedStoriesParams = {
   minScore?: number;
 };
 
+// Types for personalized feed
+export type PersonalizedNewsItem = NewsItem & {
+  category?: string;
+};
+
+export type GetPersonalizedFeedResponse = {
+  getPersonalizedFeed: {
+    stiri: PersonalizedNewsItem[];
+    pagination: {
+      totalCount: number;
+      currentPage: number;
+      totalPages: number;
+      hasNextPage: boolean;
+      hasPreviousPage: boolean;
+    };
+  };
+};
+
+export type GetPersonalizedFeedParams = {
+  limit?: number;
+  offset?: number;
+  orderBy?: string;
+  orderDirection?: 'asc' | 'desc';
+};
+
+
+// Types for Document Connections feature
+export type DocumentConnectionView = {
+  idConexiune: string;
+  idStireSursa: string;
+  cheieDocumentSursa?: string | null;
+  idStireTinta?: string | null;
+  cheieDocumentTinta?: string | null;
+  tipRelatie: string;
+  confidenceScore?: number | null;
+  extractionMethod?: string | null;
+};
+
+export type GetDocumentConnectionsByNewsResponse = {
+  getDocumentConnectionsByNews: DocumentConnectionView[];
+};
+
+export type GetDocumentConnectionsByNewsParams = {
+  newsId: string;
+  relationType?: string;
+  limit?: number;
+  offset?: number;
+};
 
