@@ -34,8 +34,8 @@ export function getGraphQLClient(options?: GraphQLClientFactoryOptions): GraphQL
       Object.assign(headers, options.additionalHeaders);
     }
 
-    // Use the configured GraphQL endpoint from environment variables or options
-    const browserEndpoint = options?.endpoint ?? process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '/api/graphql';
+    // Always use the local proxy for browser requests to avoid CORS and maintain security
+    const browserEndpoint = options?.endpoint ?? '/api/graphql';
     const absoluteBrowserEndpoint = browserEndpoint.startsWith('http')
       ? browserEndpoint
       : `${window.location.origin}${browserEndpoint}`;

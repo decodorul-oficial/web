@@ -82,13 +82,30 @@ export async function POST(req: NextRequest) {
     return new NextResponse(resText, {
       status: upstream.status,
       headers: {
-        'Content-Type': upstream.headers.get('Content-Type') || 'application/json'
+        'Content-Type': upstream.headers.get('Content-Type') || 'application/json',
+        // CORS headers for browser requests
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Accept, Authorization, X-Captcha-Token, X-Internal-API-Key'
       }
     });
   } catch (err) {
     console.error('[GraphQL proxy] error forwarding request:', err);
     return NextResponse.json({ error: 'Proxy error' }, { status: 500 });
   }
+}
+
+// Handle CORS preflight requests
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Accept, Authorization, X-Captcha-Token, X-Internal-API-Key',
+      'Access-Control-Max-Age': '86400' // 24 hours
+    }
+  });
 }
 
 
