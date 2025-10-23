@@ -79,7 +79,7 @@ export function InstagramFeed() {
       {/* Instagram Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {news.map((item, index) => (
-          <DisplayMediaScreenshot key={item.id} news={item} index={index} />
+          <DisplayMediaScreenshot key={item.id} news={item} />
         ))}
       </div>
 
