@@ -34,8 +34,8 @@ export function getGraphQLClient(options?: GraphQLClientFactoryOptions): GraphQL
       Object.assign(headers, options.additionalHeaders);
     }
 
-    // Route all browser requests through local proxy to inject internal key server-side
-    const browserEndpoint = options?.endpoint ?? '/api/graphql';
+    // Use the configured GraphQL endpoint from environment variables or options
+    const browserEndpoint = options?.endpoint ?? process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '/api/graphql';
     const absoluteBrowserEndpoint = browserEndpoint.startsWith('http')
       ? browserEndpoint
       : `${window.location.origin}${browserEndpoint}`;
