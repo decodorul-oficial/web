@@ -42,11 +42,11 @@ export default function LegalPage() {
                   Pentru claritate juridică, următoarele termeni au următoarele semnificații:
                 </p>
                 <ul className="list-disc pl-6 text-gray-700 mb-4">
-                  <li><strong>"Serviciu"</strong> - platforma online Decodorul Oficial și toate funcționalitățile sale</li>
-                  <li><strong>"Utilizator"</strong> - orice persoană care accesează sau utilizează Serviciul</li>
-                  <li><strong>"Conținut"</strong> - toate informațiile, textele, grafica și materialele disponibile pe Serviciu</li>
-                  <li><strong>"Abonament PRO"</strong> - planul de abonament plătit care oferă acces la funcționalități premium</li>
-                  <li><strong>"Compania"</strong> - {process.env.NEXT_PUBLIC_COMPANY_NAME || 'S.C. [Numele Companiei Tale S.R.L.]'}, furnizorul Serviciului</li>
+                  <li><strong>&ldquo;Serviciu&rdquo;</strong> - platforma online Decodorul Oficial și toate funcționalitățile sale</li>
+                  <li><strong>&ldquo;Utilizator&rdquo;</strong> - orice persoană care accesează sau utilizează Serviciul</li>
+                  <li><strong>&ldquo;Conținut&rdquo;</strong> - toate informațiile, textele, grafica și materialele disponibile pe Serviciu</li>
+                  <li><strong>&ldquo;Abonament PRO&rdquo;</strong> - planul de abonament plătit care oferă acces la funcționalități premium</li>
+                  <li><strong>&ldquo;Compania&rdquo;</strong> - {process.env.NEXT_PUBLIC_COMPANY_NAME || 'S.C. [Numele Companiei Tale S.R.L.]'}, furnizorul Serviciului</li>
                 </ul>
               </section>
 
@@ -55,13 +55,13 @@ export default function LegalPage() {
                   1. Informații Generale și Date de Contact
                 </h2>
                 <p className="text-gray-700 mb-4">
-                  Serviciul „Decodorul Oficial" este furnizat de {process.env.NEXT_PUBLIC_COMPANY_NAME || 'S.C. [Numele Companiei Tale S.R.L.]'}, 
+                  Serviciul &ldquo;Decodorul Oficial&rdquo; este furnizat de {process.env.NEXT_PUBLIC_COMPANY_NAME || 'S.C. [Numele Companiei Tale S.R.L.]'}, 
                   o societate de naționalitate română, cu sediul social în {process.env.NEXT_PUBLIC_COMPANY_CITY || '[Oraș]'}, {process.env.NEXT_PUBLIC_COMPANY_ADDRESS || '[Adresa completă]'}, 
                   înregistrată la Registrul Comerțului sub nr. {process.env.NEXT_PUBLIC_COMPANY_REG_NO || '[Jxx/xxxx/xxxx]'}, 
-                  cod unic de înregistrare {process.env.NEXT_PUBLIC_COMPANY_CUI || '[ROxxxxxxxx]'} (denumită în continuare „Compania", „noi").
+                  cod unic de înregistrare {process.env.NEXT_PUBLIC_COMPANY_CUI || '[ROxxxxxxxx]'} (denumită în continuare &ldquo;Compania&rdquo;, &ldquo;noi&rdquo;).
                 </p>
                 <p className="text-gray-700 mb-4">
-                  Aceste Termeni și Condiții („Termenii") reglementează utilizarea serviciului nostru. 
+                  Aceste Termeni și Condiții (&ldquo;Termenii&rdquo;) reglementează utilizarea serviciului nostru. 
                   Prin accesarea sau utilizarea Serviciului, vă angajați să respectați acești Termeni. 
                   Dacă nu sunteți de acord cu oricare parte a acestor Termeni, vă rugăm să nu utilizați Serviciul.
                 </p>
@@ -116,7 +116,7 @@ export default function LegalPage() {
                 </h2>
                 <p className="text-gray-700 mb-4">
                   Compania noastră prelucrează datele dumneavoastră cu caracter personal în conformitate 
-                  cu Regulamentul (UE) 2016/679 („GDPR"). Prin utilizarea Serviciului, sunteți de acord 
+                  cu Regulamentul (UE) 2016/679 (&ldquo;GDPR&rdquo;). Prin utilizarea Serviciului, sunteți de acord 
                   cu colectarea și utilizarea informațiilor în conformitate cu Politica noastră de 
                   Confidențialitate, pe care o puteți consulta <a href="/privacy" className="text-brand-info hover:text-brand-highlight">aici</a>.
                 </p>
@@ -248,7 +248,7 @@ export default function LegalPage() {
                   8. Limitarea răspunderii
                 </h2>
                 <p className="text-gray-700 mb-4">
-                  Serviciul nostru este furnizat „așa cum este" și „așa cum este disponibil". 
+                  Serviciul nostru este furnizat &ldquo;așa cum este&rdquo; și &ldquo;așa cum este disponibil&rdquo;. 
                   Nu garantăm că Serviciul va fi neîntrerupt, securizat sau fără erori.
                 </p>
                 <p className="text-gray-700 mb-4">

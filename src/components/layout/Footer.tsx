@@ -3,6 +3,7 @@
 import { NewsletterButton } from '@/components/newsletter/NewsletterButton';
 import { Linkedin, Instagram } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
+import Image from 'next/image';
 
 export function Footer() {
   const { user, profile } = useAuth();
@@ -84,10 +85,13 @@ export function Footer() {
                   className="hover:opacity-80 transition-opacity duration-200"
                   aria-label="Soluționarea Alternativă a Litigiilor - ANPC"
                 >
-                  <img 
+                  <Image 
                     src="/anpc-sal.jpg" 
                     alt="Soluționarea Alternativă a Litigiilor (SAL)" 
+                    width={250}
+                    height={50}
                     className="w-[200px] h-[40px] sm:w-[250px] sm:h-[50px] object-contain"
+                    priority={false}
                   />
                 </a>
                 <a 
@@ -97,10 +101,13 @@ export function Footer() {
                   className="hover:opacity-80 transition-opacity duration-200"
                   aria-label="Soluționarea Online a Litigiilor - SOL"
                 >
-                  <img 
+                  <Image 
                     src="/anpc-sol.jpg" 
                     alt="Soluționarea Online a Litigiilor (SOL)" 
+                    width={250}
+                    height={50}
                     className="w-[200px] h-[40px] sm:w-[250px] sm:h-[50px] object-contain"
+                    priority={false}
                   />
                 </a>
               </div>
@@ -122,5 +129,4 @@ export function Footer() {
     </footer>
   );
 }
-
 

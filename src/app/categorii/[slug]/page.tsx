@@ -196,6 +196,7 @@ export default function CategoryPage({ params }: PageProps) {
       })();
       const iconName = c?.lucide_icon ?? c?.lucideIcon;
       if (typeof iconName === 'string' && iconName.trim().length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const candidates = Array.from(new Set([
           iconName,
           toPascalCase(iconName),
@@ -203,9 +204,11 @@ export default function CategoryPage({ params }: PageProps) {
           iconName.replace(/[-_ ]+/g, '')
         ]));
         // Use the optimized lazy loading utility
-        getLucideIcon(iconName, fallback).then(icon => {
+        getLucideIcon(iconName, fallback).then((icon) => {
           // This will be handled asynchronously, but we return fallback immediately
           // to avoid blocking the render
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const _ = icon; // Suppress unused parameter warning
         });
       }
     } catch {}

@@ -328,8 +328,8 @@ export class AdminUsersGraphQLService {
       } : undefined;
 
       // Convertim sortField în formatul API-ului
-      const apiSortField = sortField ? sortField.toUpperCase() as any : undefined;
-      const apiSortDirection = sortDirection ? sortDirection.toUpperCase() as any : undefined;
+      const apiSortField = sortField ? sortField.toUpperCase() as SortField : undefined;
+      const apiSortDirection = sortDirection ? sortDirection.toUpperCase() as SortDirection : undefined;
 
       const response = await this.getApiClient().request<{ adminUsers: UsersResponse }>(GET_ADMIN_USERS, {
         page,

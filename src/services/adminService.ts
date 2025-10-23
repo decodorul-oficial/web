@@ -199,7 +199,6 @@ export class AdminService {
 
   static getWeekLabel(weekStart: string): string {
     const date = new Date(weekStart);
-    const today = new Date();
     const currentWeekStart = this.getCurrentWeekStart();
     const isCurrentWeek = weekStart === currentWeekStart;
     

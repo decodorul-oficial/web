@@ -59,7 +59,7 @@ export function NetworkStatsCard() {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="text-center text-gray-600">
-          <p>Nu există date disponibile pentru statistici.</p>
+          <p>Nu există date disponibile pentru statistică.</p>
         </div>
       </div>
     );
@@ -135,6 +135,7 @@ export function NetworkStatsCard() {
             <div className="absolute left-0 right-0 top-full mt-2 z-10 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg">
               <div className="font-semibold mb-1">Ce înseamnă?</div>
               <p className="leading-relaxed">
+                {/* eslint-disable-next-line react/no-unescaped-entities */}
                 Măsoară siguranța cu care sistemul AI a identificat aceste conexiuni. O legătură cu încredere de 80% sau mai mult este afișată ca o linie continuă pe hartă (conexiune explicită), în timp ce o valoare mai mică apare ca linie punctată (conexiune dedusă din context).
               </p>
               <div className="absolute -top-2 left-6 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-gray-900"></div>
@@ -169,7 +170,8 @@ export function NetworkStatsCard() {
             <div className="absolute left-0 right-0 top-full mt-2 z-10 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg">
               <div className="font-semibold mb-1">Ce înseamnă?</div>
               <p className="leading-relaxed">
-                Arată numărul de tipuri distincte de relații identificate (ex: 'modifică', 'abrogă', 'face referire la'). O diversitate mai mare poate indica un impact complex al actului normativ.
+                {/* eslint-disable-next-line react/no-unescaped-entities */}
+                Arată numărul de tipuri distincte de relații identificate (ex: &apos;modifică&apos;, &apos;abrogă&apos;, &apos;face referire la&apos;). O diversitate mai mare poate indica un impact complex al actului normativ.
               </p>
               <div className="absolute -top-2 left-6 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-gray-900"></div>
             </div>
@@ -198,7 +200,8 @@ export function NetworkStatsCard() {
               <div className="absolute left-0 right-0 top-full mt-2 z-10 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg">
                 <div className="font-semibold mb-1">Ce reprezintă această listă?</div>
                 <p className="leading-relaxed">
-                  Detaliază numărul total de conexiuni, grupate după tipul relației. O mențiune "(extern)" indică o referință către un act normativ mai vechi, care nu se află încă în baza de date a Decodorului Oficial.
+                  {/* eslint-disable-next-line react/no-unescaped-entities */}
+                  Detaliază numărul total de conexiuni, grupate după tipul relației. O mențiune &quot;(extern)&quot; indică o referință către un act normativ mai vechi, care nu se află încă în baza de date a Decodorului Oficial.
                 </p>
                 <div className="absolute -top-2 left-6 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-gray-900"></div>
               </div>

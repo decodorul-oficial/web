@@ -237,7 +237,7 @@ async function processPaymentStatus({
   transactionId?: string;
   amount?: string;
   currency: string;
-  rawData: Record<string, any>;
+  rawData: Record<string, unknown>;
 }) {
   try {
     console.log('[Netopia Webhook IPN] Processing payment status:', {
@@ -328,7 +328,7 @@ async function updateOrderStatus({
   transactionId?: string;
   amount?: string;
   currency: string;
-  rawData: Record<string, any>;
+  rawData: Record<string, unknown>;
 }) {
   try {
     const endpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'https://decodorul-oficial-api.vercel.app/api/graphql';
@@ -435,7 +435,7 @@ async function logWebhookEvent({
   transactionId?: string;
   amount?: string;
   currency: string;
-  rawData: Record<string, any>;
+  rawData: Record<string, unknown>;
   processedAt: string;
 }) {
   try {

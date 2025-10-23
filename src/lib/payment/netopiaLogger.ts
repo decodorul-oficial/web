@@ -15,7 +15,7 @@ export interface WebhookLogEntry {
   currency?: string;
   errorCode?: string;
   errorMessage?: string;
-  rawData: Record<string, any>;
+  rawData: Record<string, unknown>;
   clientIP?: string;
   userAgent?: string;
   processedAt: string;
@@ -27,7 +27,7 @@ export interface ErrorLogEntry {
   errorType: 'validation' | 'processing' | 'network' | 'database' | 'unknown';
   errorMessage: string;
   errorStack?: string;
-  context: Record<string, any>;
+  context: Record<string, unknown>;
   severity: 'low' | 'medium' | 'high' | 'critical';
   timestamp: string;
 }
@@ -258,7 +258,7 @@ export class NetopiaLogger {
   /**
    * Creează un context structurat pentru logging
    */
-  public createContext(data: Record<string, any>): Record<string, any> {
+  public createContext(data: Record<string, unknown>): Record<string, unknown> {
     return {
       ...data,
       timestamp: new Date().toISOString(),
@@ -291,7 +291,7 @@ export const logWebhookSuccess = async (data: {
   transactionId?: string;
   amount?: number;
   currency?: string;
-  rawData: Record<string, any>;
+  rawData: Record<string, unknown>;
   clientIP?: string;
   userAgent?: string;
   processingTimeMs?: number;
@@ -308,7 +308,7 @@ export const logWebhookError = async (data: {
   status: string;
   errorCode?: string;
   errorMessage?: string;
-  rawData: Record<string, any>;
+  rawData: Record<string, unknown>;
   clientIP?: string;
   userAgent?: string;
   processingTimeMs?: number;
@@ -323,7 +323,7 @@ export const logProcessingError = async (data: {
   errorType: ErrorLogEntry['errorType'];
   errorMessage: string;
   errorStack?: string;
-  context: Record<string, any>;
+  context: Record<string, unknown>;
   severity: ErrorLogEntry['severity'];
 }) => {
   await netopiaLogger.logError(data);

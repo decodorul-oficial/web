@@ -1,15 +1,13 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useRef } from 'react';
 import { NewsItem } from '@/features/news/types';
 import { extractParteaFromFilename } from '@/lib/utils/monitorulOficial';
-import { IOSScreenshotButton } from './IOSScreenshotButton';
 import { useIOSScreenshot } from '@/hooks/useIOSScreenshot';
 import * as LucideIcons from 'lucide-react';
 
 interface DisplayMediaScreenshotProps {
   news: NewsItem;
-  index: number;
 }
 
 // Define proper types for the content object
@@ -22,9 +20,10 @@ interface NewsContent {
   monitorulOficial?: string;
   moNumberDate?: string;
   author?: string;
+  lucide_icon?: string;
 }
 
-export function DisplayMediaScreenshot({ news, index }: DisplayMediaScreenshotProps) {
+export function DisplayMediaScreenshot({ news }: DisplayMediaScreenshotProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   
   // Use the iOS screenshot hook for the main screenshot functionality
@@ -49,9 +48,6 @@ export function DisplayMediaScreenshot({ news, index }: DisplayMediaScreenshotPr
 
   const category = getCategory();
 
-  // Extract partea from filename
-  const partea = extractParteaFromFilename(news.filename) || 'Partea I';
-
   // Extract publication date info
   const getPublicationInfo = () => {
     if (typeof news.content === 'object' && news.content !== null) {
@@ -66,17 +62,15 @@ export function DisplayMediaScreenshot({ news, index }: DisplayMediaScreenshotPr
       
       if (news.publicationDate) {
         const date = new Date(news.publicationDate);
-        return date.toLocaleDateString('ro-RO', { 
-          day: '2-digit', 
-          month: '2-digit', 
-          year: 'numeric' 
+        return date.toLocaleDateString('ro-RO', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
         });
       }
     }
     return '';
   };
-
-  const publicationInfo = getPublicationInfo();
 
   // Extract author from content and truncate after 12 characters
   const getAuthor = () => {
@@ -113,10 +107,10 @@ export function DisplayMediaScreenshot({ news, index }: DisplayMediaScreenshotPr
       {/* Publication Date - Outside the card so it doesn't appear in screenshots */}
       <div className="mt-2 text-center">
         <span className="text-gray-700 text-xs">
-          📅 {news.publicationDate ? new Date(news.publicationDate).toLocaleDateString('ro-RO', { 
-            day: '2-digit', 
-            month: '2-digit', 
-            year: 'numeric' 
+          📅 {news.publicationDate ? new Date(news.publicationDate).toLocaleDateString('ro-RO', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
           }) : 'Data indisponibilă'}
         </span>
       </div>
@@ -157,7 +151,7 @@ export function DisplayMediaScreenshot({ news, index }: DisplayMediaScreenshotPr
                         return <LucideIcon size={18} className="text-white" />;
                       }
                     }
-                  } catch (e) {
+                  } catch (_e) {
                     // fallback
                   }
                   // fallback to text if icon not found
@@ -215,7 +209,7 @@ export function DisplayMediaScreenshot({ news, index }: DisplayMediaScreenshotPr
                         return <LucideIcon size={18} className="text-white" />;
                       }
                     }
-                  } catch (e) {
+                  } catch (_e) {
                     // fallback
                   }
                   // fallback to text if icon not found
@@ -285,4 +279,4 @@ export function DisplayMediaScreenshot({ news, index }: DisplayMediaScreenshotPr
 
     </div>
   );
-}
+} 

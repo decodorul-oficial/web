@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { createNewsSlug } from '@/lib/utils/slugify';
@@ -12,7 +12,6 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { useConsent } from '@/components/cookies/ConsentProvider';
 import { useFavorites } from '@/features/favorites/hooks/useFavorites';
 import { useRouter } from 'next/navigation';
-import { FavoriteNews } from '@/features/favorites/graphql/queries';
 
 export default function FavoritesPage() {
   const { isAuthenticated, hasPremiumAccess, loading: authLoading } = useAuth();

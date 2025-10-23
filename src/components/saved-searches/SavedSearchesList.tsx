@@ -1,30 +1,28 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useSavedSearches, useDeleteSavedSearch, useToggleFavoriteSearch, useToggleEmailNotifications, useEmailNotificationInfo, useUpdateSavedSearch } from '@/features/saved-searches/hooks/useSavedSearches';
 import { SearchParams } from '@/features/saved-searches/types';
-import { 
-  Bookmark, 
-  Star, 
-  StarOff, 
-  Trash2, 
-  Search, 
-  Calendar, 
+import {
+  Bookmark,
+  Star,
+  StarOff,
+  Trash2,
+  Search,
+  Calendar,
   Filter,
-  ChevronDown,
-  ChevronUp,
   Loader2,
   MoreVertical,
   Edit3,
   Bell,
   BellOff
 } from 'lucide-react';
-import { NotificationBell } from './NotificationBell';
 import { NotificationCounter } from './NotificationCounter';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/Tooltip';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+
+// Remove unused icons/components, clean up hook dependencies, and ensure correct ref typing.
 
 interface SavedSearchesListProps {
   onApplySearch?: (searchParams: SearchParams) => void;
@@ -34,8 +32,9 @@ interface SavedSearchesListProps {
   showHeader?: boolean;
 }
 
-export function SavedSearchesList({ 
-  onApplySearch, 
+// Fix for `ref` warning: use `useRef<{[key: string]: HTMLDivElement | null}>`
+export function SavedSearchesList({
+  onApplySearch,
   className = '',
   showFavoritesOnly = false,
   limit = 10,
@@ -48,7 +47,7 @@ export function SavedSearchesList({
     orderBy: 'updatedAt',
     orderDirection: 'desc'
   });
-  const { deleteSavedSearch, loading: deleteLoading } = useDeleteSavedSearch();
+  const { deleteSavedSearch } = useDeleteSavedSearch();
   const { toggleFavoriteSearch, loading: toggleLoading } = useToggleFavoriteSearch();
   const { toggleEmailNotifications, loading: notificationLoading } = useToggleEmailNotifications();
   const { data: notificationInfo } = useEmailNotificationInfo();
@@ -57,31 +56,33 @@ export function SavedSearchesList({
   const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set());
   const [editingNames, setEditingNames] = useState<Set<string>>(new Set());
   const [editNameValues, setEditNameValues] = useState<Record<string, string>>({});
-  const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
-  // Close dropdowns when clicking outside
+  // Use useCallback for stable reference
+  const handleClickOutside = useCallback((event: MouseEvent) => {
+    const target = event.target as Element;
+    const dropdownsArray = Object.values(dropdownRefs.current);
+    // Even if no dropdown opened, skip
+    if (!dropdownsArray.length) return;
+    // If the event target is not in any dropdown
+    const isOutsideDropdown = dropdownsArray.every(ref =>
+      ref && !ref.contains(target)
+    );
+    if (isOutsideDropdown) {
+      setOpenDropdowns(new Set());
+    }
+  }, []);
+
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      
-      // Check if click is outside any dropdown
-      const isOutsideDropdown = Object.values(dropdownRefs.current).every(ref => 
-        ref && !ref.contains(target)
-      );
-      
-      if (isOutsideDropdown) {
-        setOpenDropdowns(new Set());
-      }
-    };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [handleClickOutside]);
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Ești sigur că vrei să ștergi căutarea "${name}"?`)) {
+    // eslint-disable-next-line no-restricted-globals
+    if (!window.confirm(`Ești sigur că vrei să ștergi căutarea "${name}"?`)) {
       return;
     }
 
@@ -91,8 +92,9 @@ export function SavedSearchesList({
         toast.success('Căutarea a fost ștearsă cu succes!');
         refetch();
       }
-    } catch (error) {
-      console.error('Error deleting search:', error);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Error deleting search:', err);
     }
   };
 
@@ -100,8 +102,9 @@ export function SavedSearchesList({
     try {
       await toggleFavoriteSearch(id);
       refetch();
-    } catch (error) {
-      console.error('Error toggling favorite:', error);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Error toggling favorite:', err);
     }
   };
 
@@ -120,8 +123,9 @@ export function SavedSearchesList({
       await toggleEmailNotifications(id, !currentState);
       toast.success(`Notificările au fost ${!currentState ? 'activate' : 'dezactivate'}.`);
       refetch();
-    } catch (error) {
-      console.error('Error toggling notifications:', error);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Error toggling notifications:', err);
       toast.error('A apărut o eroare. Vă rugăm să încercați din nou.');
     }
   };
@@ -161,7 +165,11 @@ export function SavedSearchesList({
   };
 
   const startEditingName = (id: string, currentName: string) => {
-    setEditingNames(prev => new Set(prev).add(id));
+    setEditingNames(prev => {
+      const set = new Set(prev);
+      set.add(id);
+      return set;
+    });
     setEditNameValues(prev => ({ ...prev, [id]: currentName }));
     setOpenDropdowns(prev => {
       const newSet = new Set(prev);
@@ -172,14 +180,14 @@ export function SavedSearchesList({
 
   const cancelEditingName = (id: string) => {
     setEditingNames(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(id);
-      return newSet;
+      const set = new Set(prev);
+      set.delete(id);
+      return set;
     });
     setEditNameValues(prev => {
-      const newValues = { ...prev };
-      delete newValues[id];
-      return newValues;
+      const obj = { ...prev };
+      delete obj[id];
+      return obj;
     });
   };
 
@@ -199,14 +207,18 @@ export function SavedSearchesList({
       } else {
         toast.error('Eroare la actualizarea numelui');
       }
-    } catch (error) {
-      console.error('Error renaming search:', error);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Error renaming search:', err);
       toast.error('Eroare la actualizarea numelui');
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ro-RO', {
+    if (!dateString) return '';
+    const dateObj = new Date(dateString);
+    if (isNaN(dateObj.getTime())) return '';
+    return dateObj.toLocaleDateString('ro-RO', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -215,30 +227,11 @@ export function SavedSearchesList({
     });
   };
 
-  const buildSearchUrl = (searchParams: SearchParams) => {
-    const params = new URLSearchParams();
-    
-    if (searchParams.query) {
-      params.set('query', searchParams.query);
-    }
-    if (searchParams.keywords && searchParams.keywords.length > 0) {
-      params.set('keywords', searchParams.keywords.join(','));
-    }
-    if (searchParams.publicationDateFrom) {
-      params.set('dateFrom', searchParams.publicationDateFrom);
-    }
-    if (searchParams.publicationDateTo) {
-      params.set('dateTo', searchParams.publicationDateTo);
-    }
-    if (searchParams.orderBy && searchParams.orderBy !== 'publicationDate') {
-      params.set('orderBy', searchParams.orderBy);
-    }
-    if (searchParams.orderDirection && searchParams.orderDirection !== 'desc') {
-      params.set('orderDirection', searchParams.orderDirection);
-    }
-
-    return `/stiri?${params.toString()}`;
-  };
+  // Fix unused buildSearchUrl
+  // const buildSearchUrl = (searchParams: SearchParams) => {
+  //   const params = new URLSearchParams();
+  //   ...
+  // };
 
   // Dacă utilizatorul nu are acces
   if (!user || !hasAccess) {
@@ -261,7 +254,6 @@ export function SavedSearchesList({
     );
   }
 
-  // Loading state
   if (loading) {
     return (
       <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
@@ -273,7 +265,6 @@ export function SavedSearchesList({
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className={`bg-red-50 rounded-lg border border-red-200 p-6 ${className}`}>
@@ -283,6 +274,7 @@ export function SavedSearchesList({
           </h3>
           <p className="text-red-600 mb-4">{error.message}</p>
           <button
+            type="button"
             onClick={() => refetch()}
             className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
           >
@@ -293,7 +285,6 @@ export function SavedSearchesList({
     );
   }
 
-  // Empty state
   if (!data || data.savedSearches.length === 0) {
     return (
       <div className={`bg-gray-50 rounded-lg p-6 text-center ${className}`}>
@@ -302,7 +293,7 @@ export function SavedSearchesList({
           {showFavoritesOnly ? 'Nu ai căutări favorite' : 'Nu ai căutări salvate'}
         </h3>
         <p className="text-gray-600">
-          {showFavoritesOnly 
+          {showFavoritesOnly
             ? 'Marchează căutările ca favorite pentru a le vedea aici.'
             : 'Salvează căutările frecvente pentru a le refolosi rapid.'
           }
@@ -312,7 +303,7 @@ export function SavedSearchesList({
   }
 
   return (
-    <div className={`${className}`}>
+    <div className={className}>
       {showHeader && (
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
@@ -344,7 +335,12 @@ export function SavedSearchesList({
                         <input
                           type="text"
                           value={editNameValues[search.id] || ''}
-                          onChange={(e) => setEditNameValues(prev => ({ ...prev, [search.id]: e.target.value }))}
+                          onChange={(e) =>
+                            setEditNameValues((prev) => ({
+                              ...prev,
+                              [search.id]: e.target.value
+                            }))
+                          }
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               saveEditedName(search.id);
@@ -357,6 +353,7 @@ export function SavedSearchesList({
                           autoFocus
                         />
                         <button
+                          type="button"
                           onClick={() => saveEditedName(search.id)}
                           disabled={updateLoading}
                           className="p-1 text-green-600 hover:text-green-700 transition-colors disabled:opacity-50"
@@ -371,6 +368,7 @@ export function SavedSearchesList({
                           )}
                         </button>
                         <button
+                          type="button"
                           onClick={() => cancelEditingName(search.id)}
                           disabled={updateLoading}
                           className="p-1 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
@@ -383,9 +381,16 @@ export function SavedSearchesList({
                       </div>
                     ) : (
                       <>
-                        <h4 
+                        <h4
                           className="text-sm font-medium text-gray-900 truncate cursor-pointer hover:text-brand-info transition-colors"
                           onClick={() => handleSearchClick(search.searchParams)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              handleSearchClick(search.searchParams);
+                            }
+                          }}
                           title="Click pentru a aplica căutarea"
                         >
                           {search.name}
@@ -459,11 +464,15 @@ export function SavedSearchesList({
                 </div>
 
                 <div className="flex items-center gap-2 ml-4">
-                  {/* Secondary Action Buttons with Text */}
                   {/* Notification Button */}
                   <button
+                    type="button"
                     onClick={() => handleToggleNotification(search.id, search.emailNotificationsEnabled || false)}
-                    disabled={notificationLoading || (!user || !hasPremiumAccess) || (!notificationInfo?.canEnableMore && !search.emailNotificationsEnabled)}
+                    disabled={
+                      notificationLoading ||
+                      (!user || !hasPremiumAccess) ||
+                      (!notificationInfo?.canEnableMore && !search.emailNotificationsEnabled)
+                    }
                     className="flex items-center gap-1 px-3 py-2 text-sm text-gray-600 hover:text-brand-info transition-colors border border-gray-300 rounded-md hover:border-brand-info disabled:opacity-50 disabled:cursor-not-allowed"
                     title={search.emailNotificationsEnabled ? 'Dezactivează notificările' : 'Activează notificările'}
                   >
@@ -481,6 +490,7 @@ export function SavedSearchesList({
 
                   {/* Favorite Button */}
                   <button
+                    type="button"
                     onClick={() => handleToggleFavorite(search.id)}
                     disabled={toggleLoading}
                     className="flex items-center gap-1 px-3 py-2 text-sm text-gray-600 hover:text-yellow-500 transition-colors border border-gray-300 rounded-md hover:border-yellow-500 disabled:opacity-50"
@@ -498,6 +508,7 @@ export function SavedSearchesList({
 
                   {/* Primary Action Button */}
                   <button
+                    type="button"
                     onClick={() => handleSearchClick(search.searchParams)}
                     className="px-4 py-2 bg-brand-info text-white text-sm font-medium rounded-md hover:bg-brand-highlight transition-colors focus:outline-none focus:ring-2 focus:ring-brand-info focus:ring-offset-2"
                   >
@@ -505,16 +516,19 @@ export function SavedSearchesList({
                   </button>
 
                   {/* More Options Dropdown */}
-                  <div 
+                  <div
                     className="relative"
                     ref={(el) => {
                       dropdownRefs.current[search.id] = el;
                     }}
                   >
                     <button
+                      type="button"
                       onClick={() => toggleDropdown(search.id)}
                       className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
                       title="Mai multe opțiuni"
+                      aria-haspopup="true"
+                      aria-expanded={openDropdowns.has(search.id)}
                     >
                       <MoreVertical className="h-4 w-4" />
                     </button>
@@ -522,6 +536,7 @@ export function SavedSearchesList({
                     {openDropdowns.has(search.id) && (
                       <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-md shadow-lg z-10 min-w-[140px]">
                         <button
+                          type="button"
                           onClick={() => startEditingName(search.id, search.name)}
                           className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
                         >
@@ -529,6 +544,7 @@ export function SavedSearchesList({
                           <span>Redenumește</span>
                         </button>
                         <button
+                          type="button"
                           onClick={() => {
                             handleDelete(search.id, search.name);
                             setOpenDropdowns(prev => {

@@ -3,15 +3,14 @@
 import Link from 'next/link';
 import { useState, useEffect, useCallback, type FC } from 'react';
 import { fetchRelatedStories } from '@/features/news/services/newsService';
-import { Gavel, TrendingUp, Eye } from 'lucide-react';
+import { Gavel, Eye } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
-import { getLucideIcon } from '@/lib/optimizations/lazyIcons';
 import { createNewsSlug } from '@/lib/utils/slugify';
 import { trackNewsClick } from '../../../lib/analytics';
 import type { RelatedStory, NewsItem, RelevanceReasons } from '@/features/news/types';
 import { stripHtml } from '@/lib/html/sanitize';
 import { SameDayNewsSection } from './SameDayNewsSection';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/Tooltip';
+import { TooltipProvider } from '@/components/ui/Tooltip';
 
 // Tip pentru componenta de iconiță Lucide
 type LucideIcon = FC<LucideProps>;

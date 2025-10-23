@@ -10,7 +10,8 @@ import React, {
 } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { X, Move, ZoomIn, ZoomOut, RotateCcw, Info, Eye, EyeOff } from 'lucide-react';
+import { X, Move, ZoomIn, ZoomOut, RotateCcw, Info, Eye } from 'lucide-react';
+import type { ForceGraphMethods } from 'react-force-graph-2d';
 
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
   ssr: false,
@@ -27,7 +28,9 @@ const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
 import { useGraphQL } from '@/hooks/useGraphQL';
 import {
   GET_LEGISLATIVE_GRAPH,
-  GetLegislativeGraphResponse
+  GetLegislativeGraphResponse,
+  LegislativeNode,
+  LegislativeLink
 } from '@/features/news/graphql/legislativeNetworkQueries';
 
 // Tipuri
@@ -128,9 +131,9 @@ const LEGEND_CONFIG: LegendConfig = {
 export const LegislativeNetworkGraph = React.forwardRef<
   HTMLDivElement,
   LegislativeNetworkGraphProps
->(({ documentId }, ref) => {
+>(({ documentId }) => {
   const router = useRouter();
-  const graphRef = useRef<any>();
+  const graphRef = useRef<ForceGraphMethods>();
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
@@ -138,7 +141,6 @@ export const LegislativeNetworkGraph = React.forwardRef<
   const [showLegend, setShowLegend] = useState(true);
   const [highlightNodes, setHighlightNodes] = useState(new Set<string>());
   const [highlightLinks, setHighlightLinks] = useState(new Set<string>());
-  const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const frameCount = useRef(0);
 
   // Responsive dimensions
@@ -168,14 +170,6 @@ export const LegislativeNetworkGraph = React.forwardRef<
     return () => clearTimeout(timer);
   }, []);
 
-  // Debug: Monitor when graphRef.current changes
-  useEffect(() => {
-    console.log('graphRef.current changed to:', graphRef.current);
-    if (graphRef.current) {
-      console.log('graphRef.current methods available:', Object.getOwnPropertyNames(graphRef.current));
-    }
-  }, [graphRef.current]);
-
   // GraphQL data
   const stableVariables = useMemo(
     () => ({ documentId, depth: 3 }),
@@ -197,7 +191,7 @@ export const LegislativeNetworkGraph = React.forwardRef<
     const nodeCount = sourceData.nodes.length;
     
     // Process nodes
-    const nodes: GraphNode[] = sourceData.nodes.map((node: any, idx: number) => {
+    const nodes: GraphNode[] = sourceData.nodes.map((node: LegislativeNode, idx: number) => {
       const isCentral = node.id === centralNodeId;
       const typeKey = node.type?.toLowerCase() || 'default';
       
@@ -235,7 +229,7 @@ export const LegislativeNetworkGraph = React.forwardRef<
     });
 
     // Process links with proper styling
-    const links: GraphLink[] = sourceData.links.map((link: any, idx: number) => {
+    const links: GraphLink[] = sourceData.links.map((link: LegislativeLink) => {
       const confidence = link.confidence || 0.5;
       const typeKey = link.type?.toLowerCase() || 'default';
       
@@ -248,16 +242,14 @@ export const LegislativeNetworkGraph = React.forwardRef<
       }
 
       // Add curvature for multiple links between same nodes
-      const linkKey = `${link.source}_${link.target}`;
-      const reverseKey = `${link.target}_${link.source}`;
-      const existingLinks = sourceData.links.filter((l: any) => 
+      const existingLinks = sourceData.links.filter((l: LegislativeLink) => 
         (l.source === link.source && l.target === link.target) ||
         (l.source === link.target && l.target === link.source)
       );
       
       let curvature = 0;
       if (existingLinks.length > 1) {
-        const linkIndex = existingLinks.findIndex((l: any) => l === link);
+        const linkIndex = existingLinks.findIndex((l: LegislativeLink) => l === link);
         curvature = 0.3 * (linkIndex - (existingLinks.length - 1) / 2);
       }
 
@@ -278,11 +270,9 @@ export const LegislativeNetworkGraph = React.forwardRef<
   const handleNodeClick = useCallback(
     (node: GraphNode) => {
       if (node.id === documentId) {
-        setSelectedNode(null);
         setHighlightNodes(new Set());
         setHighlightLinks(new Set());
       } else {
-        setSelectedNode(node.id);
         router.push(`/stiri/${node.id}`);
       }
     },
@@ -386,7 +376,7 @@ export const LegislativeNetworkGraph = React.forwardRef<
     try {
       // Configure forces for better layout
       fg.d3Force('link')
-        ?.distance((link: any) => {
+        ?.distance((link: GraphLink) => {
           const confidence = link.confidence || 0.5;
           return 150 + (1 - confidence) * 100;
         })
@@ -581,33 +571,33 @@ export const LegislativeNetworkGraph = React.forwardRef<
           }
         }}
         nodeLabel={() => ''}
-        onNodeClick={(node: any) => handleNodeClick(node as GraphNode)}
-        onNodeHover={(node: any) => handleNodeHover(node as GraphNode | null)}
+        onNodeClick={(node) => handleNodeClick(node as GraphNode)}
+        onNodeHover={(node) => handleNodeHover(node as GraphNode | null)}
         backgroundColor="transparent"
-        linkDirectionalParticles={(link: any) => {
+        linkDirectionalParticles={(link) => {
           const l = link as GraphLink;
           return l.confidence >= 0.8 ? 2 : 0;
         }}
-        linkDirectionalParticleSpeed={(link: any) => {
+        linkDirectionalParticleSpeed={(link) => {
           const l = link as GraphLink;
           return l.particleSpeed || 0.005;
         }}
-        linkDirectionalParticleWidth={(link: any) => {
+        linkDirectionalParticleWidth={(link) => {
           const l = link as GraphLink;
           return l.particleWidth || 2;
         }}
         linkDirectionalParticleColor={() => '#06b6d4'}
-        linkCurvature={(link: any) => (link as GraphLink).curvature || 0}
+        linkCurvature={(link) => (link as GraphLink).curvature || 0}
         linkCanvasObjectMode={() => 'after'}
         nodeCanvasObjectMode={() => 'after'}
-        onRenderFramePost={(ctx: CanvasRenderingContext2D) => {
+        onRenderFramePost={(_ctx: CanvasRenderingContext2D) => {
           // Log first few frames to see when graph is ready
           if (frameCount.current < 5) {
             console.log(`Frame ${frameCount.current}: graphRef.current =`, graphRef.current);
           }
           frameCount.current++;
         }}
-        linkCanvasObject={(link: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+        linkCanvasObject={(link, ctx: CanvasRenderingContext2D, _globalScale: number) => {
           const l = link as GraphLink;
           const source = l.source as GraphNode;
           const target = l.target as GraphNode;
@@ -660,13 +650,13 @@ export const LegislativeNetworkGraph = React.forwardRef<
           ctx.stroke();
           ctx.restore();
         }}
-        nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+        nodeCanvasObject={(node, ctx: CanvasRenderingContext2D, _globalScale: number) => {
           const n = node as GraphNode;
           if (!n.x || !n.y) return;
           
           const isHighlighted = highlightNodes.has(n.id);
           const label = n.title.length > 30 ? n.title.slice(0, 30) + '…' : n.title;
-          const fontSize = n.isCentral ? 14 / globalScale : 12 / globalScale;
+          const fontSize = n.isCentral ? 14 / _globalScale : 12 / _globalScale;
           
           ctx.save();
           

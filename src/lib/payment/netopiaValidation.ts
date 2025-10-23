@@ -15,7 +15,7 @@ export interface NetopiaWebhookData {
   currency?: string;
   signature?: string;
   timestamp?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ValidationResult {
@@ -32,7 +32,7 @@ export interface ValidationResult {
  * @returns Rezultatul validării
  */
 export function validateNetopiaSignature(
-  webhookData: Record<string, any>,
+  webhookData: Record<string, unknown>,
   secretKey: string
 ): ValidationResult {
   try {
@@ -109,7 +109,7 @@ export function validateNetopiaSignature(
  * @returns Semnătura generată
  */
 function generateNetopiaSignature(
-  data: Record<string, any>,
+  data: Record<string, unknown>,
   secretKey: string
 ): string {
   try {
@@ -324,7 +324,7 @@ export function validateWebhookTimestamp(
  * @returns Rezultatul validării complete
  */
 export function validateNetopiaWebhook(
-  webhookData: Record<string, any>,
+  webhookData: Record<string, unknown>,
   clientIP: string,
   options: {
     secretKey?: string;
@@ -352,7 +352,7 @@ export function validateNetopiaWebhook(
     // Validează timestamp-ul dacă este configurat
     if (options.validateTimestamp && webhookData.timestamp) {
       const timestampValidation = validateWebhookTimestamp(
-        webhookData.timestamp,
+        webhookData.timestamp as string | number,
         options.maxAgeSeconds
       );
       if (!timestampValidation.isValid) {

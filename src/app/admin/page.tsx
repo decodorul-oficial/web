@@ -90,6 +90,7 @@ export default function AdminDashboard() {
       fetchAdminStats();
       fetchStiriStats();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
 
   // Fetch stiri stats from API

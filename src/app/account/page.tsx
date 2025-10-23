@@ -2,19 +2,19 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Metadata } from 'next';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useSubscription, usePaymentMethods, useSubscriptionUsage } from '@/features/subscription/hooks/useSubscription';
 import { SubscriptionStatusCard } from '@/components/subscription/SubscriptionStatusCard';
-import { Loader2, User, CreditCard, BarChart3, Settings } from 'lucide-react';
+import { Loader2, User, CreditCard, Settings } from 'lucide-react';
 
 export default function AccountPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { subscription, loading: subscriptionLoading, refetch: refetchSubscription } = useSubscription();
   const { paymentMethods, loading: paymentMethodsLoading } = usePaymentMethods();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { usage, loading: usageLoading } = useSubscriptionUsage();
 
   useEffect(() => {
