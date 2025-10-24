@@ -39,7 +39,7 @@ export function getGraphQLClient(options?: GraphQLClientFactoryOptions): GraphQL
     const absoluteBrowserEndpoint = browserEndpoint.startsWith('http')
       ? browserEndpoint
       : `${window.location.origin}${browserEndpoint}`;
-    
+    console.log('!!!!!!!!!! browserEndpoint', browserEndpoint);
     return new GraphQLClient(absoluteBrowserEndpoint, {
       headers
     });
