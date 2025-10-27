@@ -5,6 +5,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { UserService } from '@/features/user/services/userService';
 import { InlineEditableDisplayName, AvatarSelector } from '@/components/user';
 import { LogOut, Bookmark, Bell, Key, Edit3 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/Tooltip';
 
 interface AccountSettingsProps {
   onSignOut: () => void;
@@ -74,13 +75,19 @@ export function AccountSettings({ onSignOut, isSigningOut }: AccountSettingsProp
           <span className="text-gray-900 font-medium">Căutări Salvate</span>
         </a>
 
-        <a
-          href="/profile/preferences"
-          className="flex items-center w-full p-3 rounded-lg hover:bg-gray-50 transition-colors group"
-        >
-          <Bell className="w-5 h-5 text-gray-500 group-hover:text-brand-info transition-colors mr-3" />
-          <span className="text-gray-900 font-medium">Setări Notificări</span>
-        </a>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center w-full p-3 rounded-lg bg-gray-50 cursor-not-allowed opacity-60 transition-colors group">
+                <Bell className="w-5 h-5 text-gray-400 mr-3" />
+                <span className="text-gray-500 font-medium">Setări Notificări</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Funcționalitate în curs de dezvoltare</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
         <a
           href="/profile/change-password"

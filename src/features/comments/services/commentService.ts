@@ -28,7 +28,7 @@ export class CommentService {
     
     // Debug logging pentru a verifica dacă token-ul este trimis
     if (process.env.NODE_ENV === 'development') {
-      console.log('CommentService: Token available:', !!token);
+      console.log('DEV>>>CommentService: Token available:', !!token);
     }
     
     return getGraphQLClient({

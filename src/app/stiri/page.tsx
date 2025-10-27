@@ -22,7 +22,19 @@ import { useAuth } from '@/components/auth/AuthProvider';
 function StiriPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user, hasPremiumAccess } = useAuth();
+  const { user, hasPremiumAccess, loading } = useAuth();
+
+  // Redirect non-premium users to homepage only after auth loading is complete
+  useEffect(() => {
+    // Wait for auth loading to complete before checking premium access
+    if (loading) return;
+
+    // Only redirect if hasPremiumAccess is definitively false (after loading is complete)
+    if (hasPremiumAccess === false) {
+      router.push('/');
+      return;
+    }
+  }, [hasPremiumAccess, loading, router]);
   
   // Schema.org structured data for news search page
   const schemaData = {
@@ -74,7 +86,7 @@ function StiriPageContent() {
   
   // State pentru rezultate
   const [news, setNews] = useState<NewsItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [pagination, setPagination] = useState({
     totalCount: 0,
     currentPage: 1,
@@ -283,7 +295,7 @@ function StiriPageContent() {
     // Permitem căutarea doar dacă există cel puțin un filtru aplicat
     if (!hasSearchContent(currentParams)) return;
     
-    setLoading(true);
+    setSearchLoading(true);
     try {
       // Calculăm offset-ul pentru pagina curentă
       const offset = (page - 1) * itemsPerPage;
@@ -320,7 +332,7 @@ function StiriPageContent() {
         hasPreviousPage: false
       });
     } finally {
-      setLoading(false);
+      setSearchLoading(false);
     }
   }, [searchQuery, keywords, orderBy, orderDirection, dateFrom, dateTo, itemsPerPage, updateURL]);
 
@@ -972,7 +984,7 @@ function StiriPageContent() {
               </div>
 
               {/* Loading state */}
-              {loading && (
+              {searchLoading && (
                 <div className="text-center py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto"></div>
                   <p className="mt-4 text-gray-600">Se caută știrile...</p>
@@ -980,7 +992,7 @@ function StiriPageContent() {
               )}
 
               {/* Paginare */}
-              {!loading && pagination.totalPages > 1 && (
+              {!searchLoading && pagination.totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2">
                   <button
                     onClick={() => handlePageChange(pagination.currentPage - 1)}
@@ -1078,7 +1090,7 @@ function StiriPageContent() {
               )}
 
               {/* Lista de știri */}
-              {!loading && news.length > 0 && (
+              {!searchLoading && news.length > 0 && (
                 <div className="space-y-4">
                   {news.map((item) => (
                     <article
@@ -1203,7 +1215,7 @@ function StiriPageContent() {
               )}
 
               {/* Mesaj când nu sunt rezultate */}
-              {!loading && news.length === 0 && (searchQuery || keywords.length > 0 || dateFrom || dateTo) && (
+              {!searchLoading && news.length === 0 && (searchQuery || keywords.length > 0 || dateFrom || dateTo) && (
                 <div className="text-center py-12">
                   <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Nu s-au găsit rezultate</h3>
@@ -1240,7 +1252,7 @@ function StiriPageContent() {
               )}
 
               {/* Paginare */}
-              {!loading && pagination.totalPages > 1 && (
+              {!searchLoading && pagination.totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2">
                   <button
                     onClick={() => handlePageChange(pagination.currentPage - 1)}

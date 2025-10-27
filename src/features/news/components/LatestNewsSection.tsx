@@ -562,7 +562,7 @@ export function LatestNewsSection() {
                   aria-label="Selectează numărul de items per pagină"
                 >
                   <BookOpen className="h-4 w-4 text-brand-accent" />
-                  <span className="text-gray-700">{itemsPerPage} items</span>
+                  <span className="text-gray-700">{itemsPerPage} știri pe pagină</span>
                   <ChevronDown className="h-4 w-4 text-brand-accent" />
                 </button>
                 
@@ -575,18 +575,18 @@ export function LatestNewsSection() {
                     />
                     
                     {/* Dropdown menu */}
-                    <div className="absolute right-0 top-full mt-1 w-32 bg-white border border-brand-accent/20 rounded-md shadow-lg z-20">
+                    <div className="absolute right-0 top-full mt-1 w-42 bg-white border border-brand-accent/20 rounded-md shadow-lg z-20">
                       {itemsPerPageOptions.map((option) => (
                         <button
                           key={option}
                           onClick={() => handleItemsPerPageChange(option)}
-                          className={`w-full px-3 py-2 text-left text-sm transition-colors first:rounded-t-md last:rounded-b-md ${
+                          className={`w-full px-3 py-2 text-center text-sm transition-colors first:rounded-t-md last:rounded-b-md ${
                             itemsPerPage === option 
                               ? 'bg-brand-accent text-white hover:bg-brand-accent/90' 
                               : 'text-gray-700 hover:bg-brand-accent/10 hover:text-brand-accent'
                           }`}
                         >
-                          {option} items
+                          {option} știri pe pagină
                         </button>
                       ))}
                     </div>
