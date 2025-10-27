@@ -4,7 +4,45 @@
 
 This implementation adds full-page interstitial ads (Vignette) that appear when users navigate between news article pages (`/stiri/[slug]`). These ads are shown only to non-authenticated users and users without premium access.
 
-## Features
+## ⚠️ CURRENT STATUS: TEMPORARILY DISABLED
+
+**The AdSense interstitial ads are currently disabled** due to Google AdSense rejection for "Low value content". The implementation is preserved and ready for reactivation when the site becomes eligible for AdSense approval.
+
+**To re-enable:**
+1. Set `NEXT_PUBLIC_ADSENSE_ENABLED=true` in environment variables
+2. Uncomment the `AdSenseVignetteManager` component in `src/app/layout.tsx`
+3. Uncomment the import in `src/app/layout.tsx`
+
+### Reactivation Steps:
+
+1. **Environment Setup:**
+   ```bash
+   # Add this to your .env file
+   NEXT_PUBLIC_ADSENSE_ENABLED=true
+   ```
+
+2. **Code Changes in layout.tsx:**
+   ```typescript
+   // Change from:
+   {/* Temporarily disabled: AdSenseVignetteManager - awaiting Google AdSense approval */}
+   {/* <AdSenseVignetteManager /> */}
+
+   // To:
+   <AdSenseVignetteManager />
+
+   // And change from:
+   // Temporarily disabled: import AdSenseVignetteManager from '@/components/ads/AdSenseVignetteManager';
+
+   // To:
+   import AdSenseVignetteManager from '@/components/ads/AdSenseVignetteManager';
+   ```
+
+3. **Google AdSense Requirements:**
+   - Ensure site is approved for AdSense
+   - Enable Vignette ads in AdSense dashboard
+   - Configure ad targeting and frequency settings
+
+## Features (When Enabled)
 
 - **Full-page interstitial ads** that overlay the entire page
 - **User consent required** - ads only show if user has given analytics consent

@@ -9,15 +9,19 @@ import { useAuth } from "@/components/auth/AuthProvider";
  * Loads AdSense Auto Ads script once and triggers SPA page updates to allow
  * Google to show vignette interstitials on page transitions for non-premium users.
  *
- * Features:
+ * STATUS: Temporarily disabled - awaiting Google AdSense approval due to "Low value content"
+ * To re-enable: Set NEXT_PUBLIC_ADSENSE_ENABLED=true in environment variables
+ *
+ * Features (when enabled):
  * - Shows full-page interstitial ads (Vignette) when navigating between pages
  * - Only displays for non-authenticated users and users without premium access
  * - Requires user consent for analytics (proxy for ad consent)
  * - Throttled to prevent ad spam (30 second minimum interval)
  * - Only runs on allowlisted routes: /stiri, /stiri/[slug], /sinteza-zilnica
  *
- * Requirements:
+ * Requirements (when re-enabling):
  * - Set NEXT_PUBLIC_ADSENSE_PUBLISHER_ID to your `ca-pub-XXXXXXXXXXXXXXX`.
+ * - Set NEXT_PUBLIC_ADSENSE_ENABLED=true in environment variables.
  * - Enable Vignette ads in AdSense Auto ads settings in Google AdSense dashboard.
  * - Users must give consent for analytics cookies to see ads.
  * - Premium users (subscription owners and trial users) are excluded.
@@ -31,6 +35,8 @@ export function AdSenseVignetteManager() {
   const { user, hasPremiumAccess, loading: authLoading } = useAuth();
 
   const publisherId = process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID;
+  // Temporarily disabled - awaiting Google AdSense approval due to "Low value content"
+  const isAdSenseEnabled = process.env.NEXT_PUBLIC_ADSENSE_ENABLED === 'true';
 
   const isAllowlistedRoute = useMemo(() => {
     if (!pathname) return false;
@@ -41,6 +47,8 @@ export function AdSenseVignetteManager() {
   }, [pathname]);
 
   const adsEnabled = useMemo(() => {
+    // Temporarily disabled - awaiting Google AdSense approval
+    if (!isAdSenseEnabled) return false;
     if (!publisherId) return false;
     if (!consentLoaded) return false;
     if (!hasAnalyticsConsent) return false;
@@ -49,7 +57,7 @@ export function AdSenseVignetteManager() {
     // Premium users include: subscription owners and users with active trial
     if (user && hasPremiumAccess) return false;
     return true;
-  }, [publisherId, consentLoaded, hasAnalyticsConsent, authLoading, user, hasPremiumAccess]);
+  }, [isAdSenseEnabled, publisherId, consentLoaded, hasAnalyticsConsent, authLoading, user, hasPremiumAccess]);
 
   const scriptLoadedRef = useRef(false);
   const lastPushTsRef = useRef(0);

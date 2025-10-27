@@ -18,7 +18,7 @@ import { RecaptchaProvider } from '@/components/auth/RecaptchaProvider';
 import { CategoriesProvider } from '@/contexts/CategoriesContext';
 import { Toaster } from 'react-hot-toast';
 import { PerformanceInitializer } from '@/components/optimizations/PerformanceInitializer';
-import AdSenseVignetteManager from '@/components/ads/AdSenseVignetteManager';
+// Temporarily disabled: import AdSenseVignetteManager from '@/components/ads/AdSenseVignetteManager';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro'),
@@ -236,7 +236,8 @@ export default function RootLayout({
               <CategoriesProvider>
               <NewsletterProvider>
               <GoogleAnalytics />
-              <AdSenseVignetteManager />
+              {/* Temporarily disabled: AdSenseVignetteManager - awaiting Google AdSense approval */}
+              {/* <AdSenseVignetteManager /> */}
               <PerformanceInitializer />
               <div className="flex flex-col min-h-screen">
                 <DisclaimerBanner />
