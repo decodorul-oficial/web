@@ -160,17 +160,20 @@ export function MobileMenu() {
                   </svg>
                   Acasă
                 </Link>
-                <Link 
-                  href="/stiri" 
-                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-brand-accent transition-colors" 
-                  onClick={() => setOpen(false)}
-                >
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="11" cy="11" r="8"/>
-                    <path d="M21 21l-4.35-4.35"/>
-                  </svg>
-                  Căutare Avansată
-                </Link>
+                {/* Căutare Avansată - Only for authenticated users with premium access */}
+                {isAuthenticated && hasPremiumAccess && (
+                  <Link
+                    href="/stiri"
+                    className="flex items-center gap-3 rounded-lg px-3 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-brand-accent transition-colors"
+                    onClick={() => setOpen(false)}
+                  >
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="11" cy="11" r="8"/>
+                      <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                    Căutare Avansată
+                  </Link>
+                )}
                 <Link 
                   href="/sinteza-zilnica" 
                   className="flex items-center gap-3 rounded-lg px-3 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-brand-accent transition-colors" 

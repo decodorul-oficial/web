@@ -523,14 +523,18 @@ export function Header() {
           </Link>
           <span className="text-gray-300 mx-2">|</span>
 
-          {/* Cautare Avansata */}
-          <Link
-            href={navItems[1].href}
-            className={`text-sm font-medium transition-colors hover:text-brand-info ${safePathname === navItems[1].href ? 'text-brand-info' : 'text-gray-600'}`}
-          >
-            {navItems[1].label}
-          </Link>
-          <span className="text-gray-300 mx-2">|</span>
+          {/* Cautare Avansata - Only for authenticated users with premium access */}
+          {isAuthenticated && hasPremiumAccess && (
+            <>
+              <Link
+                href={navItems[1].href}
+                className={`text-sm font-medium transition-colors hover:text-brand-info ${safePathname === navItems[1].href ? 'text-brand-info' : 'text-gray-600'}`}
+              >
+                {navItems[1].label}
+              </Link>
+              <span className="text-gray-300 mx-2">|</span>
+            </>
+          )}
 
           {/* Keep other links */}
           {navItems.slice(2).map((item, index) => {
