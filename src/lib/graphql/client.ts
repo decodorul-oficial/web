@@ -7,7 +7,7 @@ export type GraphQLClientFactoryOptions = {
 };
 
 const normalizeEndpoint = (endpoint?: string): string => {
-  const raw = endpoint ?? process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? 'https://decodorul-oficial-api.vercel.app/api/graphql';
+  const raw = endpoint ?? process.env.EXTERNAL_GRAPHQL_ENDPOINT ?? process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? 'https://decodorul-oficial-api.vercel.app/api/graphql';
   if (raw.startsWith('http')) {
     return raw;
   }

@@ -7,7 +7,14 @@ import { encryptPasswordServer } from '@/lib/crypto/passwordEncryption';
 
 export async function POST(req: NextRequest) {
   try {
-    const endpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'https://decodorul-oficial-api.vercel.app/api/graphql';
+    // Use environment variables to determine the correct external API endpoint
+    const browserEndpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || '/api/graphql';
+    const externalApiEndpoint = process.env.EXTERNAL_GRAPHQL_ENDPOINT || process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'https://decodorul-oficial-api.vercel.app/api/graphql';
+    
+    // If browser endpoint is relative (starts with /), use external API endpoint
+    // Otherwise, use the browser endpoint directly (for absolute URLs)
+    const endpoint = browserEndpoint.startsWith('/') ? externalApiEndpoint : browserEndpoint;
+    
     let body = await req.text();
 
     // Check if this is a signIn or signUp mutation and encrypt the password
@@ -61,7 +68,9 @@ export async function POST(req: NextRequest) {
         const opMatch = /\b(query|mutation)\s+(\w+)/.exec(body);
         const operationName = opMatch?.[2] ?? 'unknown';
         console.info('[GraphQL][S2S Debug][proxy] forwarding request', {
-          endpoint,
+          browserEndpoint,
+          externalApiEndpoint,
+          finalEndpoint: endpoint,
           operationName,
           hasInternalKey: Boolean(process.env.INTERNAL_API_KEY),
           internalKeyLength: process.env.INTERNAL_API_KEY?.length ?? 0,

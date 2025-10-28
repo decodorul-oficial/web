@@ -331,7 +331,8 @@ async function updateOrderStatus({
   rawData: Record<string, unknown>;
 }) {
   try {
-    const endpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'https://decodorul-oficial-api.vercel.app/api/graphql';
+    // Use external API endpoint for server-side requests (webhooks)
+    const endpoint = process.env.EXTERNAL_GRAPHQL_ENDPOINT || process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'https://decodorul-oficial-api.vercel.app/api/graphql';
     
     const mutation = `
       mutation UpdateOrderStatus($orderId: ID!, $status: String!, $transactionId: String, $amount: String, $currency: String, $rawData: JSON) {
