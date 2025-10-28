@@ -9,7 +9,7 @@ export function toURL(input: string): URL | null {
 }
 
 export function buildEndpointCandidates(rawInput?: string): string[] {
-  const input = rawInput ?? process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? 'https://decodorul-oficial-api.vercel.app';
+  const input = rawInput ?? process.env.EXTERNAL_GRAPHQL_ENDPOINT ?? process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? 'https://decodorul-oficial-api.vercel.app';
   const u = toURL(input);
   if (!u) return [input];
 
