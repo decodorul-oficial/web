@@ -234,14 +234,16 @@ function LoginForm() {
               </div>
             </div>
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Nu ai cont?{' '}
-                <a href="/signup" className="font-medium text-brand-info hover:text-brand-highlight">
-                  Înregistrează-te aici
-                </a>
-              </p>
-            </div>
+            {process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_SIGNUP_ENABLED === 'true' ? (
+              <div className="mt-6 text-center">
+                <p className="text-sm text-gray-600">
+                  Nu ai cont?{' '}
+                  <a href="/signup" className="font-medium text-brand-info hover:text-brand-highlight">
+                    Înregistrează-te aici
+                  </a>
+                </p>
+              </div>
+            ) : null}
 
             <div className="mt-4 text-center">
               <a

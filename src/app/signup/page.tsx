@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase/client';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 export default function SignupPage() {
+  const isSignupDisabledInProd = (process.env.NODE_ENV === 'production') && (process.env.NEXT_PUBLIC_SIGNUP_ENABLED !== 'true');
   const { isAuthenticated, signUp } = useAuth();
   const { executeRecaptcha, isLoaded: recaptchaLoaded, error: recaptchaError } = useRecaptchaContext();
   const router = useRouter();
@@ -131,6 +132,28 @@ export default function SignupPage() {
       setError(`Eroare cu LinkedIn: ${error.message}`);
     }
   };
+
+  if (isSignupDisabledInProd) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="container-responsive flex-1 py-8">
+          <div className="max-w-md mx-auto">
+            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 text-center">
+              <h1 className="text-xl font-semibold mb-2">Înregistrarea este dezactivată</h1>
+              <p className="text-gray-600">Momentan nu acceptăm înregistrări noi.</p>
+              <div className="mt-6 text-center">
+                <a href="/login" className="font-medium text-brand-info hover:text-brand-highlight">
+                  Mergi la autentificare
+                </a>
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
