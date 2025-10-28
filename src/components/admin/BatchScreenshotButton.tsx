@@ -2,8 +2,6 @@
 
 import React, { useState } from 'react';
 import { NewsItem } from '@/features/news/types';
-import { useMobileScreenshot } from '@/hooks/useMobileScreenshot';
-import { extractParteaFromFilename } from '@/lib/utils/monitorulOficial';
 
 interface BatchScreenshotButtonProps {
   news: NewsItem[];
@@ -20,6 +18,7 @@ interface NewsContent {
   type?: string;
   monitorulOficial?: string;
   moNumberDate?: string;
+  author?: string;
 }
 
 export function BatchScreenshotButton({ news, filterToday = true }: BatchScreenshotButtonProps) {
@@ -31,7 +30,97 @@ export function BatchScreenshotButton({ news, filterToday = true }: BatchScreens
     total: 0
   });
 
-  const { isIOS } = useMobileScreenshot();
+  // Simple iOS detection without hook
+  const isIOS = typeof window !== 'undefined' && 
+    (/iPad|iPhone|iPod/.test(navigator.userAgent) || 
+     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+  
+  // Simplified screenshot function
+  const captureAndDownloadBatch = async (element: HTMLElement, filename: string = 'instagram-post') => {
+    try {
+      console.log('📸 Starting captureAndDownloadBatch for:', filename);
+      
+      // Wait a bit for rendering
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Wait for fonts
+      if ('fonts' in document) {
+        try {
+          await document.fonts.ready;
+          console.log('✅ Fonts loaded');
+        } catch (error) {
+          console.warn('Font loading failed:', error);
+        }
+      }
+
+      // Import html2canvas
+      console.log('📦 Importing html2canvas...');
+      const html2canvas = (await import('html2canvas')).default;
+      console.log('✅ html2canvas imported');
+
+      // Create canvas
+      console.log('🎨 Creating canvas...');
+      const canvas = await html2canvas(element, {
+        backgroundColor: '#0B132B',
+        scale: 1, // Use 1x scale for better compatibility
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+        imageTimeout: 10000,
+        ignoreElements: (el) => {
+          return el.classList.contains('animate-spin');
+        }
+      });
+      console.log('✅ Canvas created');
+
+      // Convert to blob
+      console.log('🔄 Converting to blob...');
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            console.log('✅ Blob created, size:', blob.size);
+            resolve(blob);
+          } else {
+            reject(new Error('Failed to create image blob'));
+          }
+        }, 'image/png', 0.9);
+      });
+
+      // Create download
+      console.log('🔗 Creating download...');
+      const url = URL.createObjectURL(blob);
+      const finalFilename = `${filename}-${new Date().toISOString().slice(0, 10)}.png`;
+      console.log('📁 Final filename:', finalFilename);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = finalFilename;
+      link.style.display = 'none';
+      
+      document.body.appendChild(link);
+      console.log('🔗 Link added to DOM');
+      
+      // Trigger download
+      link.click();
+      console.log('✅ Download triggered');
+      
+      // Cleanup
+      setTimeout(() => {
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+        URL.revokeObjectURL(url);
+        console.log('🧹 Cleanup completed');
+      }, 1000);
+      
+      return true;
+    } catch (error) {
+      console.error('❌ Batch screenshot failed:', error);
+      return false;
+    }
+  };
 
   // Filter news for today if requested
   const getFilteredNews = () => {
@@ -50,20 +139,6 @@ export function BatchScreenshotButton({ news, filterToday = true }: BatchScreens
   };
 
   const generateCardHTML = (newsItem: NewsItem, index: number) => {
-    // Extract synthesis
-    const getSynthesis = () => {
-      if (typeof newsItem.content === 'object' && newsItem.content !== null) {
-        const content = newsItem.content as NewsContent;
-        return content.synthesis || content.summary || content.description || '';
-      }
-      return '';
-    };
-
-    const synthesis = getSynthesis();
-    const truncatedSynthesis = synthesis.length > 200 
-      ? synthesis.substring(0, 200) + '...' 
-      : synthesis;
-
     // Extract category
     const getCategory = () => {
       if (typeof newsItem.content === 'object' && newsItem.content !== null) {
@@ -75,178 +150,160 @@ export function BatchScreenshotButton({ news, filterToday = true }: BatchScreens
     };
 
     const category = getCategory();
-    const partea = extractParteaFromFilename(newsItem.filename) || 'Partea I';
 
-    // Extract publication info
-    const getPublicationInfo = () => {
+    // Extract author from content
+    const getAuthor = () => {
       if (typeof newsItem.content === 'object' && newsItem.content !== null) {
         const content = newsItem.content as NewsContent;
-        
-        if (content.monitorulOficial && content.monitorulOficial.trim()) {
-          return content.monitorulOficial.trim();
-        }
-        if (content.moNumberDate && content.moNumberDate.trim()) {
-          return content.moNumberDate.trim();
-        }
-        
-        if (newsItem.publicationDate) {
-          const date = new Date(newsItem.publicationDate);
-          return date.toLocaleDateString('ro-RO', { 
-            day: '2-digit', 
-            month: '2-digit', 
-            year: 'numeric' 
-          });
-        }
+        return content.author || 'Monitorul Oficial';
       }
-      return '';
+      return 'Monitorul Oficial';
     };
 
-    const publicationInfo = getPublicationInfo();
+    const author = getAuthor();
 
+    // Use exact same structure as InstagramPreview.tsx
     return `
-      <div style="
+      <div class="instagram-card" style="
         position: relative;
-        width: 400px;
-        height: 400px;
-        background: white;
+        width: 100%;
+        aspect-ratio: 1;
+        background-color: #0B132B;
         border-radius: 16px;
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         overflow: hidden;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
       ">
         
-        <!-- Background Gradient -->
-        <div style="
+        <!-- Background Gradient - Same as InstagramPreview -->
+        <div class="background-gradient" style="
           position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
+          inset: 0;
           background: linear-gradient(135deg, #0B132B 0%, #1C2541 50%, #3A506B 100%);
           opacity: 0.95;
         "></div>
         
-        <!-- Content Container -->
-        <div style="
+        <!-- Content Container - Same as InstagramPreview -->
+        <div class="content-container" style="
           position: relative;
           height: 100%;
           display: flex;
           flex-direction: column;
-          padding: 20px;
-          padding-bottom: 48px;
+          padding: 24px 55px;
         ">
           
-          <!-- Header -->
-          <div style="
+          <!-- Header - Same as InstagramPreview -->
+          <div class="header" style="
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 16px;
+            margin-bottom: 0px;
           ">
-            <!-- Publication Info -->
-            <div style="
-              display: flex;
+            <!-- Logo Container - Same as InstagramPreview -->
+            <div class="logo-container" style="
+              display: inline-flex;
               align-items: center;
-              gap: 8px;
-              flex: 1;
-              min-width: 0;
+              gap: 6px;
             ">
-              <div style="
-                width: 28px;
-                height: 28px;
-                background-color: white;
+              <div class="logo-wrapper" style="
+                width: 40px;
+                height: 40px;
+                background-color: #FFFFFF;
                 border-radius: 12px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+                display: grid;
+                place-items: center;
                 box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
                 flex-shrink: 0;
               ">
-                <span style="color: #0B132B; font-size: 10px; font-weight: bold;">📋</span>
-              </div>
-              <div style="
-                color: white;
-                font-size: 10px;
-                line-height: 1.2;
-                min-width: 0;
-              ">
-                ${publicationInfo ? `
-                  <div style="font-weight: 600; margin-bottom: 2px;">Monitorul Oficial</div>
-                  <div style="color: rgba(255, 255, 255, 0.8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${publicationInfo}</div>
-                ` : `
-                  <span style="font-weight: 600;">Monitorul Oficial</span>
-                `}
+                <span style="color: #0B132B; font-size: 16px; font-weight: bold;">📋</span>
               </div>
             </div>
             
-            <!-- Category Badge -->
+            <!-- Category Badge - Same as InstagramPreview -->
             ${category ? `
-              <div style="
+              <div class="category-badge" style="
                 background-color: rgba(255, 255, 255, 0.25);
-                color: white;
-                font-size: 10px;
-                padding: 4px 8px;
+                color: #FFFFFF;
+                font-size: 14px;
+                padding: 8px 16px;
                 border-radius: 20px;
                 font-weight: 600;
                 flex-shrink: 0;
-                margin-left: 8px;
               ">${category}</div>
             ` : ''}
           </div>
 
-          <!-- Main Content -->
-          <div style="
-            flex: 1;
+          <!-- Main Content - Same as InstagramPreview -->
+          <div class="main-content" style="
+            top: 10px;
+            position: relative;
+            flex: 0;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding-bottom: 32px;
           ">
-            <!-- Title -->
-            <h3 style="
-              color: white;
-              font-size: 16px;
+            <!-- Title - Same as InstagramPreview -->
+            <h1 class="title" style="
+              color: #FFFFFF;
+              font-size: 20px;
               font-weight: bold;
               line-height: 1.2;
-              margin: 0 0 12px 0;
-              display: -webkit-box;
-              -webkit-line-clamp: 3;
-              -webkit-box-orient: vertical;
+              margin-bottom: 12px;
+              padding-bottom: 10px;
               overflow: hidden;
-            ">${newsItem.title}</h3>
-            
-            <!-- Synthesis -->
-            ${truncatedSynthesis ? `
-              <p style="
-                color: rgba(255, 255, 255, 0.95);
-                font-size: 12px;
-                line-height: 1.6;
-                margin: 0;
-                display: -webkit-box;
-                -webkit-line-clamp: 3;
-                -webkit-box-orient: vertical;
-                overflow: hidden;
-              ">${truncatedSynthesis}</p>
-            ` : ''}
+              text-overflow: ellipsis;
+              display: block;
+              max-height: calc(1.3em * 4);
+              white-space: normal;
+            ">${newsItem.title}</h1>
           </div>
 
-          <!-- Footer -->
-          <div style="
+          <!-- Footer - Same as InstagramPreview -->
+          <div class="footer" style="
             margin-top: 16px;
             padding-top: 16px;
             border-top: 1px solid rgba(255, 255, 255, 0.25);
           ">
-            <div style="
+            <div class="footer-content" style="
               display: flex;
               align-items: center;
               justify-content: space-between;
               color: rgba(255, 255, 255, 0.8);
-              font-size: 10px;
+              font-size: 12px;
             ">
-              <span style="font-weight: 500;">SO: Monitorul Oficial ${partea}</span>
-              <span style="font-weight: 500;">#${index + 1}</span>
+              <div class="footer-left" style="
+                display: flex;
+                align-items: center;
+                gap: 4px;
+              ">
+                <span class="footer-icon" style="font-size: 16px;">📋</span>
+                <span class="footer-text" style="font-weight: 500;">${author}</span>
+              </div>
             </div>
           </div>
+
+          <!-- Decorative Elements - Same as InstagramPreview -->
+          <div class="decorative-element1" style="
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 48px;
+            height: 48px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+          "></div>
+          <div class="decorative-element2" style="
+            position: absolute;
+            bottom: 16px;
+            left: 8px;
+            width: 24px;
+            height: 24px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+          "></div>
         </div>
       </div>
     `;
@@ -254,56 +311,167 @@ export function BatchScreenshotButton({ news, filterToday = true }: BatchScreens
 
   const generateAndDownloadCard = async (newsItem: NewsItem, index: number): Promise<boolean> => {
     try {
-      // Create a temporary container
+      console.log(`🎨 Generating card for news ${newsItem.id} (${index + 1})`);
+      
+      // Create a temporary container with proper dimensions - same as AutoScreenshot
       const container = document.createElement('div');
       container.style.position = 'fixed';
       container.style.top = '-2000px';
       container.style.left = '0';
       container.style.zIndex = '-1';
-      container.innerHTML = generateCardHTML(newsItem, index);
+      container.style.width = '400px'; // Set a reasonable width
+      container.style.height = '400px'; // Set a reasonable height
       
+      console.log('📦 Container created');
+      
+      // Add CSS styles to match InstagramPreview.module.css
+      const style = document.createElement('style');
+      style.textContent = `
+        .instagram-card {
+          position: relative;
+          width: 100%;
+          aspect-ratio: 1;
+          background-color: #0B132B;
+          border-radius: 16px;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          overflow: hidden;
+        }
+        .background-gradient {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, #0B132B 0%, #1C2541 50%, #3A506B 100%);
+          opacity: 0.95;
+        }
+        .content-container {
+          position: relative;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          padding: 24px 55px;
+        }
+        .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 0px;
+        }
+        .logo-container {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .logo-wrapper {
+          width: 40px;
+          height: 40px;
+          background-color: #FFFFFF;
+          border-radius: 12px;
+          display: grid;
+          place-items: center;
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+          flex-shrink: 0;
+        }
+        .category-badge {
+          background-color: rgba(255, 255, 255, 0.25);
+          color: #FFFFFF;
+          font-size: 14px;
+          padding: 8px 16px;
+          border-radius: 20px;
+          font-weight: 600;
+          flex-shrink: 0;
+        }
+        .main-content {
+          top: 10px;
+          position: relative;
+          flex: 0;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+        .title {
+          color: #FFFFFF;
+          font-size: 20px;
+          font-weight: bold;
+          line-height: 1.2;
+          margin-bottom: 12px;
+          padding-bottom: 10px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: block;
+          max-height: calc(1.3em * 4);
+          white-space: normal;
+        }
+        .footer {
+          margin-top: 16px;
+          padding-top: 16px;
+          border-top: 1px solid rgba(255, 255, 255, 0.25);
+        }
+        .footer-content {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          color: rgba(255, 255, 255, 0.8);
+          font-size: 12px;
+        }
+        .footer-left {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+        .footer-icon {
+          font-size: 16px;
+        }
+        .footer-text {
+          font-weight: 500;
+        }
+        .decorative-element1 {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          width: 48px;
+          height: 48px;
+          background-color: rgba(255, 255, 255, 0.1);
+          border-radius: 50%;
+        }
+        .decorative-element2 {
+          position: absolute;
+          bottom: 16px;
+          left: 8px;
+          width: 24px;
+          height: 24px;
+          background-color: rgba(255, 255, 255, 0.1);
+          border-radius: 50%;
+        }
+      `;
+      document.head.appendChild(style);
+      
+      container.innerHTML = generateCardHTML(newsItem, index);
       document.body.appendChild(container);
       
-      // Wait for rendering
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Wait for rendering - same as AutoScreenshot
+      await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Dynamic import html2canvas
-      const html2canvas = (await import('html2canvas')).default;
-      
-      // Capture the card
+      // Get the card element and add data-screenshot-target attribute
       const cardElement = container.firstElementChild as HTMLElement;
-      const canvas = await html2canvas(cardElement, {
-        backgroundColor: '#0B132B',
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        width: 400,
-        height: 400,
-        imageTimeout: 15000,
+      cardElement.setAttribute('data-screenshot-target', newsItem.id);
+      
+      console.log(`Card element created for ${newsItem.id}, dimensions:`, {
+        width: cardElement.offsetWidth,
+        height: cardElement.offsetHeight
       });
-
-      // Convert to blob and download
-      const imageBlob = await new Promise<Blob>((resolve) => {
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-        }, 'image/png', 1.0);
-      });
-
-      // Create download
-      const url = URL.createObjectURL(imageBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `instagram-${newsItem.id}-${new Date().toISOString().slice(0, 10)}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      
+      // Use the batch screenshot function for consistent behavior
+      const result = await captureAndDownloadBatch(cardElement, `instagram-${newsItem.id}`);
+      
+      console.log(`Screenshot result for ${newsItem.id}:`, result);
       
       // Cleanup
       document.body.removeChild(container);
+      // Remove the added style element
+      if (document.head.contains(style)) {
+        document.head.removeChild(style);
+      }
       
-      return true;
+      return result;
     } catch (error) {
       console.error(`Failed to generate card for news ${newsItem.id}:`, error);
       return false;
@@ -311,71 +479,148 @@ export function BatchScreenshotButton({ news, filterToday = true }: BatchScreens
   };
 
   const handleBatchScreenshot = async () => {
-    const filteredNews = getFilteredNews();
+    console.log('🚀 handleBatchScreenshot called');
+    alert('🚀 handleBatchScreenshot called - check console for details');
     
-    if (filteredNews.length === 0) {
-      alert('Nu există știri pentru ziua curentă!');
-      return;
-    }
-
-    if (!confirm(`Vrei să generezi ${filteredNews.length} imagini pentru știrile ${filterToday ? 'din ziua curentă' : 'selectate'}? Acest proces poate dura câteva minute.`)) {
-      return;
-    }
-
-    setIsProcessing(true);
-    setCurrentIndex(0);
-    setResults({ success: 0, failed: 0, total: filteredNews.length });
-
-    for (let i = 0; i < filteredNews.length; i++) {
-      setCurrentIndex(i + 1);
+    try {
+      const filteredNews = getFilteredNews();
+      console.log('📊 Filtered news:', filteredNews.length);
       
-      const success = await generateAndDownloadCard(filteredNews[i], i);
-      
-      setResults(prev => ({
-        ...prev,
-        success: prev.success + (success ? 1 : 0),
-        failed: prev.failed + (success ? 0 : 1)
-      }));
+      if (filteredNews.length === 0) {
+        alert('Nu există știri pentru ziua curentă!');
+        return;
+      }
 
-      // Small delay between screenshots to avoid overwhelming the browser
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (!confirm(`Vrei să generezi ${filteredNews.length} imagini pentru știrile ${filterToday ? 'din ziua curentă' : 'selectate'}? Acest proces poate dura câteva minute.`)) {
+        console.log('❌ User cancelled');
+        return;
+      }
+
+      console.log('✅ User confirmed, starting processing...');
+      setIsProcessing(true);
+      setCurrentIndex(0);
+      setResults({ success: 0, failed: 0, total: filteredNews.length });
+
+      let successCount = 0;
+      let failedCount = 0;
+
+      for (let i = 0; i < filteredNews.length; i++) {
+        setCurrentIndex(i + 1);
+        
+        console.log(`Processing news ${i + 1}/${filteredNews.length}: ${filteredNews[i].id}`);
+        
+        const success = await generateAndDownloadCard(filteredNews[i], i);
+        
+        if (success) {
+          successCount++;
+          console.log(`✅ Success for news ${filteredNews[i].id}`);
+        } else {
+          failedCount++;
+          console.log(`❌ Failed for news ${filteredNews[i].id}`);
+        }
+        
+        setResults(prev => ({
+          ...prev,
+          success: successCount,
+          failed: failedCount
+        }));
+
+        // Small delay between screenshots to avoid overwhelming the browser
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      setIsProcessing(false);
+      alert(`Proces finalizat! Succes: ${successCount}, Eșuate: ${failedCount}`);
+    } catch (error) {
+      console.error('❌ Error in handleBatchScreenshot:', error);
+      setIsProcessing(false);
+      alert(`Eroare: ${error instanceof Error ? error.message : 'Eroare necunoscută'}`);
     }
-
-    setIsProcessing(false);
-    alert(`Proces finalizat! Succes: ${results.success + (results.total > 0 ? 1 : 0)}, Eșuate: ${results.failed}`);
   };
 
   const filteredNews = getFilteredNews();
   const todayCount = filteredNews.length;
 
   const handleAllScreenshots = async () => {
-    if (news.length === 0) return;
+    console.log('🚀 handleAllScreenshots called');
+    alert('🚀 handleAllScreenshots called - check console for details');
     
-    if (!confirm(`Vrei să generezi ${news.length} imagini pentru toate știrile? Acest proces poate dura câteva minute.`)) {
+    console.log('📊 News length:', news.length);
+    if (news.length === 0) {
+      console.log('❌ No news available, returning');
       return;
     }
+    
+    console.log('❓ Showing confirm dialog...');
+    
+    // Try a more explicit confirmation approach
+    const message = `Vrei să generezi ${news.length} imagini pentru toate știrile? Acest proces poate dura câteva minute.`;
+    console.log('📝 Confirm message:', message);
+    
+    // Test if confirm is working properly
+    console.log('🔍 Testing confirm function...');
+    const testConfirm = window.confirm('Test dialog - apasă OK pentru a continua');
+    console.log('🧪 Test confirm result:', testConfirm);
+    
+    if (!testConfirm) {
+      console.log('❌ Test confirm failed, user cancelled test');
+      alert('Test confirm failed - user cancelled test dialog');
+      return;
+    }
+    
+    console.log('✅ Test confirm passed, showing main confirm...');
+    const confirmed = window.confirm(message);
+    console.log('✅ Confirm result:', confirmed);
+    console.log('✅ Confirm type:', typeof confirmed);
+    
+    if (!confirmed) {
+      console.log('❌ User cancelled, returning');
+      alert('Procesul a fost anulat de utilizator');
+      return;
+    }
+    
+    console.log('✅ User confirmed, proceeding...');
 
+    console.log('🔄 Setting processing state...');
     setIsProcessing(true);
     setCurrentIndex(0);
     setResults({ success: 0, failed: 0, total: news.length });
 
+    let successCount = 0;
+    let failedCount = 0;
+
+    console.log(`🔄 Starting loop for ${news.length} news items...`);
     for (let i = 0; i < news.length; i++) {
+      console.log(`🔄 Processing news ${i + 1}/${news.length}: ${news[i].id}`);
       setCurrentIndex(i + 1);
       
+      console.log(`🎨 Calling generateAndDownloadCard for news ${news[i].id}...`);
       const success = await generateAndDownloadCard(news[i], i);
+      console.log(`📊 generateAndDownloadCard result for ${news[i].id}:`, success);
+      
+      if (success) {
+        successCount++;
+        console.log(`✅ Success for news ${news[i].id}`);
+      } else {
+        failedCount++;
+        console.log(`❌ Failed for news ${news[i].id}`);
+      }
       
       setResults(prev => ({
         ...prev,
-        success: prev.success + (success ? 1 : 0),
-        failed: prev.failed + (success ? 0 : 1)
+        success: successCount,
+        failed: failedCount
       }));
 
+      console.log(`⏳ Waiting 500ms before next item...`);
       // Small delay between screenshots
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
+    console.log('🏁 Loop completed, setting processing to false...');
     setIsProcessing(false);
-    alert(`Proces finalizat! Succes: ${results.success + (results.total > 0 ? 1 : 0)}, Eșuate: ${results.failed}`);
+    console.log(`🏁 Final results - Success: ${successCount}, Failed: ${failedCount}`);
+    alert(`Proces finalizat! Succes: ${successCount}, Eșuate: ${failedCount}`);
   };
 
   return (
@@ -448,7 +693,7 @@ export function BatchScreenshotButton({ news, filterToday = true }: BatchScreens
       )}
 
       {/* Info */}
-      <div className="text-white/60 text-xs text-center">
+      <div className="text-gray-700 text-xs text-center">
         {filterToday 
           ? `${todayCount} știri din ziua curentă găsite`
           : `${todayCount} știri disponibile`

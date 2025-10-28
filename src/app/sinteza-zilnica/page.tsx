@@ -6,11 +6,13 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { getDailySynthesis } from '@/features/news/services/newsService';
 import { DailySynthesis } from '@/features/news/types';
-import { ChevronLeft, ChevronRight, AlertCircle, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, AlertCircle, Info, CheckCircle } from 'lucide-react';
 import OverlayBackdrop from '@/components/ui/OverlayBackdrop';
 import Link from 'next/link';
 import BusinessDayDatePicker from '@/components/ui/BusinessDayDatePicker';
 import { ShareButtons } from '@/components/ui/ShareButtons';
+import { CommentsSection } from '@/features/comments';
+import { CommentParentType } from '@/features/comments/types';
 
 // Funcții utilitare pentru gestionarea datelor
 const isWeekend = (date: Date): boolean => {
@@ -115,6 +117,12 @@ function SintezaZilnicaContent() {
   // Replaced custom datepicker with BusinessDayDatePicker
   const [showInfoToast, setShowInfoToast] = useState(false);
   const [autoRedirectInfo, setAutoRedirectInfo] = useState<string | null>(null);
+  // New state for the confirmation modal
+  const [showNewSynthesisModal, setShowNewSynthesisModal] = useState<{
+    visible: boolean;
+    currentDate: string;
+    previousDate: string;
+  } | null>(null);
 
   // Funcție helper pentru a găsi cea mai recentă zi cu sinteza disponibilă
   const findLatestDateWithSynthesis = useCallback(async (startDate: Date, maxDaysBack: number = 7): Promise<string | null> => {
@@ -153,6 +161,7 @@ function SintezaZilnicaContent() {
     const initializePage = async () => {
       let finalDate = toLocalDateString(today);
       let shouldCheckForSynthesis = false;
+      let isFromMenu = false; // Detectează dacă utilizatorul vine din meniu
       
       // Dacă există o dată în URL, verifică dacă este validă
       if (urlDate) {
@@ -171,12 +180,43 @@ function SintezaZilnicaContent() {
           finalDate = urlDate;
         }
       } else {
-        // Nu există dată în URL, verificăm automat pentru ziua curentă
+        // Nu există dată în URL - utilizatorul vine din meniu
+        isFromMenu = true;
         shouldCheckForSynthesis = true;
       }
       
-      // Verifică dacă există sinteza pentru data calculată (doar pentru ziua curentă sau când venim din erori)
+      // Verifică dacă există sinteza pentru data calculată
       if (shouldCheckForSynthesis) {
+        // Verifică mai întâi dacă există sinteză pentru ziua curentă (doar dacă venim din meniu)
+        if (isFromMenu && !isWeekend(today)) {
+          try {
+            const todayString = toLocalDateString(today);
+            const todayResponse = await getDailySynthesis({ date: todayString });
+            
+            if (todayResponse.getDailySynthesis) {
+              // Există sinteză pentru ziua curentă - afișează modalul de confirmare
+              const previousDay = getPreviousBusinessDay(today);
+              const previousDate = toLocalDateString(previousDay);
+              
+              setShowNewSynthesisModal({
+                visible: true,
+                currentDate: todayString,
+                previousDate: previousDate
+              });
+              return; // Nu setăm currentDate încă, așteptăm alegerea utilizatorului
+            }
+          } catch {
+            // Nu există sinteză pentru ziua curentă, continuăm cu logica normală
+          }
+        }
+        
+        // Dacă venim din meniu și nu există sinteză pentru ziua curentă, mergem direct la ziua anterioară
+        if (isFromMenu) {
+          const previousDay = getPreviousBusinessDay(today);
+          finalDate = toLocalDateString(previousDay);
+        }
+        
+        // Logica normală pentru găsirea sintezei
         const dateWithSynthesis = await findLatestDateWithSynthesis(parseLocalDate(finalDate));
         if (dateWithSynthesis && dateWithSynthesis !== finalDate) {
           const daysBack = Math.floor((parseLocalDate(finalDate).getTime() - parseLocalDate(dateWithSynthesis).getTime()) / (1000 * 60 * 60 * 24));
@@ -314,6 +354,21 @@ function SintezaZilnicaContent() {
 
   // (Datepicker logic replaced by BusinessDayDatePicker)
 
+  // Funcții pentru modalul de confirmare
+  const handleGoToNewSynthesis = () => {
+    if (showNewSynthesisModal) {
+      setCurrentDate(showNewSynthesisModal.currentDate);
+      setShowNewSynthesisModal(null);
+    }
+  };
+
+  const handleStayOnPreviousSynthesis = () => {
+    if (showNewSynthesisModal) {
+      setCurrentDate(showNewSynthesisModal.previousDate);
+      setShowNewSynthesisModal(null);
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
@@ -334,7 +389,7 @@ function SintezaZilnicaContent() {
           </ol>
         </nav>
 
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="width-full mx-auto space-y-8">
           {/* Header cu titlu și descriere */}
           <div className="text-center space-y-3">
             <div className="flex items-center justify-center gap-2">
@@ -399,6 +454,45 @@ function SintezaZilnicaContent() {
               <ChevronRight className="h-5 w-5" />
             </button>
           </div>
+
+          {/* Modal pentru confirmarea sintezei noi */}
+          {showNewSynthesisModal && (
+            <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4">
+              <OverlayBackdrop position="absolute" onClick={handleStayOnPreviousSynthesis} />
+              <div className="w-[min(40rem,100%)] rounded-lg border border-green-200 bg-white/90 backdrop-blur-md shadow-2xl">
+                <div className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="mt-1 rounded-full bg-green-50 p-3 text-green-600">
+                      <CheckCircle className="h-6 w-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        Sinteză nouă disponibilă!
+                      </h3>
+                      <p className="text-gray-700 mb-4">
+                        A fost publicată o nouă sinteză pentru ziua de azi ({formatDisplayDate(showNewSynthesisModal.currentDate)}). 
+                        Doriți să vizualizați sinteza nouă sau să rămâneți pe cea din ziua anterioară?
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <button
+                          onClick={handleGoToNewSynthesis}
+                          className="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors"
+                        >
+                          Vezi sinteza nouă
+                        </button>
+                        <button
+                          onClick={handleStayOnPreviousSynthesis}
+                          className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                        >
+                          Rămân pe cea anterioară
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Info toast (înlocuiește panourile albastre) */}
           {showInfoToast && (
@@ -535,6 +629,15 @@ function SintezaZilnicaContent() {
                     </div>
                   </footer>
                 )}
+
+                {/* Comments Section */}
+                <section className="mt-12 pt-8 border-t border-gray-200">
+                  <CommentsSection
+                    parentType={CommentParentType.SYNTHESIS}
+                    parentId={synthesis.id}
+                    className="width-full mx-auto"
+                  />
+                </section>
               </div>
             )}
 

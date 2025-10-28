@@ -13,6 +13,12 @@ import { SectionViewTracker } from '@/components/analytics/SectionViewTracker';
 const FontSizeControl = dynamic(() => import('@/components/ui/FontSizeControl').then(m => m.FontSizeControl), { ssr: false });
 import { NewsletterProvider } from '@/components/newsletter/NewsletterProvider';
 import { ZoomPrevention } from '@/components/ui/ZoomPrevention';
+import { AuthProvider } from '@/components/auth/AuthProvider';
+import { RecaptchaProvider } from '@/components/auth/RecaptchaProvider';
+import { CategoriesProvider } from '@/contexts/CategoriesContext';
+import { Toaster } from 'react-hot-toast';
+import { PerformanceInitializer } from '@/components/optimizations/PerformanceInitializer';
+// Temporarily disabled: import AdSenseVignetteManager from '@/components/ads/AdSenseVignetteManager';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro'),
@@ -225,20 +231,86 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-white text-gray-900 antialiased">
         <ConsentProvider>
-          <NewsletterProvider>
-            <GoogleAnalytics />
-            <div className="flex flex-col min-h-screen">
-              <DisclaimerBanner />
-              <NavigationInterceptor />
-              {children}
-              <CookieBanner />
-              <ScrollToTop />
-              <NavigationOverlay />
-              <FontSizeControl />
-              <ZoomPrevention />
-            </div>
-            <SectionViewTracker />
-          </NewsletterProvider>
+          <RecaptchaProvider siteKey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''}>
+            <AuthProvider>
+              <CategoriesProvider>
+              <NewsletterProvider>
+              <GoogleAnalytics />
+              {/* Temporarily disabled: AdSenseVignetteManager - awaiting Google AdSense approval */}
+              {/* <AdSenseVignetteManager /> */}
+              <PerformanceInitializer />
+              <div className="flex flex-col min-h-screen">
+                <DisclaimerBanner />
+                <NavigationInterceptor />
+                {children}
+                <CookieBanner />
+                <ScrollToTop />
+                <NavigationOverlay />
+                <FontSizeControl />
+                <ZoomPrevention />
+              </div>
+              <SectionViewTracker />
+              <Toaster 
+                position="top-right"
+                containerStyle={{
+                  top: 'calc(var(--header-height) + 16px)',
+                  right: '16px',
+                }}
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    background: 'linear-gradient(to right, rgba(56, 168, 165, 0.15), rgba(28, 37, 65, 0.15))',
+                    color: '#1C2541',
+                    border: '1px solid rgba(56, 168, 165, 0.4)',
+                    borderRadius: '0.5rem',
+                    padding: '12px 16px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    backdropFilter: 'blur(8px)',
+                  },
+                  success: {
+                    duration: 4000,
+                    style: {
+                      background: 'linear-gradient(to right, rgba(56, 168, 165, 0.15), rgba(28, 37, 65, 0.15))',
+                      color: '#1C2541',
+                      border: '1px solid rgba(56, 168, 165, 0.4)',
+                      borderRadius: '0.5rem',
+                      padding: '12px 16px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                      backdropFilter: 'blur(8px)',
+                    },
+                    iconTheme: {
+                      primary: '#38a8a5',
+                      secondary: '#1C2541',
+                    },
+                  },
+                  error: {
+                    duration: 4000,
+                    style: {
+                      background: 'linear-gradient(to right, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.15))',
+                      color: '#1C2541',
+                      border: '1px solid rgba(239, 68, 68, 0.4)',
+                      borderRadius: '0.5rem',
+                      padding: '12px 16px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                      backdropFilter: 'blur(8px)',
+                    },
+                    iconTheme: {
+                      primary: '#EF4444',
+                      secondary: '#1C2541',
+                    },
+                  },
+                }}
+              />
+              </NewsletterProvider>
+            </CategoriesProvider>
+          </AuthProvider>
+          </RecaptchaProvider>
         </ConsentProvider>
       </body>
     </html>

@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useNewsletter } from '@/features/newsletter/hooks/useNewsletter';
 import { UNSUBSCRIBE_REASONS, UnsubscribeReason } from '@/features/newsletter/types';
 import { resetNewsletterTracking } from '@/lib/utils/newsletterTracking';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { UserService } from '@/features/user/services/userService';
 
 interface UnsubscribeNewsletterFormProps {
   initialEmail?: string;
@@ -16,8 +18,10 @@ export const UnsubscribeNewsletterForm = ({ initialEmail }: UnsubscribeNewslette
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   
   const { unsubscribe, success, clearMessages } = useNewsletter();
+  const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
     if (success) {
@@ -27,6 +31,30 @@ export const UnsubscribeNewsletterForm = ({ initialEmail }: UnsubscribeNewslette
       setIsProcessing(false);
     }
   }, [success]);
+
+  // Auto-populate email if user is authenticated and subscribed to newsletter
+  useEffect(() => {
+    const fetchUserProfileAndAutoFill = async () => {
+      // Only proceed if user is authenticated, no initial email is provided, and email field is empty
+      if (!isAuthenticated || !user || initialEmail || email) {
+        return;
+      }
+
+      setIsLoadingProfile(true);
+      try {
+        const profile = await UserService.getCurrentUserProfile();
+        if (profile && profile.isNewsletterSubscribed && profile.email) {
+          setEmail(profile.email);
+        }
+      } catch (error) {
+        console.error('Error fetching user profile for auto-fill:', error);
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+
+    fetchUserProfileAndAutoFill();
+  }, [isAuthenticated, user, initialEmail, email]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,8 +97,8 @@ export const UnsubscribeNewsletterForm = ({ initialEmail }: UnsubscribeNewslette
     return (
       <div className="bg-white rounded-lg shadow-lg p-8">
         <div className="text-center">
-          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
-            <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-brand-info/10 mb-6">
+            <svg className="h-8 w-8 text-brand-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
@@ -83,17 +111,17 @@ export const UnsubscribeNewsletterForm = ({ initialEmail }: UnsubscribeNewslette
             Te-ai dezabonat cu succes de la newsletter-ul nostru. Nu vei mai primi email-uri de la noi.
           </p>
           
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <p className="text-sm text-blue-700">
+          <div className="bg-brand-info/10 border border-brand-info/20 rounded-lg p-4 mb-6">
+            <p className="text-sm text-brand-info">
               <strong>Email:</strong> {email}
             </p>
             {reason && reason !== 'Alte motive' && (
-              <p className="text-sm text-blue-700 mt-1">
+              <p className="text-sm text-brand-info mt-1">
                 <strong>Motiv:</strong> {reason}
               </p>
             )}
             {reason === 'Alte motive' && customReason && (
-              <p className="text-sm text-blue-700 mt-1">
+              <p className="text-sm text-brand-info mt-1">
                 <strong>Motiv:</strong> {customReason}
               </p>
             )}
@@ -102,7 +130,7 @@ export const UnsubscribeNewsletterForm = ({ initialEmail }: UnsubscribeNewslette
           <div className="space-y-3">
             <a
               href="/"
-              className="block w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+              className="block w-full bg-brand-info text-white py-2 px-4 rounded-md hover:bg-brand-info/80 transition-colors"
             >
               Înapoi la Pagina Principală
             </a>
@@ -134,16 +162,26 @@ export const UnsubscribeNewsletterForm = ({ initialEmail }: UnsubscribeNewslette
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
             Adresa de email *
           </label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="exemplu@email.com"
-            required
-            disabled={isProcessing}
-          />
+          <div className="relative">
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-info focus:border-brand-info"
+              placeholder={isLoadingProfile ? "Se încarcă..." : "exemplu@email.com"}
+              required
+              disabled={isProcessing || isLoadingProfile}
+            />
+            {isLoadingProfile && (
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                <svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Reason Selection */}
@@ -155,7 +193,7 @@ export const UnsubscribeNewsletterForm = ({ initialEmail }: UnsubscribeNewslette
             id="reason"
             value={reason}
             onChange={(e) => handleReasonChange(e.target.value as UnsubscribeReason)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-info focus:border-brand-info"
             required
             disabled={isProcessing}
           >
@@ -179,7 +217,7 @@ export const UnsubscribeNewsletterForm = ({ initialEmail }: UnsubscribeNewslette
               value={customReason}
               onChange={(e) => setCustomReason(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-info focus:border-brand-info"
               placeholder="Te rugăm să ne spui de ce te dezabonezi..."
               required
               disabled={isProcessing}
@@ -246,7 +284,7 @@ export const UnsubscribeNewsletterForm = ({ initialEmail }: UnsubscribeNewslette
       <div className="mt-6 text-center">
         <a
           href="/"
-          className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+          className="text-brand-info hover:text-brand-info/80 text-sm font-medium"
         >
           ← Înapoi la Pagina Principală
         </a>

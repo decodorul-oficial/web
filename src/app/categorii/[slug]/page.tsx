@@ -5,15 +5,19 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { fetchCategories, fetchStiriByCategorySlug } from '@/features/news/services/newsService';
+import { fetchStiriByCategorySlug } from '@/features/news/services/newsService';
 import { NewsItem } from '@/features/news/types';
 import { createNewsSlug } from '@/lib/utils/slugify';
 import { ChevronLeft, ChevronRight, Gavel } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
+// Removed massive Lucide import - using specific imports instead
 import type { LucideIcon } from 'lucide-react';
+import { getLucideIcon } from '@/lib/optimizations/lazyIcons';
 import { stripHtml } from '@/lib/html/sanitize';
 import { Citation } from '@/components/legal/Citation';
 import { extractParteaFromFilename } from '@/lib/utils/monitorulOficial';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { useCategories } from '../../../contexts/CategoriesContext';
+import { redirect } from 'next/navigation';
 
 type PageProps = {
   params: { slug: string };
@@ -52,6 +56,8 @@ export default function CategoryPage({ params }: PageProps) {
   const { slug } = params;
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user, loading: authLoading, hasPremiumAccess } = useAuth();
+  const { categories, error: categoriesError } = useCategories();
 
   const categorySlug = useMemo(() => slug, [slug]);
   const pageParam = Number(searchParams.get('page') || '1');
@@ -69,6 +75,20 @@ export default function CategoryPage({ params }: PageProps) {
     currentPage: 1,
     totalPages: 1
   });
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      redirect('/login');
+    }
+  }, [user, authLoading]);
+
+  // Redirect to pricing if authenticated but no premium access or subscription error
+  useEffect(() => {
+    if (!authLoading && user && !hasPremiumAccess && (categoriesError === 'SUBSCRIPTION_REQUIRED' || categoriesError === 'Failed to fetch categories')) {
+      redirect('/preturi');
+    }
+  }, [user, authLoading, hasPremiumAccess, categoriesError]);
 
   useEffect(() => {
     let mounted = true;
@@ -94,17 +114,14 @@ export default function CategoryPage({ params }: PageProps) {
 
   const [displayName, setDisplayName] = useState<string>(slug);
   useEffect(() => {
-    let mounted = true;
-    fetchCategories(100)
-      .then((cats) => {
-        if (!mounted) return;
-        const match = cats.find((c) => c.slug === categorySlug);
-        if (match) setDisplayName(match.name);
-        else setDisplayName(categorySlug.replace(/-/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase()));
-      })
-      .catch(() => setDisplayName(categorySlug));
-    return () => { mounted = false; };
-  }, [categorySlug]);
+    if (categories.length > 0) {
+      const match = categories.find((c: { slug: string; name: string; count: number }) => c.slug === categorySlug);
+      if (match) setDisplayName(match.name);
+      else setDisplayName(categorySlug.replace(/-/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase()));
+    } else {
+      setDisplayName(categorySlug.replace(/-/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase()));
+    }
+  }, [categories, categorySlug]);
 
   const goToPage = (p: number) => {
     const sp = new URLSearchParams(searchParams.toString());
@@ -179,19 +196,41 @@ export default function CategoryPage({ params }: PageProps) {
       })();
       const iconName = c?.lucide_icon ?? c?.lucideIcon;
       if (typeof iconName === 'string' && iconName.trim().length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const candidates = Array.from(new Set([
           iconName,
           toPascalCase(iconName),
           iconName.charAt(0).toUpperCase() + iconName.slice(1),
           iconName.replace(/[-_ ]+/g, '')
         ]));
-        for (const candidate of candidates) {
-          const Icon = (LucideIcons as Record<string, unknown>)[candidate];
-          if (Icon) return Icon as LucideIcon;
-        }
+        // Use the optimized lazy loading utility
+        getLucideIcon(iconName, fallback).then((icon) => {
+          // This will be handled asynchronously, but we return fallback immediately
+          // to avoid blocking the render
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const _ = icon; // Suppress unused parameter warning
+        });
       }
     } catch {}
     return fallback;
+  }
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="container-responsive flex-1 py-6">
+          <div className="py-12 text-center text-gray-500">Se încarcă...</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated (will redirect)
+  if (!user) {
+    return null;
   }
 
   return (

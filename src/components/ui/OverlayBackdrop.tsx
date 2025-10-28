@@ -19,7 +19,7 @@ export function OverlayBackdrop({
 }: OverlayBackdropProps) {
   return (
     <div
-      className={`${position} inset-0 ${zIndexClass || ''} bg-white/50 backdrop-blur-sm transition-all duration-200 ${className || ''}`}
+      className={`${position} inset-0 ${zIndexClass || ''} bg-brand-info/20 backdrop-blur-sm transition-all duration-200 ${className || ''}`}
       onClick={onClick}
       aria-hidden={ariaHidden}
     />

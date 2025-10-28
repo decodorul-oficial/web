@@ -1,8 +1,10 @@
 import { Metadata } from 'next';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { LatestNewsSectionWithParams } from '@/features/news/components/LatestNewsSectionWithParams';
+import { PersonalizedNewsSection } from '@/features/news/components/PersonalizedNewsSection';
 import { SessionCookieInitializer } from '@/components/session/SessionCookieInitializer';
+import { MostReadNewsProvider } from '@/features/news/contexts/MostReadNewsContext';
+import { LatestNewsProvider } from '@/features/news/contexts/LatestNewsContext';
 
 export const dynamic = 'force-dynamic';
 
@@ -120,9 +122,17 @@ export default function HomePage() {
       
       <Header />
       <SessionCookieInitializer />
-      <main className="container-responsive flex-1 py-6" role="main">
-          <LatestNewsSectionWithParams />
-      </main>
+      
+      <LatestNewsProvider>
+        <MostReadNewsProvider>
+          <main className="container-responsive flex-1 py-6" role="main">
+            
+
+            {/* Personalized News Section */}
+            <PersonalizedNewsSection />
+          </main>
+        </MostReadNewsProvider>
+      </LatestNewsProvider>
       <Footer />
     </div>
   );

@@ -76,7 +76,8 @@ export function IOSScreenshotButton({ news, className = '', compact = false }: I
       <button
         onClick={handleScreenshot}
         disabled={isCapturing}
-        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-purple-400 disabled:to-pink-400 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:scale-100 disabled:cursor-not-allowed text-lg"
+        className="mx-auto block bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-purple-400 disabled:to-pink-400 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all duration-300 disabled:cursor-not-allowed text-base min-w-[180px] max-w-xs"
+        style={{ width: 'fit-content' }}
       >
         <div className="flex items-center justify-center gap-3">
           {isCapturing ? (
@@ -129,17 +130,6 @@ export function IOSScreenshotButton({ news, className = '', compact = false }: I
         </div>
       )}
 
-      {/* Instructions */}
-      <div className="text-center text-gray-600 text-xs">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <p className="text-blue-700 font-medium">
-            📱 Simplificat pentru iPhone - click pentru descărcare directă
-          </p>
-          <p className="text-blue-600 text-xs mt-1">
-            Workflow: Salvează → Mergi la Photos → Postează pe Instagram
-          </p>
-        </div>
-      </div>
     </div>
   );
 }

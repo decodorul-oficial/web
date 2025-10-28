@@ -1,12 +1,11 @@
 'use client';
 
-import * as LucideIcons from 'lucide-react';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, TrendingUp, TrendingDown, Users, FileText, Eye, Calendar } from 'lucide-react';
 
 interface KPICardProps {
   title: string;
   value: number;
-  icon: keyof typeof LucideIcons;
+  icon: string;
   trend?: {
     value: number;
     isPositive: boolean;
@@ -14,8 +13,19 @@ interface KPICardProps {
   subtitle?: string;
 }
 
+// Simple icon mapping for common analytics icons
+const iconMap: Record<string, LucideIcon> = {
+  'users': Users,
+  'file-text': FileText,
+  'eye': Eye,
+  'calendar': Calendar,
+  'trending-up': TrendingUp,
+  'trending-down': TrendingDown,
+};
+
 export function KPICard({ title, value, icon, trend, subtitle }: KPICardProps) {
-  const IconComponent = LucideIcons[icon] as LucideIcon;
+  // Get the icon component from our mapping
+  const IconComponent = iconMap[icon] || FileText;
 
   const formatValue = (val: number): string => {
     if (val >= 1000000) {
@@ -39,7 +49,7 @@ export function KPICard({ title, value, icon, trend, subtitle }: KPICardProps) {
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 hover:border-gray-300">
       <div className="flex items-center justify-between mb-4">
         <div className="text-3xl">
-          {IconComponent && <IconComponent size={32} className="text-gray-600" />}
+          <IconComponent size={32} className="text-gray-600" />
         </div>
         {trend && (
           <div className={`flex items-center text-sm font-medium ${

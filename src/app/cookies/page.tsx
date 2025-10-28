@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { SessionCookieInitializer } from '@/components/session/SessionCookieInitializer';
+import { TableOfContents } from '@/components/legal/TableOfContents';
 
 export const metadata: Metadata = {
   title: 'Politica de Cookie-uri | Decodorul Oficial',
@@ -47,7 +48,13 @@ export default function CookiesPolicyPage() {
       <Header />
       <SessionCookieInitializer />
       <main className="flex-1" role="main">
-        <div className="container-responsive prose max-w-none py-10">
+        <div className="container-responsive">
+          {/* Table of Contents - positioned under header */}
+          <div className="mb-6">
+            <TableOfContents className="max-w-4xl mx-auto" />
+          </div>
+          
+          <div className="prose max-w-none py-10 max-w-4xl mx-auto">
           <header className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
               Politica de Cookie-uri
@@ -58,7 +65,7 @@ export default function CookiesPolicyPage() {
             </p>
           </header>
 
-          <section className="mb-8">
+          <section className="mb-8" id="ce-sunt-cookie-urile">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               1. Ce Sunt Cookie-urile?
             </h2>
@@ -67,7 +74,7 @@ export default function CookiesPolicyPage() {
             </p>
           </section>
 
-          <section className="mb-8">
+          <section className="mb-8" id="de-ce-folosim-cookie-uri">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               2. De Ce Folosim Cookie-uri?
             </h2>
@@ -83,7 +90,7 @@ export default function CookiesPolicyPage() {
             </ul>
           </section>
 
-          <section className="mb-8">
+          <section className="mb-8" id="tipurile-de-cookie-uri">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               3. Tipurile de Cookie-uri pe Care le Folosim
             </h2>
@@ -127,7 +134,7 @@ export default function CookiesPolicyPage() {
             </ul>
           </section>
 
-          <section className="mb-8">
+          <section className="mb-8" id="sessionstorage-si-stocarea-locala">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               3.4 SessionStorage și Stocarea Locală
             </h2>
@@ -148,7 +155,7 @@ export default function CookiesPolicyPage() {
             </div>
           </section>
 
-          <section className="mb-8">
+          <section className="mb-8" id="cookie-uri-newsletter-marketing">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               3.5 Cookie-uri de Newsletter și Marketing
             </h2>
@@ -169,7 +176,7 @@ export default function CookiesPolicyPage() {
             </div>
           </section>
 
-          <section className="mb-8">
+          <section className="mb-8" id="cookie-uri-terte-parti">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               4. Cookie-uri Terțe Părți și SessionStorage
             </h2>
@@ -178,13 +185,14 @@ export default function CookiesPolicyPage() {
             </p>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
               <li><strong>Google Analytics:</strong> pentru analiza traficului (cu consimțământul tău)</li>
+              <li><strong>Google AdSense (Auto ads, includând Vignette interstitials):</strong> afișează reclame pentru utilizatorii fără abonament activ sau trial, <strong>numai dacă îți exprimi consimțământul pentru cookie-uri non-esențiale</strong>. Poți controla consimțământul din bannerul de pe site.</li>
               <li><strong>Servicii de hosting:</strong> pentru funcționarea tehnică a site-ului</li>
               <li><strong>Servicii de securitate:</strong> pentru protecția împotriva atacurilor</li>
               <li><strong>SessionStorage local:</strong> folosit exclusiv de noi pentru persistența căutării, nu este partajat cu terți</li>
             </ul>
           </section>
 
-          <section className="mb-8">
+          <section className="mb-8" id="durata-de-viata-cookie-uri">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               5. Durata de Viață a Cookie-urilor și SessionStorage
             </h2>
@@ -197,7 +205,7 @@ export default function CookiesPolicyPage() {
             </ul>
           </section>
 
-          <section className="mb-8">
+          <section className="mb-8" id="cum-sa-gestionezi-cookie-uri">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               6. Cum să Gestionezi Cookie-urile și SessionStorage
             </h2>
@@ -226,21 +234,21 @@ export default function CookiesPolicyPage() {
               Site-ul nostru oferă un banner de consimțământ pentru cookie-urile non-esențiale. Pentru sessionStorage și cookie-uri poți:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
-              <li>Accepta toate cookie-urile (inclusiv analytics, mo_session și newsletter)</li>
-              <li>Respinge cookie-urile non-esențiale (analytics, mo_session și newsletter nu se vor seta)</li>
+              <li>Accepta toate cookie-urile (inclusiv analytics, mo_session, newsletter și AdSense)</li>
+              <li>Respinge cookie-urile non-esențiale (analytics, mo_session, newsletter și AdSense nu se vor seta)</li>
               <li>Modifica preferințele oricând din footer-ul site-ului</li>
-              <li>Revoca consimțământul pentru analytics (cookie-ul mo_session se va elimina automat)</li>
+              <li>Revoca consimțământul pentru analytics/marketing (cookie-ul mo_session se va elimina automat și AdSense nu va rula)</li>
               <li>Gestionează preferințele newsletter-ului din setările tale</li>
               <li><strong>SessionStorage:</strong> se șterge automat când închizi browserul (nu necesită consimțământ explicit)</li>
             </ul>
             <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mt-4 rounded">
               <p className="text-sm text-blue-700">
-                <strong>Notă importantă:</strong> Cookie-ul mo_session și Google Analytics sunt activate <strong>doar cu consimțământul tău explicit</strong>. Dacă respingi cookie-urile de analytics, acestea nu se vor seta deloc.
+                <strong>Notă importantă:</strong> Cookie-ul mo_session, Google Analytics și Google AdSense (inclusiv interstițiale Vignette) sunt activate <strong>doar cu consimțământul tău explicit</strong>. Dacă respingi cookie-urile de analytics/marketing, acestea nu se vor seta și reclamele nu vor fi afișate.
               </p>
             </div>
           </section>
 
-          <section className="mb-8">
+          <section className="mb-8" id="impactul-dezactivarii-cookie-uri">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               7. Impactul Dezactivării Cookie-urilor și SessionStorage
             </h2>
@@ -258,7 +266,7 @@ export default function CookiesPolicyPage() {
             </ul>
           </section>
 
-          <section className="mb-8">
+          <section className="mb-8" id="cookie-uri-confidentialitate">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               8. Cookie-uri, SessionStorage și Confidențialitatea
             </h2>
@@ -284,11 +292,11 @@ export default function CookiesPolicyPage() {
               <li>Personalizarea experienței de navigare</li>
             </ul>
             <p className="text-gray-700">
-              Acest cookie este setat <strong>doar cu consimțământul tău pentru analytics</strong> și se elimină automat când revoci consimțământul. Nu poate fi folosit pentru a te identifica personal.
+              Acest cookie este setat <strong>doar cu consimțământul tău pentru analytics</strong> și se elimină automat când revoci consimțământul. Nu poate fi folosit pentru a te identifica personal. <strong>Reclamele Google AdSense (inclusiv interstițiale de tip Vignette)</strong> vor rula doar dacă ți-ai exprimat consimțământul pentru cookie-uri non-esențiale.
             </p>
           </section>
 
-          <section className="mb-8">
+          <section className="mb-8" id="controlul-si-revocarea-consimtamantului">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               9. Controlul și Revocarea Consimțământului
             </h2>
@@ -304,7 +312,7 @@ export default function CookiesPolicyPage() {
             </ul>
           </section>
 
-          <section className="mb-8">
+          <section className="mb-8" id="actualizari-politica-cookie-uri">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               10. Actualizări ale Politicii de Cookie-uri și SessionStorage
             </h2>
@@ -313,7 +321,7 @@ export default function CookiesPolicyPage() {
             </p>
           </section>
 
-          <section className="mb-8">
+          <section className="mb-8" id="contact-cookie-uri">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               11. Contact pentru Cookie-uri și SessionStorage
             </h2>
@@ -327,7 +335,7 @@ export default function CookiesPolicyPage() {
             </ul>
           </section>
 
-          <section className="mb-8">
+          <section className="mb-8" id="informatii-suplimentare">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               12. Informații Suplimentare
             </h2>
@@ -336,7 +344,7 @@ export default function CookiesPolicyPage() {
             </p>
           </section>
 
-          <section className="mb-8">
+          <section className="mb-8" id="conformitatea-gdpr">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               13. Conformitatea GDPR
             </h2>
@@ -358,14 +366,15 @@ export default function CookiesPolicyPage() {
             </div>
           </section>
 
-          <section className="mb-8">
+          <section className="mb-8" id="pagini-legate">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               Pagini Legate
             </h2>
             <div className="grid md:grid-cols-2 gap-4">
               <a 
                 href="/privacy" 
-                className="block p-4 border border-gray-200 rounded-lg hover:border-brand-info hover:shadow-md transition-all"
+                className="block p-4 border border-gray-200 rounded-lg hover:border-brand-info hover:shadow-md transition-all no-underline"
+                style={{ textDecoration: 'none' }}
               >
                 <h3 className="font-semibold text-gray-800 mb-2">Politica de Confidențialitate</h3>
                 <p className="text-sm text-gray-600">
@@ -375,7 +384,8 @@ export default function CookiesPolicyPage() {
               
               <a 
                 href="/contact" 
-                className="block p-4 border border-gray-200 rounded-lg hover:border-brand-info hover:shadow-md transition-all"
+                className="block p-4 border border-gray-200 rounded-lg hover:border-brand-info hover:shadow-md transition-all no-underline"
+                style={{ textDecoration: 'none' }}
               >
                 <h3 className="font-semibold text-gray-800 mb-2">Contact</h3>
                 <p className="text-sm text-gray-600">
@@ -384,6 +394,7 @@ export default function CookiesPolicyPage() {
               </a>
             </div>
           </section>
+          </div>
         </div>
       </main>
       <Footer />

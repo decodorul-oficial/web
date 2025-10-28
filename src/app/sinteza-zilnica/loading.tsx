@@ -16,7 +16,7 @@ export default function Loading() {
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="width-full mx-auto space-y-8">
           {/* Header skeleton */}
           <div className="text-center space-y-4">
             <div className="h-10 w-64 bg-gray-200 rounded mx-auto animate-pulse"></div>

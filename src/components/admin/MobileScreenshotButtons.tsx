@@ -61,7 +61,7 @@ export function MobileScreenshotButtons({ news, className = '' }: MobileScreensh
       <button
         onClick={handleSaveToPhotos}
         disabled={isCapturing}
-        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-purple-400 disabled:to-pink-400 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:scale-100 disabled:cursor-not-allowed text-lg"
+        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-purple-400 disabled:to-pink-400 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all duration-300 transform disabled:scale-100 disabled:cursor-not-allowed text-lg"
       >
         <div className="flex items-center justify-center gap-3">
           {isCapturing ? (

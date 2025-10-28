@@ -10,6 +10,7 @@ import {
   Mail,
   Link as LinkIcon
 } from 'lucide-react';
+import { FavoriteButton } from './FavoriteButton';
 
 interface ShareButtonsProps {
   url: string;
@@ -167,16 +168,29 @@ export function ShareButtons({
 }
 
 // Floating Share Sidebar Component
-export function FloatingShareSidebar({ url, title, description }: Omit<ShareButtonsProps, 'variant' | 'className' | 'showLabels'>) {
+export function FloatingShareSidebar({ url, title, description, newsId }: Omit<ShareButtonsProps, 'variant' | 'className' | 'showLabels'> & { newsId?: string }) {
   return (
     <div className="hidden lg:block">
-      <ShareButtons
-        url={url}
-        title={title}
-        description={description}
-        variant="floating"
-        showLabels={false}
-      />
+      <div className="fixed left-4 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-2 bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-lg border border-gray-200">
+        {newsId && (
+          <div className="mb-2">
+            <FavoriteButton
+              newsId={newsId}
+              newsTitle={title}
+              size="md"
+              showLabel={false}
+              tooltipDirection="right"
+            />
+          </div>
+        )}
+        <ShareButtons
+          url={url}
+          title={title}
+          description={description}
+          variant="vertical"
+          showLabels={false}
+        />
+      </div>
     </div>
   );
 }

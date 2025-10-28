@@ -44,9 +44,12 @@ const SUBSCRIPTION_STATUS_QUERY = `
 export class NewsletterService {
   private static client = getGraphQLClient();
 
-  static async subscribe(input: SubscribeNewsletterInput): Promise<Partial<NewsletterSubscriber>> {
+  static async subscribe(input: SubscribeNewsletterInput, additionalHeaders?: Record<string, string>): Promise<Partial<NewsletterSubscriber>> {
     try {
-      const data = await this.client.request<{ subscribeNewsletter: Partial<NewsletterSubscriber> }>(
+      // Creează un client cu header-uri suplimentare dacă sunt furnizate
+      const client = additionalHeaders ? getGraphQLClient({ additionalHeaders }) : this.client;
+      
+      const data = await client.request<{ subscribeNewsletter: Partial<NewsletterSubscriber> }>(
         SUBSCRIBE_MUTATION,
         { input }
       );

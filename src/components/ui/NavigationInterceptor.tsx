@@ -32,6 +32,11 @@ export function NavigationInterceptor() {
   }, [HEAVY_QUERY_ALLOWLIST]);
 
   useEffect(() => {
+    // Check if we're in browser environment
+    if (typeof window === 'undefined' || typeof location === 'undefined') {
+      return;
+    }
+    
     let lastPathname = location.pathname;
 
     const onClickCapture = (e: MouseEvent) => {

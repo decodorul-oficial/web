@@ -39,10 +39,10 @@ export function CookieBanner() {
   return (
     <>
       {/* Backdrop consistent with global loader/info toast */}
-      <OverlayBackdrop zIndexClass="z-[60]" />
+      <OverlayBackdrop zIndexClass="z-[95]" />
       
       {/* Cookie Banner */}
-      <div className="fixed inset-x-0 bottom-0 z-[70] border-t bg-white/95 shadow-lg">
+      <div className="fixed inset-x-0 bottom-0 z-[100] border-t bg-white/95 shadow-lg">
         <div className="container-responsive py-4 text-sm">
           <p className="mb-3 text-gray-700">
             Folosim cookie-uri esențiale pentru funcționarea site-ului. Pentru cookie-uri de analiză (ex. trafic),

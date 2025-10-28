@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Minus, Plus, Type } from 'lucide-react';
+import { TrialStatusBanner } from './TrialStatusBanner';
 
 const FONT_SIZE_KEY = 'mo-font-size';
 const MIN_FONT_SIZE = 0.8;
@@ -214,6 +215,11 @@ export function FontSizeControl() {
       className={`fixed left-6 z-50 transition-all duration-500 ease-in-out`}
       style={{ bottom: `${bottomOffset}px` }}
     >
+      {/* Trial Status Banner - deasupra butonului de font */}
+      <div className="mb-3">
+        <TrialStatusBanner />
+      </div>
+      
       {/* Butonul principal pentru a afișa/ascunde controlul */}
       <button
         onClick={() => setIsVisible(!isVisible)}

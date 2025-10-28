@@ -11,6 +11,7 @@ export const GET_STIRI = gql`
         content
         filename
         viewCount
+        isFavorite
       }
       pagination {
         totalCount
@@ -115,6 +116,7 @@ export const SEARCH_STIRI_BY_KEYWORDS = gql`
         content
         filename
         viewCount
+        isFavorite
       }
       pagination {
         totalCount
@@ -131,6 +133,7 @@ export const SEARCH_STIRI_BY_KEYWORDS = gql`
 export const GET_DAILY_SYNTHESIS = gql`
   query GetDailySynthesis($date: String!) {
     getDailySynthesis(date: $date) {
+      id
       synthesisDate
       title
       content
@@ -224,6 +227,56 @@ export const GET_RELATED_STORIES = gql`
         relevanceScore
         relevanceReasons
       }
+    }
+  }
+`;
+
+// Query: getPersonalizedFeed - pentru feed-ul personalizat
+export const GET_PERSONALIZED_FEED = gql`
+  query GetPersonalizedFeed($limit: Int, $offset: Int, $orderBy: String, $orderDirection: String) {
+    getPersonalizedFeed(
+      limit: $limit
+      offset: $offset
+      orderBy: $orderBy
+      orderDirection: $orderDirection
+    ) {
+      stiri {
+        id
+        title
+        publicationDate
+        content
+        filename
+        viewCount
+        category
+      }
+      pagination {
+        totalCount
+        currentPage
+        totalPages
+        hasNextPage
+        hasPreviousPage
+      }
+    }
+  }
+`;
+
+// Query: getDocumentConnectionsByNews - conexiuni documente pentru o știre
+export const GET_DOCUMENT_CONNECTIONS_BY_NEWS = gql`
+  query GetDocConns($newsId: ID!, $relationType: String, $limit: Int, $offset: Int) {
+    getDocumentConnectionsByNews(
+      newsId: $newsId
+      relationType: $relationType
+      limit: $limit
+      offset: $offset
+    ) {
+      idConexiune
+      idStireSursa
+      cheieDocumentSursa
+      idStireTinta
+      cheieDocumentTinta
+      tipRelatie
+      confidenceScore
+      extractionMethod
     }
   }
 `;

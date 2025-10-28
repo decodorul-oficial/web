@@ -1,46 +1,79 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Eye } from 'lucide-react';
-import { fetchMostReadStiri } from '@/features/news/services/newsService';
+import React, { useEffect, useRef, useState } from 'react';
 import { stripHtml } from '@/lib/html/sanitize';
 import { PeriodSelector } from './PeriodSelector';
-import { type NewsViewPeriod } from '../config/periods';
 import { NewsItem } from '../types';
 import { createNewsSlug } from '@/lib/utils/slugify';
 import { trackNewsClick } from '../../../lib/analytics';
+import { useMostReadNews } from '../contexts/MostReadNewsContext';
 
 export function MostReadNewsSection() {
-  const [currentPeriod, setCurrentPeriod] = useState<NewsViewPeriod>('7d');
-  const [stiri, setStiri] = useState<NewsItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasError, setHasError] = useState(false);
+  const { stiri, isLoading, hasError, currentPeriod, setCurrentPeriod, refreshData } = useMostReadNews();
+  const scrollContainerRef = useRef<HTMLUListElement>(null);
+  const [isHovering, setIsHovering] = useState(false);
+  // Folosim un ref pentru a stoca valoarea acumulată a scroll-ului,
+  // pentru a nu declanșa re-renderizări.
+  const scrollAccumulator = useRef(0);
 
-  const loadNews = async (period: NewsViewPeriod) => {
-    setIsLoading(true);
-    setHasError(false);
-    try {
-      // Optimizat pentru a fi mai rapid
-      const result = await fetchMostReadStiri({ limit: 4, period });
-      setStiri(result.stiri || []);
-    } catch (error) {
-      console.error('Failed to load most read news:', error);
-      setHasError(true);
-      setStiri([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Load initial data
   useEffect(() => {
-    loadNews(currentPeriod);
-  }, [currentPeriod]);
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer || isLoading || hasError || stiri.length <= 4) return;
 
-  const handlePeriodChange = (period: NewsViewPeriod) => {
+    // Asigurăm clonarea elementelor o singură dată
+    if (scrollContainer.children.length === stiri.length) {
+        const originalItems = Array.from(scrollContainer.children);
+        originalItems.forEach(item => {
+            scrollContainer.appendChild(item.cloneNode(true));
+        });
+    }
+
+    let animationFrameId: number;
+
+    const scroll = () => {
+      // Dacă suntem în hover, nu facem scroll
+      if (isHovering) {
+        animationFrameId = requestAnimationFrame(scroll);
+        return;
+      }
+
+      // Verificăm dacă am ajuns la jumătatea containerului
+      if (scrollContainer.scrollTop >= scrollContainer.scrollHeight / 2) {
+        // Resetăm scrollTop și acumulatorul pentru un loop perfect
+        scrollContainer.scrollTop = 0;
+        scrollAccumulator.current = 0;
+      } else {
+        // --- AICI ESTE LOGICA NOUĂ ---
+        // 1. Definim viteza dorită (o valoare mică)
+        const scrollSpeed = 0.1;
+        
+        // 2. Adăugăm viteza la acumulator
+        scrollAccumulator.current += scrollSpeed;
+        
+        // 3. Aplicăm valoarea acumulată la scrollTop
+        scrollContainer.scrollTop = scrollAccumulator.current;
+      }
+      animationFrameId = requestAnimationFrame(scroll);
+    };
+
+    animationFrameId = requestAnimationFrame(scroll);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      // NU resetăm acumulatorul la cleanup pentru a păstra poziția
+      // scrollAccumulator.current = 0;
+      // Curățăm elementele clonate
+      while (scrollContainer.children.length > stiri.length) {
+          scrollContainer.removeChild(scrollContainer.lastChild!);
+      }
+    };
+  }, [isLoading, hasError, isHovering, stiri.length]);
+
+
+  const handlePeriodChange = (period: typeof currentPeriod) => {
     setCurrentPeriod(period);
-    loadNews(period);
   };
 
   const handleNewsClick = (news: NewsItem) => {
@@ -51,7 +84,6 @@ export function MostReadNewsSection() {
     if (!content) return undefined;
     try {
       const c = content as Record<string, unknown>;
-      // Prioritizăm body-ul pentru a afișa conținutul complet al știrii
       const raw = c.body || c.summary || c.text || (typeof c === 'string' ? c : undefined);
       return typeof raw === 'string' ? stripHtml(raw) : undefined;
     } catch {
@@ -71,9 +103,6 @@ export function MostReadNewsSection() {
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
           Cele mai citite
-          {/* <span className="ml-2 text-xs font-normal text-gray-400">
-            ({currentConfig.labelRo.toLowerCase()})
-          </span> */}
         </h3>
         <PeriodSelector currentPeriod={currentPeriod} onPeriodChange={handlePeriodChange} />
       </div>
@@ -99,7 +128,7 @@ export function MostReadNewsSection() {
           </div>
           <p className="text-sm text-gray-500 mb-2">Nu s-au putut încărca știrile</p>
           <button 
-            onClick={() => loadNews(currentPeriod)}
+            onClick={refreshData}
             className="text-xs text-brand-info hover:underline"
           >
             Încearcă din nou
@@ -120,7 +149,15 @@ export function MostReadNewsSection() {
           </p>
         </div>
       ) : (
-        <ul className="space-y-4">
+        <ul 
+          ref={scrollContainerRef}
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+          className="h-96 space-y-4 overflow-y-auto scroll-behavior-smooth [scrollbar-width:none] [-ms-overflow-style:none] hover:[-webkit-scrollbar:thin] hover:[-webkit-scrollbar-thumb-color:gray-300] hover:[-webkit-scrollbar-track-color:gray-100]"
+          style={{ 
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
           {stiri.map((n) => (
             <li key={n.id} className="flex items-start gap-3">
               <div className="flex flex-col items-center">

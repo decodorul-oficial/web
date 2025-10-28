@@ -3,6 +3,7 @@ import { GraphQLClient } from 'graphql-request';
 export type GraphQLClientFactoryOptions = {
   endpoint?: string;
   getAuthToken?: () => Promise<string | undefined> | string | undefined;
+  additionalHeaders?: Record<string, string>;
 };
 
 const normalizeEndpoint = (endpoint?: string): string => {
@@ -27,13 +28,18 @@ export function getGraphQLClient(options?: GraphQLClientFactoryOptions): GraphQL
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Adaugă header-uri suplimentare (ex: X-Captcha-Token)
+    if (options?.additionalHeaders) {
+      Object.assign(headers, options.additionalHeaders);
+    }
 
-    // Route all browser requests through local proxy to inject internal key server-side
-    const browserEndpoint = options?.endpoint ?? '/api/graphql';
+    // Use the configured GraphQL endpoint from environment variables for browser requests
+    const browserEndpoint = options?.endpoint ?? process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '/api/graphql';
     const absoluteBrowserEndpoint = browserEndpoint.startsWith('http')
       ? browserEndpoint
       : `${window.location.origin}${browserEndpoint}`;
-    
+      
     return new GraphQLClient(absoluteBrowserEndpoint, {
       headers
     });
@@ -50,6 +56,11 @@ export function getGraphQLClient(options?: GraphQLClientFactoryOptions): GraphQL
     
     if (resolveToken) {
       headers.Authorization = `Bearer ${resolveToken}`;
+    }
+    
+    // Adaugă header-uri suplimentare (ex: X-Captcha-Token)
+    if (options?.additionalHeaders) {
+      Object.assign(headers, options.additionalHeaders);
     }
     
     // Inject internal API key for server-side requests

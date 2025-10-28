@@ -1,29 +1,49 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { fetchCategories } from '@/features/news/services/newsService';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { useCategories } from '@/contexts/CategoriesContext';
+import { redirect } from 'next/navigation';
 
-type Category = { slug: string; name: string; count: number };
 
 export default function CategoriesListPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user, loading: authLoading, hasPremiumAccess } = useAuth();
+  const { categories, loading, error } = useCategories();
 
+  // Redirect to login if not authenticated
   useEffect(() => {
-    let mounted = true;
-    setLoading(true);
-    fetchCategories(100)
-      .then((cats) => {
-        if (!mounted) return;
-        const mapped = cats.map((c) => ({ slug: c.slug, name: c.name, count: c.count }));
-        setCategories(mapped);
-      })
-      .finally(() => setLoading(false));
-    return () => { mounted = false; };
-  }, []);
+    if (!authLoading && !user) {
+      redirect('/login');
+    }
+  }, [user, authLoading]);
+
+  // Redirect to pricing if authenticated but no premium access or subscription error
+  useEffect(() => {
+    if (!authLoading && user && !hasPremiumAccess && (error === 'SUBSCRIPTION_REQUIRED' || error === 'Failed to fetch categories')) {
+      redirect('/preturi');
+    }
+  }, [user, authLoading, hasPremiumAccess, error]);
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="container-responsive flex-1 py-8">
+          <div className="py-12 text-center text-gray-500">Se încarcă...</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated (will redirect)
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
