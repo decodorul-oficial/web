@@ -11,9 +11,18 @@ export async function POST(req: NextRequest) {
     const browserEndpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || '/api/graphql';
     const externalApiEndpoint = process.env.EXTERNAL_GRAPHQL_ENDPOINT || process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'https://decodorul-oficial-api.vercel.app/api/graphql';
     
-    // If browser endpoint is relative (starts with /), use external API endpoint
-    // Otherwise, use the browser endpoint directly (for absolute URLs)
-    const endpoint = browserEndpoint.startsWith('/') ? externalApiEndpoint : browserEndpoint;
+    // Determine the final endpoint for the upstream request
+    let endpoint: string;
+    if (browserEndpoint.startsWith('/')) {
+      // If browser endpoint is relative, use external API endpoint
+      endpoint = externalApiEndpoint;
+    } else if (browserEndpoint.startsWith('http')) {
+      // If browser endpoint is absolute, use it directly
+      endpoint = browserEndpoint;
+    } else {
+      // Fallback to external API endpoint
+      endpoint = externalApiEndpoint;
+    }
     
     let body = await req.text();
 

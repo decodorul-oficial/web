@@ -25,9 +25,11 @@ DEBUG_INTERNAL_API_KEY=true
 ### Logica Proxy-ului
 
 1. **Browser requests** folosesc `NEXT_PUBLIC_GRAPHQL_ENDPOINT` (de obicei `/api/graphql`)
-2. **Proxy-ul local** detectează dacă endpoint-ul este relativ (`/api/graphql`)
-3. **Proxy-ul local** folosește `EXTERNAL_GRAPHQL_ENDPOINT` pentru request-uri către API-ul extern
-4. **Server requests** (webhook-uri, etc.) folosesc direct `EXTERNAL_GRAPHQL_ENDPOINT`
+2. **Proxy-ul local** detectează tipul de endpoint:
+   - Dacă `NEXT_PUBLIC_GRAPHQL_ENDPOINT` este relativ (`/api/graphql`) → folosește `EXTERNAL_GRAPHQL_ENDPOINT`
+   - Dacă `NEXT_PUBLIC_GRAPHQL_ENDPOINT` este absolut (`https://...`) → folosește direct acel endpoint
+   - Fallback → folosește `EXTERNAL_GRAPHQL_ENDPOINT`
+3. **Server requests** (webhook-uri, etc.) folosesc direct `EXTERNAL_GRAPHQL_ENDPOINT`
 
 ### Fluxul de Date
 
@@ -99,6 +101,7 @@ Log-urile vor afișa:
 - Verifică că proxy-ul local adaugă CORS headers
 
 ### Eroarea 500
-- Verifică că `EXTERNAL_GRAPHQL_ENDPOINT` este accesibil
+- Verifică că `EXTERNAL_GRAPHQL_ENDPOINT` este accesibil și este un URL absolut (începe cu `http://` sau `https://`)
 - Verifică că `INTERNAL_API_KEY` este setată corect
 - Activează `DEBUG_INTERNAL_API_KEY=true` pentru mai multe detalii
+- Verifică că nu există probleme de conectivitate către API-ul extern
