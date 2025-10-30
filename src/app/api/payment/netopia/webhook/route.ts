@@ -138,12 +138,51 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString()
     });
 
-    // Extrage informațiile relevante din webhook
-    const orderId = String(webhookData.orderId || webhookData.order_id || '');
-    const status = String(webhookData.status || webhookData.payment_status || '');
-    const transactionId = String(webhookData.transactionId || webhookData.transaction_id || '');
-    const amount = String(webhookData.amount || '');
-    const currency = String(webhookData.currency || 'RON');
+    // Extrage informațiile relevante din webhook (suportă structură nested a Netopia)
+    const getNested = (obj: any, paths: string[]): any => {
+      for (const path of paths) {
+        const value = path.split('.').reduce((acc: any, key: string) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj);
+        if (value !== undefined && value !== null && value !== '') return value;
+      }
+      return undefined;
+    };
+
+    const extracted = {
+      orderId: getNested(webhookData, ['orderId', 'order_id', 'order.orderID', 'order.orderId', 'order.data.orderID']),
+      status: getNested(webhookData, ['status', 'payment_status', 'payment.status', 'payment.message', 'payment.code']),
+      transactionId: getNested(webhookData, ['transactionId', 'transaction_id', 'payment.ntpID', 'payment.data.tranId']),
+      amount: getNested(webhookData, ['amount', 'payment.amount']),
+      currency: getNested(webhookData, ['currency', 'payment.currency']) || 'RON'
+    };
+
+    // Map numeric/status Netopia -> string status intern preliminar
+    const normalizeStatus = (raw: any): string => {
+      if (raw === undefined || raw === null) return '';
+      const s = String(raw).toLowerCase();
+      // Cazuri cunoscute Netopia
+      // payment.status poate fi numeric: 3 = paid/approved (în practică)
+      if (!isNaN(Number(s))) {
+        const code = Number(s);
+        if (code === 3) return 'paid';
+        if (code === 2) return 'confirmed';
+        if (code === 1) return 'pending';
+        if (code === 0) return 'pending';
+      }
+      if (s === '00' || s === '0') return 'paid';
+      if (s.includes('approved')) return 'paid';
+      if (s.includes('confirm')) return 'confirmed';
+      if (s.includes('paid')) return 'paid';
+      if (s.includes('pending')) return 'pending';
+      if (s.includes('cancel')) return 'cancelled';
+      if (s.includes('fail')) return 'failed';
+      return s;
+    };
+
+    const orderId = String(extracted.orderId || '');
+    const status = String(normalizeStatus(extracted.status));
+    const transactionId = extracted.transactionId ? String(extracted.transactionId) : '';
+    const amount = extracted.amount !== undefined ? String(extracted.amount) : '';
+    const currency = String(extracted.currency || 'RON');
 
     console.log('[Netopia Webhook IPN] Extracted data:', {
       orderId,
@@ -151,6 +190,13 @@ export async function POST(request: NextRequest) {
       transactionId,
       amount,
       currency,
+      usedPaths: {
+        orderId: ['orderId','order_id','order.orderID','order.orderId','order.data.orderID'],
+        status: ['status','payment_status','payment.status','payment.message','payment.code'],
+        transactionId: ['transactionId','transaction_id','payment.ntpID','payment.data.tranId'],
+        amount: ['amount','payment.amount'],
+        currency: ['currency','payment.currency']
+      },
       timestamp: new Date().toISOString()
     });
 
