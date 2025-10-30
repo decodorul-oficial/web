@@ -24,13 +24,62 @@ export async function POST(request: NextRequest) {
   console.log('[Netopia Webhook IPN] Received notification at:', startTime);
   
   try {
-    // Parsează datele primite de la Netopia
-    const formData = await request.formData();
-    const webhookData = Object.fromEntries(formData.entries());
-    
-    console.log('[Netopia Webhook IPN] Raw data received:', {
-      keys: Object.keys(webhookData),
-      hasData: Object.keys(webhookData).length > 0,
+    // Parsează datele primite de la Netopia în mod robust (acceptă mai multe Content-Type)
+    const contentType = request.headers.get('content-type') || '';
+    const allHeaders = Object.fromEntries(request.headers);
+    let webhookData: Record<string, unknown> = {};
+    let rawBodyText = '';
+
+    try {
+      if (contentType.includes('multipart/form-data') || contentType.includes('application/x-www-form-urlencoded')) {
+        const formData = await request.formData();
+        webhookData = Object.fromEntries(formData.entries());
+      } else if (contentType.includes('application/json')) {
+        webhookData = await request.json();
+      } else {
+        // Fallback: citește ca text și încearcă să parsezi urlencoded; dacă nu iese, lasă ca text brut într-un câmp
+        rawBodyText = await request.text();
+        try {
+          const params = new URLSearchParams(rawBodyText);
+          webhookData = Object.fromEntries(params.entries());
+        } catch {
+          webhookData = { _raw: rawBodyText };
+        }
+      }
+    } catch (parseErr) {
+      rawBodyText = rawBodyText || (await request.text().catch(() => ''));
+      const parseErrorMessage = parseErr instanceof Error ? parseErr.message : 'Unknown error';
+      console.error('[Netopia Webhook IPN] Body parse error', {
+        contentType,
+        rawBodyLength: rawBodyText.length,
+        error: parseErrorMessage,
+        timestamp: new Date().toISOString()
+      });
+      // Log pentru audit, inclusiv corpul brut (trunchiat dacă e prea mare)
+      try {
+        const truncatedRaw = rawBodyText.length > 4000 ? rawBodyText.slice(0, 4000) + '...[truncated]' : rawBodyText;
+        await logProcessingError({
+          errorType: 'processing',
+          errorMessage: 'Invalid request body: ' + parseErrorMessage,
+          errorStack: parseErr instanceof Error ? parseErr.stack : undefined,
+          context: netopiaLogger.createContext({
+            contentType,
+            rawBodyLength: rawBodyText.length,
+            rawBodyPreview: truncatedRaw
+          }),
+          severity: 'high'
+        });
+      } catch {}
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
+    // Log de diagnostic pentru a urmări ce am primit efectiv
+    console.log('[Netopia Webhook IPN] Incoming request meta:', {
+      contentType,
+      headerNames: Object.keys(allHeaders),
+      rawBodyLength: rawBodyText ? rawBodyText.length : undefined,
+      parsedKeys: Object.keys(webhookData || {}),
+      hasData: webhookData && Object.keys(webhookData).length > 0,
       timestamp: new Date().toISOString()
     });
 

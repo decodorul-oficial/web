@@ -10,15 +10,7 @@ export async function POST(req: NextRequest) {
     // Use environment variables to determine the correct external API endpoint
     const browserEndpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || '/api/graphql';
     const externalApiEndpoint = process.env.EXTERNAL_GRAPHQL_ENDPOINT || process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'https://decodorul-oficial-api.vercel.app/api/graphql';
-    
-    // Debug logging to see what values we're working with
-    console.log('[GraphQL Proxy Debug] Environment variables:', {
-      NEXT_PUBLIC_GRAPHQL_ENDPOINT: process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT,
-      EXTERNAL_GRAPHQL_ENDPOINT: process.env.EXTERNAL_GRAPHQL_ENDPOINT,
-      browserEndpoint,
-      externalApiEndpoint
-    });
-    
+        
     // Determine the final endpoint for the upstream request
     let endpoint: string;
     if (browserEndpoint.startsWith('/')) {
@@ -31,15 +23,7 @@ export async function POST(req: NextRequest) {
       // Fallback to external API endpoint
       endpoint = externalApiEndpoint;
     }
-    
-    console.log('[GraphQL Proxy Debug] Final endpoint decision:', {
-      browserEndpoint,
-      externalApiEndpoint,
-      finalEndpoint: endpoint,
-      isRelative: browserEndpoint.startsWith('/'),
-      isAbsolute: browserEndpoint.startsWith('http')
-    });
-    
+        
     let body = await req.text();
 
     // Check if this is a signIn or signUp mutation and encrypt the password
