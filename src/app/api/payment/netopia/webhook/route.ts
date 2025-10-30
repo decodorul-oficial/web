@@ -488,16 +488,15 @@ async function updateOrderStatus({
       timestamp: new Date().toISOString()
     });
 
-    if (!response.ok || result.errors) {
-      return { 
-        success: false, 
-        error: result.errors?.[0]?.message || 'GraphQL update failed' 
-      };
+    const op = result?.data?.updateOrderStatus;
+    // Considerăm succes dacă API-ul a răspuns cu 200 și mutația raportează success=true,
+    // chiar dacă există warnings/erori non-critice în `errors`.
+    if (response.ok && op?.success === true) {
+      return { success: true, data: op };
     }
-
-    return { 
-      success: true, 
-      data: result.data?.updateOrderStatus 
+    return {
+      success: false,
+      error: result.errors?.[0]?.message || op?.message || 'GraphQL update failed'
     };
 
   } catch (error) {
@@ -535,20 +534,21 @@ async function logWebhookEvent({
   processedAt: string;
 }) {
   try {
-    // Log în Supabase pentru audit
-    const { error } = await supabase
-      .from('webhook_logs')
-      .insert({
-        order_id: orderId,
-        status,
-        transaction_id: transactionId,
-        amount: amount ? parseFloat(amount) : null,
-        currency,
-        raw_data: rawData,
-        processed_at: processedAt,
-        webhook_type: 'netopia_ipn',
-        created_at: new Date().toISOString()
-      });
+    // Log prin RPC (schema payments) – non-blocking
+    const payload = [{
+      order_id: orderId,
+      webhook_type: 'netopia_ipn',
+      status,
+      transaction_id: transactionId,
+      amount: amount ? parseFloat(amount) : null,
+      currency,
+      raw_data: rawData,
+      processed_at: processedAt
+    }];
+
+    const { error } = await supabase.rpc('webhook_processing', {
+      payload: { type: 'webhook_logs', entries: payload }
+    });
 
     if (error) {
       console.error('[Netopia Webhook IPN] Error logging webhook event:', {

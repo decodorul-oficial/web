@@ -138,27 +138,29 @@ export class NetopiaLogger {
     if (this.logBuffer.length === 0) return;
 
     try {
-      console.log(`[Netopia Logger] Flushing ${this.logBuffer.length} webhook logs to database`);
+      console.log(`[Netopia Logger] Flushing ${this.logBuffer.length} webhook logs to database via RPC payments.webhook_processing`);
 
-      const { error } = await supabase
-        .from('webhook_logs')
-        .insert(this.logBuffer.map(entry => ({
-          order_id: entry.orderId,
-          webhook_type: entry.webhookType,
-          status: entry.status,
-          transaction_id: entry.transactionId,
-          amount: entry.amount,
-          currency: entry.currency,
-          error_code: entry.errorCode,
-          error_message: entry.errorMessage,
-          raw_data: entry.rawData,
-          client_ip: entry.clientIP,
-          user_agent: entry.userAgent,
-          processed_at: entry.processedAt,
-          success: entry.success,
-          processing_time_ms: entry.processingTimeMs,
-          created_at: new Date().toISOString()
-        })));
+      // Trimitere prin RPC; implementarea din DB va decide unde scrie efectiv
+      const payload = this.logBuffer.map(entry => ({
+        order_id: entry.orderId,
+        webhook_type: entry.webhookType,
+        status: entry.status,
+        transaction_id: entry.transactionId,
+        amount: entry.amount,
+        currency: entry.currency,
+        error_code: entry.errorCode,
+        error_message: entry.errorMessage,
+        raw_data: entry.rawData,
+        client_ip: entry.clientIP,
+        user_agent: entry.userAgent,
+        processed_at: entry.processedAt,
+        success: entry.success,
+        processing_time_ms: entry.processingTimeMs
+      }));
+
+      const { error } = await supabase.rpc('webhook_processing', {
+        payload: { type: 'webhook_logs', entries: payload }
+      });
 
       if (error) {
         console.error('[Netopia Logger] Error flushing webhook logs:', {
@@ -192,18 +194,20 @@ export class NetopiaLogger {
     if (this.errorBuffer.length === 0) return;
 
     try {
-      console.log(`[Netopia Logger] Flushing ${this.errorBuffer.length} error logs to database`);
+      console.log(`[Netopia Logger] Flushing ${this.errorBuffer.length} error logs via RPC payments.webhook_processing`);
 
-      const { error } = await supabase
-        .from('error_logs')
-        .insert(this.errorBuffer.map(entry => ({
-          error_type: entry.errorType,
-          error_message: entry.errorMessage,
-          error_stack: entry.errorStack,
-          context: entry.context,
-          severity: entry.severity,
-          created_at: entry.timestamp
-        })));
+      const payload = this.errorBuffer.map(entry => ({
+        error_type: entry.errorType,
+        error_message: entry.errorMessage,
+        error_stack: entry.errorStack,
+        context: entry.context,
+        severity: entry.severity,
+        created_at: entry.timestamp
+      }));
+
+      const { error } = await supabase.rpc('webhook_processing', {
+        payload: { type: 'error_logs', entries: payload }
+      });
 
       if (error) {
         console.error('[Netopia Logger] Error flushing error logs:', {

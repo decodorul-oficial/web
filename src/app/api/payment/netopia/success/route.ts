@@ -300,21 +300,22 @@ async function logRedirectEvent({
   timestamp: string;
 }) {
   try {
-    // Log în Supabase pentru audit
-    const { error } = await supabase
-      .from('webhook_logs')
-      .insert({
-        order_id: orderId,
-        status: status || 'unknown',
-        transaction_id: transactionId,
-        amount: amount ? parseFloat(amount) : null,
-        currency,
-        error_code: errorCode,
-        error_message: errorMessage,
-        processed_at: timestamp,
-        webhook_type: 'netopia_success_redirect',
-        created_at: new Date().toISOString()
-      });
+    // Log prin RPC (schema payments) – non-blocking
+    const payload = [{
+      order_id: orderId,
+      webhook_type: 'netopia_success_redirect',
+      status: status || 'unknown',
+      transaction_id: transactionId || undefined,
+      amount: amount ? parseFloat(amount) : null,
+      currency,
+      error_code: errorCode || undefined,
+      error_message: errorMessage || undefined,
+      processed_at: timestamp
+    }];
+
+    const { error } = await supabase.rpc('webhook_processing', {
+      payload: { type: 'webhook_logs', entries: payload }
+    });
 
     if (error) {
       console.error('[Netopia Success Redirect] Error logging redirect event:', {
