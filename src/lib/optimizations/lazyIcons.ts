@@ -34,10 +34,12 @@ export async function getLucideIcon(iconName: string, fallback: LucideIcon): Pro
     ];
 
     for (const variation of variations) {
-      const icon = (LucideIcons as unknown as Record<string, LucideIcon>)[variation];
-      if (icon && typeof icon === 'function') {
-        iconCache.set(iconName, icon);
-        return icon;
+      if (variation in LucideIcons) {
+        const icon = (LucideIcons as unknown as Record<string, LucideIcon>)[variation];
+        if (icon) {
+          iconCache.set(iconName, icon as LucideIcon);
+          return icon as LucideIcon;
+        }
       }
     }
   } catch (error) {
