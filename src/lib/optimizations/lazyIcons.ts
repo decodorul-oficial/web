@@ -34,8 +34,8 @@ export async function getLucideIcon(iconName: string, fallback: LucideIcon): Pro
     ];
 
     for (const variation of variations) {
-      const icon = (LucideIcons as Record<string, LucideIcon>)[variation];
-      if (icon) {
+      const icon = (LucideIcons as unknown as Record<string, LucideIcon>)[variation];
+      if (icon && typeof icon === 'function') {
         iconCache.set(iconName, icon);
         return icon;
       }
