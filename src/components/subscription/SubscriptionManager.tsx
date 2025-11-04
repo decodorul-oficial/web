@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { subscriptionService } from '@/features/subscription/services/subscriptionService';
-import { Subscription, SubscriptionTier, SubscriptionUsage, EnhancedUser } from '@/features/subscription/types';
-import { AlertCircle, CheckCircle, Clock, Loader2, Check } from 'lucide-react';
+import { Subscription, SubscriptionTier, SubscriptionUsage, EnhancedUser, Order } from '@/features/subscription/types';
+import { AlertCircle, CheckCircle, Clock, Loader2, Check, Download } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import jsPDF from 'jspdf';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/Tooltip';
 
 export function SubscriptionManager() {
   const { user, hasPremiumAccess } = useAuth();
@@ -19,6 +21,9 @@ export function SubscriptionManager() {
   const [planLoading, setPlanLoading] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<'subscription' | 'billing'>('subscription');
   const [subscriptionSectionLoading, setSubscriptionSectionLoading] = useState(false);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [downloadingInvoice, setDownloadingInvoice] = useState<string | null>(null);
 
   const loadData = async () => {
     try {
@@ -42,6 +47,26 @@ export function SubscriptionManager() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Load orders when billing section is active
+  useEffect(() => {
+    if (activeSection === 'billing') {
+      loadOrders();
+    }
+  }, [activeSection]);
+
+  const loadOrders = async () => {
+    try {
+      setOrdersLoading(true);
+      const ordersData = await subscriptionService.getMyOrders();
+      setOrders(ordersData);
+    } catch (error) {
+      console.error('Error loading orders:', error);
+      toast.error('Eroare la încărcarea facturilor');
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
 
   const handleCancelSubscription = async () => {
     if (!subscription) return;
@@ -154,6 +179,333 @@ export function SubscriptionManager() {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const formatDateForInvoice = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('ro-RO', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  };
+
+  const generateInvoicePDF = async (order: Order) => {
+    setDownloadingInvoice(order.id);
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth(); // 210mm
+      const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
+      const margin = 15;
+      
+      let currentY = margin;
+      
+      // Get subscription info (use enhancedProfile as fallback)
+      const orderSubscription = subscription || enhancedProfile?.profile?.activeSubscription;
+      
+      // Company data (from env or defaults)
+      const companyName = process.env.NEXT_PUBLIC_COMPANY_NAME || 'Monitorul Oficial PRO';
+      const companyCUI = process.env.NEXT_PUBLIC_COMPANY_CUI || 'ROxxxxxxxx';
+      const companyRegNo = process.env.NEXT_PUBLIC_COMPANY_REG_NO || 'Jxx/xxxx/xxxx';
+      const companyAddress = process.env.NEXT_PUBLIC_COMPANY_ADDRESS || 'Adresa completă';
+      const companyCity = process.env.NEXT_PUBLIC_COMPANY_CITY || 'București';
+      const companyEmail = 'contact@decodoruloficial.ro';
+      const companyPhone = process.env.NEXT_PUBLIC_COMPANY_PHONE || '';
+      const companySocialCapital = process.env.NEXT_PUBLIC_COMPANY_SOCIAL_CAPITAL || '200 lei';
+      
+      // Load logo image
+      let logoData: string | null = null;
+      try {
+        const logoResponse = await fetch('/logo.png');
+        if (logoResponse.ok) {
+          const logoBlob = await logoResponse.blob();
+          const reader = new FileReader();
+          logoData = await new Promise<string>((resolve, reject) => {
+            reader.onloadend = () => {
+              if (reader.result && typeof reader.result === 'string') {
+                resolve(reader.result);
+              } else {
+                reject(new Error('Failed to load logo'));
+              }
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(logoBlob);
+          });
+        }
+      } catch (error) {
+        console.log('Logo not found, continuing without logo');
+      }
+      
+      // Calculate amounts with VAT (19% for Romania)
+      const VAT_RATE = 0.19;
+      const amountWithVAT = order.amount;
+      const amountWithoutVAT = amountWithVAT / (1 + VAT_RATE);
+      const vatAmount = amountWithVAT - amountWithoutVAT;
+      
+      // Brand colors
+      const brandInfo = '#38a8a5';
+      const brandHighlight = '#3A506B';
+      
+      // Helper function to add text
+      const addText = (text: string, x: number, y: number, fontSize: number, isBold: boolean = false, color: string = '#000000', align: 'left' | 'center' | 'right' = 'left') => {
+        pdf.setFontSize(fontSize);
+        pdf.setFont('helvetica', isBold ? 'bold' : 'normal');
+        pdf.setTextColor(color);
+        
+        // Fix diacritics
+        const fixedText = text
+          .replace(/ă/g, 'a')
+          .replace(/â/g, 'a')
+          .replace(/î/g, 'i')
+          .replace(/ș/g, 's')
+          .replace(/ț/g, 't')
+          .replace(/Ă/g, 'A')
+          .replace(/Â/g, 'A')
+          .replace(/Î/g, 'I')
+          .replace(/Ș/g, 'S')
+          .replace(/Ț/g, 'T');
+        
+        pdf.text(fixedText, x, y, { align });
+      };
+      
+      // Helper function to format currency
+      const formatCurrency = (amount: number) => {
+        return `${amount.toFixed(2)} ${order.currency}`;
+      };
+      
+      // Header background across full width
+      const headerHeight = 30;
+      pdf.setFillColor(56, 168, 165); // brand-info color
+      pdf.rect(0, 0, pageWidth, headerHeight, 'F');
+
+      // White plate for logo (ensures white background under logo)
+      if (logoData) {
+        try {
+          pdf.setFillColor(255, 255, 255);
+          const plateX = margin - 2;
+          const plateY = 4;
+          const plateW = 30;
+          const plateH = 22;
+          // rounded rectangle under logo
+          if ((pdf as any).roundedRect) {
+            (pdf as any).roundedRect(plateX, plateY, plateW, plateH, 2, 2, 'F');
+          } else {
+            pdf.rect(plateX, plateY, plateW, plateH, 'F');
+          }
+
+          // Keep image aspect ratio and center it on the white plate
+          let logoDrawW = 22;
+          let logoDrawH = 18;
+          try {
+            const img = new Image();
+            img.src = logoData;
+            await new Promise<void>((resolve) => {
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+            });
+            const naturalW = img.width || 1;
+            const naturalH = img.height || 1;
+            const aspect = naturalW / naturalH;
+            const maxW = 22;
+            const maxH = 18;
+            if (maxW / maxH < aspect) {
+              // Width constrained
+              logoDrawW = maxW;
+              logoDrawH = maxW / aspect;
+            } else {
+              // Height constrained
+              logoDrawH = maxH;
+              logoDrawW = maxH * aspect;
+            }
+          } catch {}
+
+          const imgX = plateX + (plateW - logoDrawW) / 2;
+          const imgY = plateY + (plateH - logoDrawH) / 2;
+          pdf.addImage(logoData, 'PNG', imgX, imgY, logoDrawW, logoDrawH);
+        } catch (error) {
+          console.log('Error adding logo to PDF:', error);
+        }
+      }
+
+      // Title centered in header
+      addText('FACTURA FISCALA', pageWidth / 2, 18, 16, true, '#FFFFFF', 'center');
+
+      // Start content after header
+      currentY = headerHeight + 5;
+      
+      // Company info (left side) - better spacing and font sizes
+      addText('FURNIZOR:', margin, currentY, 10, true);
+      currentY += 6;
+      addText(companyName, margin, currentY, 11, true);
+      currentY += 6;
+      addText(`CUI: ${companyCUI}`, margin, currentY, 9);
+      currentY += 5;
+      addText(`Nr. Reg. Com.: ${companyRegNo}`, margin, currentY, 9);
+      currentY += 5;
+      addText(`Capital social: ${companySocialCapital}`, margin, currentY, 9);
+      currentY += 5;
+      addText(`Adresa: ${companyAddress}`, margin, currentY, 9);
+      currentY += 5;
+      addText(`${companyCity}`, margin, currentY, 9);
+      if (companyPhone) {
+        currentY += 5;
+        addText(`Tel: ${companyPhone}`, margin, currentY, 9);
+      }
+      currentY += 5;
+      addText(`Email: ${companyEmail}`, margin, currentY, 9);
+      const companyInfoEndY = currentY + 5; // Store where company info ends
+      
+      // Invoice details (right side) - better alignment
+      const rightMargin = pageWidth - margin;
+      const invoiceDetailsStartY = 35;
+      let invoiceDetailsY = invoiceDetailsStartY;
+      
+      addText('FACTURA Nr.', rightMargin, invoiceDetailsY, 9, false, '#000000', 'right');
+      invoiceDetailsY += 5;
+      addText(order.id.slice(-8).toUpperCase(), rightMargin, invoiceDetailsY, 11, true, '#000000', 'right');
+      invoiceDetailsY += 7;
+      addText('Data emiterii:', rightMargin, invoiceDetailsY, 9, false, '#000000', 'right');
+      invoiceDetailsY += 5;
+      addText(formatDateForInvoice(order.createdAt), rightMargin, invoiceDetailsY, 10, true, '#000000', 'right');
+      invoiceDetailsY += 7;
+      addText('Scadenta:', rightMargin, invoiceDetailsY, 9, false, '#000000', 'right');
+      invoiceDetailsY += 5;
+      addText(formatDateForInvoice(order.createdAt), rightMargin, invoiceDetailsY, 10, true, '#000000', 'right');
+      const invoiceDetailsEndY = invoiceDetailsY + 5; // Store where invoice details end
+      
+      // Calculate where customer section should start (after company info or invoice details, whichever is lower)
+      const customerSectionStartY = Math.max(companyInfoEndY, invoiceDetailsEndY) + 8;
+      
+      // Customer info
+      currentY = customerSectionStartY;
+      pdf.setDrawColor(200, 200, 200);
+      pdf.setLineWidth(0.5);
+      pdf.line(margin, currentY, pageWidth - margin, currentY);
+      currentY += 7;
+      
+      addText('CUMPĂRĂTOR:', margin, currentY, 10, true);
+      currentY += 6;
+      if (user) {
+        if (user.user_metadata?.full_name) {
+          addText(user.user_metadata.full_name, margin, currentY, 10);
+          currentY += 5;
+        }
+        addText(user.email || '', margin, currentY, 10);
+        currentY += 5;
+      }
+      
+      // Subscription details
+      currentY += 5;
+      pdf.setDrawColor(200, 200, 200);
+      pdf.setLineWidth(0.5);
+      pdf.line(margin, currentY, pageWidth - margin, currentY);
+      currentY += 7;
+      
+      const subscriptionName = orderSubscription?.tier?.displayName || 'Plan Pro';
+      const subscriptionInterval = orderSubscription?.tier?.interval === 'MONTHLY' ? 'Lunar' : orderSubscription?.tier?.interval === 'YEARLY' ? 'Anual' : 'Lunar';
+      addText('Servicii furnizate:', margin, currentY, 9, true);
+      currentY += 5;
+      addText(`Abonament ${subscriptionName} - ${subscriptionInterval}`, margin, currentY, 9);
+      
+      // Invoice table
+      currentY += 10;
+      pdf.setDrawColor(200, 200, 200);
+      pdf.line(margin, currentY, pageWidth - margin, currentY);
+      currentY += 8;
+      
+      // Calculate column positions (distributed evenly across available width)
+      const tableWidth = pageWidth - (margin * 2); // 180mm available
+      const colNrCrt = margin + 3;
+      const colDenumire = margin + 12;
+      const colUM = margin + 100;
+      const colCant = margin + 115;
+      const colPretUnitar = margin + 135;
+      const colValoare = rightMargin - 3;
+      
+      // Table header
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(margin, currentY - 6, pageWidth - (margin * 2), 8, 'F');
+      addText('Nr.', colNrCrt, currentY, 8, true);
+      addText('Denumire produs/serviciu', colDenumire, currentY, 8, true);
+      addText('U.M.', colUM, currentY, 8, true, '#000000', 'center');
+      addText('Cant.', colCant, currentY, 8, true, '#000000', 'center');
+      addText('Pret unitar', colPretUnitar, currentY, 8, true, '#000000', 'right');
+      addText('Valoare', colValoare, currentY, 8, true, '#000000', 'right');
+      currentY += 8;
+      
+      pdf.line(margin, currentY, pageWidth - margin, currentY);
+      currentY += 6;
+      
+      // Invoice item - truncate description if too long to fit
+      const description = `Abonament ${subscriptionName} - ${subscriptionInterval}`;
+      const maxDescriptionWidth = colUM - colDenumire - 5; // Available width for description
+      let displayDescription = description;
+      if (description.length > 45) {
+        displayDescription = description.substring(0, 42) + '...';
+      }
+      
+      addText('1', colNrCrt, currentY, 9);
+      addText(displayDescription, colDenumire, currentY, 9);
+      addText('buc', colUM, currentY, 9, false, '#000000', 'center');
+      addText('1', colCant, currentY, 9, false, '#000000', 'center');
+      addText(formatCurrency(amountWithoutVAT), colPretUnitar, currentY, 9, false, '#000000', 'right');
+      addText(formatCurrency(amountWithoutVAT), colValoare, currentY, 9, false, '#000000', 'right');
+      currentY += 8;
+      
+      pdf.line(margin, currentY, pageWidth - margin, currentY);
+      currentY += 6;
+      
+      // Totals section
+      currentY += 3;
+      const totalsX = pageWidth / 2;
+      addText('Total fara TVA:', totalsX, currentY, 10, false, '#000000', 'right');
+      addText(formatCurrency(amountWithoutVAT), rightMargin - 2, currentY, 10, false, '#000000', 'right');
+      currentY += 7;
+      addText(`TVA 19%:`, totalsX, currentY, 10, false, '#000000', 'right');
+      addText(formatCurrency(vatAmount), rightMargin - 2, currentY, 10, false, '#000000', 'right');
+      currentY += 7;
+      
+      pdf.setDrawColor(56, 168, 165);
+      pdf.line(totalsX - 30, currentY, rightMargin, currentY);
+      currentY += 8;
+      
+      addText('TOTAL DE PLATA:', totalsX, currentY, 12, true, '#000000', 'right');
+      addText(formatCurrency(amountWithVAT), rightMargin - 2, currentY, 14, true, brandInfo, 'right');
+      currentY += 8;
+      
+      pdf.setDrawColor(56, 168, 165);
+      pdf.setLineWidth(0.5);
+      pdf.line(totalsX - 30, currentY, rightMargin, currentY);
+      
+      // Payment status
+      currentY += 12;
+      const statusText = order.status === 'SUCCEEDED' ? 'Platita' : order.status === 'PENDING' ? 'In asteptare' : order.status === 'FAILED' ? 'Esuata' : 'Anulata';
+      const statusColor = order.status === 'SUCCEEDED' ? '#10B981' : order.status === 'PENDING' ? '#F59E0B' : '#EF4444';
+      addText(`Status plata: ${statusText}`, margin, currentY, 10, true, statusColor);
+      
+      // Footer
+      currentY = pageHeight - 30;
+      pdf.setDrawColor(200, 200, 200);
+      pdf.setLineWidth(0.3);
+      pdf.line(margin, currentY, pageWidth - margin, currentY);
+      currentY += 8;
+      
+      addText('Conform art. 319 alin. (2) din Codul Fiscal, factura este valabila fara semnatura si stampila.', pageWidth / 2, currentY, 8, false, '#666666', 'center');
+      currentY += 5;
+      addText('Va multumim pentru abonare!', pageWidth / 2, currentY, 9, false, '#666666', 'center');
+      currentY += 5;
+      addText(`Pentru intrebari: ${companyEmail}`, pageWidth / 2, currentY, 8, false, '#999999', 'center');
+      
+      // Download PDF
+      const fileName = `Factura_${order.id.slice(-8)}_${formatDateForInvoice(order.createdAt).replace(/\//g, '-')}.pdf`;
+      pdf.save(fileName);
+      
+      toast.success('Factura a fost descărcată cu succes');
+    } catch (error) {
+      console.error('Error generating invoice PDF:', error);
+      toast.error('Eroare la generarea facturii');
+    } finally {
+      setDownloadingInvoice(null);
+    }
   };
 
   // Filter and format plans from API
@@ -407,8 +759,12 @@ export function SubscriptionManager() {
             Istoricul facturilor
           </h3>
           
-          <div className="space-y-4">
-            {/* Placeholder for billing history - you can replace this with actual data */}
+          {ordersLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-brand-info mr-3" />
+              <span className="text-gray-600">Se încarcă facturile...</span>
+            </div>
+          ) : orders.length === 0 ? (
             <div className="text-center py-12">
               <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                 <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -426,34 +782,102 @@ export function SubscriptionManager() {
                 Alege un plan
               </button>
             </div>
-
-            {/* Example billing history items - replace with real data */}
-            {subscription?.status === 'ACTIVE' && (
+          ) : (
+            <TooltipProvider>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
+                {orders.map((order) => {
+                  const orderSubscription = subscription || enhancedProfile?.profile?.activeSubscription;
+                  
+                  // Status configuration
+                  let statusIcon;
+                  let statusBgColor;
+                  let statusTooltip;
+                  let statusDescription;
+                  
+                  if (order.status === 'SUCCEEDED') {
+                    statusIcon = <CheckCircle className="w-5 h-5 text-green-600" />;
+                    statusBgColor = 'bg-green-100';
+                    statusTooltip = 'Factură plătită';
+                    statusDescription = 'Factura a fost plătită cu succes';
+                  } else if (order.status === 'PENDING') {
+                    statusIcon = <Clock className="w-5 h-5 text-yellow-600" />;
+                    statusBgColor = 'bg-yellow-100';
+                    statusTooltip = 'Factură în așteptare';
+                    statusDescription = 'Factura este în așteptarea plății';
+                  } else if (order.status === 'FAILED') {
+                    statusIcon = <AlertCircle className="w-5 h-5 text-red-600" />;
+                    statusBgColor = 'bg-red-100';
+                    statusTooltip = 'Plată eșuată';
+                    statusDescription = 'Plata facturii a eșuat';
+                  } else {
+                    statusIcon = <AlertCircle className="w-5 h-5 text-gray-600" />;
+                    statusBgColor = 'bg-gray-100';
+                    statusTooltip = 'Factură anulată';
+                    statusDescription = 'Factura a fost anulată';
+                  }
+                  
+                  return (
+                    <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-3 flex-1">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className={`w-10 h-10 ${statusBgColor} rounded-full flex items-center justify-center cursor-help`}>
+                              {statusIcon}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="text-sm">
+                              <p className="font-semibold">{statusTooltip}</p>
+                              <p className="text-xs text-gray-400 mt-1">{statusDescription}</p>
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">
+                            Factura #{order.id.slice(-8).toUpperCase()}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {orderSubscription?.tier?.displayName || 'Plan Pro'} - {orderSubscription?.tier?.interval === 'MONTHLY' ? 'Lunar' : orderSubscription?.tier?.interval === 'YEARLY' ? 'Anual' : 'Lunar'}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {statusTooltip}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className="font-medium text-gray-900">
+                            {order.amount} {order.currency}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {formatDate(order.createdAt)}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => generateInvoicePDF(order)}
+                          disabled={downloadingInvoice === order.id}
+                          className="inline-flex items-center px-4 py-2 text-sm font-medium text-brand-info bg-white border border-brand-info rounded-lg hover:bg-brand-info hover:text-white focus:outline-none focus:ring-2 focus:ring-brand-info transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Descarcă factura"
+                        >
+                          {downloadingInvoice === order.id ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Se generează...
+                            </>
+                          ) : (
+                            <>
+                              <Download className="w-4 h-4 mr-2" />
+                              Descarcă
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Factura #001</p>
-                      <p className="text-sm text-gray-600">
-                        {subscription.tier?.displayName || 'Plan Pro'} - {subscription.tier?.interval === 'MONTHLY' ? 'Lunar' : 'Anual'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-gray-900">
-                      {subscription.tier?.price || '0'} lei
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {subscription.currentPeriodStart ? formatDate(subscription.currentPeriodStart) : 'N/A'}
-                    </p>
-                  </div>
-                </div>
+                  );
+                })}
               </div>
-            )}
-          </div>
+            </TooltipProvider>
+          )}
         </div>
       )}
     </div>

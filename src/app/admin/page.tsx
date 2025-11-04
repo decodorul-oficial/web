@@ -17,7 +17,8 @@ import {
   Users,
   Activity,
   AlertTriangle,
-  UserCheck
+  UserCheck,
+  Mail
 } from 'lucide-react';
 import { NewsStatsChart } from '@/components/admin/NewsStatsChart';
 import { AdminService, StiriStatsData } from '@/services/adminService';
@@ -781,6 +782,27 @@ export default function AdminDashboard() {
             </div>
           </Link>
 
+          {/* Abonați Newsletter */}
+          <Link
+            href="/admin/newsletter"
+            className="group bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+          >
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-purple-100 rounded-full group-hover:bg-purple-200 transition-colors">
+                <Mail className="h-6 w-6 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-brand-info transition-colors">
+                  Abonați Newsletter
+                </h3>
+                <p className="text-sm text-gray-600">Gestionează abonații newsletter</p>
+              </div>
+            </div>
+          </Link>
+        </div>
+
+        {/* Second Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
           {/* System Settings */}
           <div className="group bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-not-allowed opacity-50">
             <div className="flex items-center space-x-4">

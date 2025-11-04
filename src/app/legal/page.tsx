@@ -184,7 +184,7 @@ export default function LegalPage() {
                   în termen de 14 zile de la data achiziției, fără a da motive.
                 </p>
                 <p className="text-gray-700 mb-4">
-                  Pentru a exercita dreptul de retur, contactați-ne la: {process.env.NEXT_PUBLIC_EMAIL_SUPPORT || 'support@decodoruloficial.ro'}
+                  Pentru a exercita dreptul de retur, contactați-ne la: {process.env.NEXT_PUBLIC_EMAIL_SUPPORT || 'contact@decodoruloficial.ro'}
                 </p>
                 <p className="text-gray-700 mb-4">
                   Rambursarea se va face în termen de 14 zile de la primirea cererii de retur, 

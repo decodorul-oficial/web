@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useUserPreferences } from '@/features/user/hooks/useUserPreferences';
@@ -12,7 +12,7 @@ import { PersonalizedFeedBanner } from './PersonalizedFeedBanner';
 import { Citation } from '@/components/legal/Citation';
 import { stripHtml } from '@/lib/html/sanitize';
 import { MostReadNewsSection } from './MostReadNewsSection';
-import { Gavel, Landmark, Settings, User, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Gavel, Landmark, Settings, User, X, ChevronLeft, ChevronRight, ChevronDown, BookOpen } from 'lucide-react';
 // Removed massive Lucide import - using specific imports instead
 import type { LucideProps, LucideIcon } from 'lucide-react';
 import { getLucideIcon } from '@/lib/optimizations/lazyIcons';
@@ -114,6 +114,7 @@ export function PersonalizedNewsSection() {
 function PersonalizedFeedContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { hasPremiumAccess, isAuthenticated } = useAuth();
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -125,8 +126,10 @@ function PersonalizedFeedContent() {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [showDateInput, setShowDateInput] = useState<boolean>(false);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
+  const [showItemsPerPageDropdown, setShowItemsPerPageDropdown] = useState<boolean>(false);
   
-  const itemsPerPage = 10;
+  const itemsPerPageOptions = [10, 25, 50, 100];
 
   const loadPersonalizedNewsWithPagination = useCallback(async (page: number = 1): Promise<void> => {
     try {
@@ -186,6 +189,12 @@ function PersonalizedFeedContent() {
   useEffect(() => {
     const urlDate = searchParams.get('date');
     const urlPage = parseInt(searchParams.get('page') || '1', 10);
+    const urlItemsPerPage = parseInt(searchParams.get('itemsPerPage') || '10', 10);
+    
+    // Setează itemsPerPage din URL dacă este valid
+    if (itemsPerPageOptions.includes(urlItemsPerPage)) {
+      setItemsPerPage(urlItemsPerPage);
+    }
     
     if (urlDate) {
       setSelectedDate(urlDate);
@@ -212,11 +221,12 @@ function PersonalizedFeedContent() {
     }
   }, [selectedDate, isFiltered, loadNewsByDate, loadPersonalizedNewsWithPagination, searchParams]);
 
-  const updateURL = useCallback((newDate?: string, newPage?: number) => {
+  const updateURL = useCallback((newDate?: string, newPage?: number, newItemsPerPage?: number) => {
     const params = new URLSearchParams();
     
     const dateToUse = newDate !== undefined ? newDate : selectedDate;
     const pageToUse = newPage !== undefined ? newPage : currentPage;
+    const itemsPerPageToUse = newItemsPerPage !== undefined ? newItemsPerPage : itemsPerPage;
     
     if (dateToUse) {
       params.set('date', dateToUse);
@@ -226,9 +236,13 @@ function PersonalizedFeedContent() {
       params.set('page', pageToUse.toString());
     }
     
+    if (itemsPerPageToUse !== 10) {
+      params.set('itemsPerPage', itemsPerPageToUse.toString());
+    }
+    
     const newURL = params.toString() ? `/?${params.toString()}` : '/';
     router.push(newURL, { scroll: false });
-  }, [selectedDate, currentPage, router]);
+  }, [selectedDate, currentPage, itemsPerPage, router]);
 
   const handleDateChangeFlow = (date: string) => {
     setSelectedDate(date);
@@ -244,6 +258,14 @@ function PersonalizedFeedContent() {
     setFilteredStiri([]);
     setShowDateInput(false);
     updateURL('', 1);
+    void loadPersonalizedNewsWithPagination(1);
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+    setShowItemsPerPageDropdown(false);
+    updateURL(undefined, 1, newItemsPerPage);
     void loadPersonalizedNewsWithPagination(1);
   };
 
@@ -301,18 +323,35 @@ function PersonalizedFeedContent() {
       .join('');
   }
 
-  function getLucideIconForContent(content: unknown, fallback: LucideIcon): LucideIcon {
+  // Hook pentru a gestiona încărcarea asincronă a icon-ului
+  function useLucideIcon(iconName: string | undefined, fallback: LucideIcon): LucideIcon {
+    const [icon, setIcon] = useState<LucideIcon>(fallback);
+    const fallbackRef = useRef(fallback);
+
+    // Actualizează referința la fallback când se schimbă
+    useEffect(() => {
+      fallbackRef.current = fallback;
+    }, [fallback]);
+
+    useEffect(() => {
+      if (typeof iconName === 'string' && iconName.trim().length > 0) {
+        void getLucideIcon(iconName, fallbackRef.current).then(loadedIcon => {
+          setIcon(loadedIcon);
+        });
+      } else {
+        setIcon(fallbackRef.current);
+      }
+    }, [iconName]);
+
+    return icon;
+  }
+
+  // Component wrapper pentru icon-ul din conținut
+  function ContentIcon({ content, fallback, className }: { content: unknown; fallback: LucideIcon; className?: string }) {
     const c = parseContent(content);
     const iconName = c.lucide_icon ?? c.lucideIcon;
-
-    if (typeof iconName === 'string' && iconName.trim().length > 0) {
-      // Use the optimized lazy loading utility
-      getLucideIcon(iconName, fallback).then(icon => {
-        // This will be handled asynchronously, but we return fallback immediately
-        // to avoid blocking the render
-      });
-    }
-    return fallback;
+    const Icon = useLucideIcon(iconName, fallback);
+    return <Icon className={className} />;
   }
 
   const handleNewsClick = (news: NewsItem, section: string): void => {
@@ -515,10 +554,7 @@ function PersonalizedFeedContent() {
             <article className="mb-8">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:hidden">
                 <div className="h-48 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 md:h-full flex items-center justify-center">
-                  {(() => {
-                    const Icon = getLucideIconForContent(featured.content, Landmark);
-                    return <Icon className="h-16 w-16 text-white" />;
-                  })()}
+                  <ContentIcon content={featured.content} fallback={Landmark} className="h-16 w-16 text-white" />
                 </div>
                 <div className="md:col-span-2">
                   <h2 className="mb-3 text-xl font-bold">
@@ -543,10 +579,7 @@ function PersonalizedFeedContent() {
               <div className="hidden lg:block">
                 <div className="float-left mr-6 mb-4">
                   <div className="h-48 w-64 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 flex items-center justify-center">
-                    {(() => {
-                      const Icon = getLucideIconForContent(featured.content, Landmark);
-                      return <Icon className="h-16 w-16 text-white" />;
-                    })()}
+                    <ContentIcon content={featured.content} fallback={Landmark} className="h-16 w-16 text-white" />
                   </div>
                 </div>
                 <div>
@@ -621,6 +654,48 @@ function PersonalizedFeedContent() {
                 </button>
               )}
             </div>
+            
+            {/* Items per page dropdown - doar pentru utilizatorii cu subscripție activă */}
+            {isAuthenticated && hasPremiumAccess && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowItemsPerPageDropdown(!showItemsPerPageDropdown)}
+                  className="flex items-center gap-2 px-3 py-2 h-10 text-sm border border-brand-accent/30 rounded-md bg-white hover:bg-brand-accent/5 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition-colors"
+                  aria-label="Selectează numărul de items per pagină"
+                >
+                  <BookOpen className="h-4 w-4 text-brand-accent" />
+                  <span className="text-gray-700">{itemsPerPage} știri pe pagină</span>
+                  <ChevronDown className="h-4 w-4 text-brand-accent" />
+                </button>
+                
+                {showItemsPerPageDropdown && (
+                  <>
+                    {/* Backdrop pentru a închide dropdown-ul */}
+                    <div 
+                      className="fixed inset-0 z-10" 
+                      onClick={() => setShowItemsPerPageDropdown(false)}
+                    />
+                    
+                    {/* Dropdown menu */}
+                    <div className="absolute right-0 top-full mt-1 w-42 bg-white border border-brand-accent/20 rounded-md shadow-lg z-20">
+                      {itemsPerPageOptions.map((option) => (
+                        <button
+                          key={option}
+                          onClick={() => handleItemsPerPageChange(option)}
+                          className={`w-full px-3 py-2 text-center text-sm transition-colors first:rounded-t-md last:rounded-b-md ${
+                            itemsPerPage === option 
+                              ? 'bg-brand-accent text-white hover:bg-brand-accent/90' 
+                              : 'text-gray-700 hover:bg-brand-accent/10 hover:text-brand-accent'
+                          }`}
+                        >
+                          {option} știri pe pagină
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -638,10 +713,7 @@ function PersonalizedFeedContent() {
                   <article className="flex gap-3 py-4">
                     <div className="flex-shrink-0">
                       <div className="h-16 w-16 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 flex items-center justify-center">
-                        {(() => {
-                          const Icon = getLucideIconForContent(n.content, Gavel);
-                          return <Icon className="h-6 w-6 text-white" />;
-                        })()}
+                        <ContentIcon content={n.content} fallback={Gavel} className="h-6 w-6 text-white" />
                       </div>
                       <div className="mt-2 text-xs text-gray-500">
                         {formatDate(n.publicationDate)}

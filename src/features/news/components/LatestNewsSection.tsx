@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect, useCallback, type FC } from 'react';
+import { useState, useEffect, useCallback, useRef, type FC } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { fetchNewsByDate, fetchLatestNews } from '@/features/news/services/newsService';
 import { Citation } from '@/components/legal/Citation';
@@ -274,18 +274,35 @@ export function LatestNewsSection() {
       .join('');
   }
 
-  function getLucideIconForContent(content: unknown, fallback: LucideIcon): LucideIcon {
+  // Hook pentru a gestiona încărcarea asincronă a icon-ului
+  function useLucideIcon(iconName: string | undefined, fallback: LucideIcon): LucideIcon {
+    const [icon, setIcon] = useState<LucideIcon>(fallback);
+    const fallbackRef = useRef(fallback);
+
+    // Actualizează referința la fallback când se schimbă
+    useEffect(() => {
+      fallbackRef.current = fallback;
+    }, [fallback]);
+
+    useEffect(() => {
+      if (typeof iconName === 'string' && iconName.trim().length > 0) {
+        void getLucideIcon(iconName, fallbackRef.current).then(loadedIcon => {
+          setIcon(loadedIcon);
+        });
+      } else {
+        setIcon(fallbackRef.current);
+      }
+    }, [iconName]);
+
+    return icon;
+  }
+
+  // Component wrapper pentru icon-ul din conținut
+  function ContentIcon({ content, fallback, className }: { content: unknown; fallback: LucideIcon; className?: string }) {
     const c = parseContent(content);
     const iconName = c.lucide_icon ?? c.lucideIcon;
-
-    if (typeof iconName === 'string' && iconName.trim().length > 0) {
-      // Use the optimized lazy loading utility
-      getLucideIcon(iconName, fallback).then(icon => {
-        // This will be handled asynchronously, but we return fallback immediately
-        // to avoid blocking the render
-      });
-    }
-    return fallback;
+    const Icon = useLucideIcon(iconName, fallback);
+    return <Icon className={className} />;
   }
 
   const handleNewsClick = (news: NewsItem, section: string): void => {
@@ -451,10 +468,7 @@ export function LatestNewsSection() {
             <article className="mb-8">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:hidden">
                 <div className="h-48 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 md:h-full flex items-center justify-center">
-                  {(() => {
-                    const Icon = getLucideIconForContent(featured.content, Landmark);
-                    return <Icon className="h-16 w-16 text-white" />;
-                  })()}
+                  <ContentIcon content={featured.content} fallback={Landmark} className="h-16 w-16 text-white" />
                 </div>
                 <div className="md:col-span-2">
                   <h2 className="mb-3 text-xl font-bold">
@@ -479,10 +493,7 @@ export function LatestNewsSection() {
               <div className="hidden lg:block">
                 <div className="float-left mr-6 mb-4">
                   <div className="h-48 w-64 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 flex items-center justify-center">
-                    {(() => {
-                      const Icon = getLucideIconForContent(featured.content, Landmark);
-                      return <Icon className="h-16 w-16 text-white" />;
-                    })()}
+                    <ContentIcon content={featured.content} fallback={Landmark} className="h-16 w-16 text-white" />
                   </div>
                 </div>
                 <div>
@@ -611,10 +622,7 @@ export function LatestNewsSection() {
                   <article className="flex gap-3 py-4">
                     <div className="flex-shrink-0">
                       <div className="h-16 w-16 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 flex items-center justify-center">
-                        {(() => {
-                          const Icon = getLucideIconForContent(n.content, Gavel);
-                          return <Icon className="h-6 w-6 text-white" />;
-                        })()}
+                        <ContentIcon content={n.content} fallback={Gavel} className="h-6 w-6 text-white" />
                       </div>
                       <div className="mt-2 text-xs text-gray-500">
                         {formatDate(n.publicationDate)}

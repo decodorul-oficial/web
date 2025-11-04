@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { OverlayBackdrop } from '@/components/ui/OverlayBackdrop';
 import { AdminUsersGraphQLService, User, SortField, SortDirection, UserFilters } from '@/services/adminUsersGraphQL';
+import toast from 'react-hot-toast';
 
 export default function UsersAdminPage() {
   const { user, isAdmin, loading: authLoading } = useAuth();
@@ -310,9 +311,13 @@ export default function UsersAdminPage() {
 
   const handleConfirmation = async () => {
     if (!confirmationAction || confirmationEmail !== confirmationAction.user.email) {
-      alert('Email-ul introdus nu se potrivește cu cel al utilizatorului!');
+      toast.error('Email-ul introdus nu se potrivește cu cel al utilizatorului!');
       return;
     }
+
+    // Salvăm informațiile necesare înainte de a le modifica
+    const isDeleteUser = confirmationAction.type === 'delete_user';
+    const userEmail = confirmationAction.user.email;
 
     try {
       let result: { success: boolean; message: string };
@@ -346,17 +351,31 @@ export default function UsersAdminPage() {
       if (result.success) {
         await fetchUsers();
         await fetchStats();
-        alert(result.message);
+
+        // Pentru ștergere, închidem modalul și afișăm un mesaj formatat frumos
+        if (isDeleteUser) {
+          setShowConfirmationModal(false);
+          setConfirmationAction(null);
+          setConfirmationEmail('');
+          toast.success(`User cu email: ${userEmail} a fost șters cu succes`, {
+            duration: 5000,
+          });
+        } else {
+          toast.success(result.message);
+        }
       } else {
         alert(result.message);
       }
     } catch (error) {
       console.error('Error performing action:', error);
-      alert('Eroare la executarea acțiunii');
+      toast.error('Eroare la executarea acțiunii');
     } finally {
-      setShowConfirmationModal(false);
-      setConfirmationAction(null);
-      setConfirmationEmail('');
+      // Închidem modalul doar dacă nu este ștergere (pentru ștergere, l-am închis deja mai sus)
+      if (!isDeleteUser) {
+        setShowConfirmationModal(false);
+        setConfirmationAction(null);
+        setConfirmationEmail('');
+      }
     }
   };
 

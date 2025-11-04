@@ -206,8 +206,8 @@ function PaymentResultContent() {
           <div className="text-sm text-gray-500">
             <p>
               Dacă ai întrebări, te rugăm să ne contactezi la{' '}
-              <a href="mailto:support@monitoruloficial.ro" className="text-brand-info hover:underline">
-                support@monitoruloficial.ro
+              <a href="mailto:contact@decodoruloficial.ro" className="text-brand-info hover:underline">
+                contact@decodoruloficial.ro
               </a>
             </p>
           </div>

@@ -2,13 +2,12 @@
 
 import React, { useState } from 'react';
 import { NewsItem } from '@/features/news/types';
+import html2canvas from 'html2canvas';
 
 interface BatchScreenshotButtonProps {
   news: NewsItem[];
   filterToday?: boolean;
 }
-
-
 
 interface NewsContent {
   synthesis?: string;
@@ -35,89 +34,92 @@ export function BatchScreenshotButton({ news, filterToday = true }: BatchScreens
     (/iPad|iPhone|iPod/.test(navigator.userAgent) || 
      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
   
-  // Simplified screenshot function
-  const captureAndDownloadBatch = async (element: HTMLElement, filename: string = 'instagram-post') => {
+  // Use the same capture logic as the individual "Salvează" button
+  // This matches the logic from useIOSScreenshot hook
+  const captureAndDownload = async (element: HTMLElement, filename: string = 'instagram-post') => {
     try {
-      console.log('📸 Starting captureAndDownloadBatch for:', filename);
-      
-      // Wait a bit for rendering
+      // Wait a bit for any animations to complete
       await new Promise(resolve => setTimeout(resolve, 200));
       
-      // Wait for fonts
+      // Wait for fonts if available
       if ('fonts' in document) {
         try {
           await document.fonts.ready;
-          console.log('✅ Fonts loaded');
         } catch (error) {
           console.warn('Font loading failed:', error);
         }
       }
 
-      // Import html2canvas
-      console.log('📦 Importing html2canvas...');
-      const html2canvas = (await import('html2canvas')).default;
-      console.log('✅ html2canvas imported');
-
-      // Create canvas
-      console.log('🎨 Creating canvas...');
+      // Create canvas with high quality settings - same as useIOSScreenshot
       const canvas = await html2canvas(element, {
         backgroundColor: '#0B132B',
-        scale: 1, // Use 1x scale for better compatibility
+        scale: window.devicePixelRatio || 2, // Use device pixel ratio
         useCORS: true,
         allowTaint: true,
         logging: false,
         width: element.offsetWidth,
         height: element.offsetHeight,
         imageTimeout: 10000,
+        foreignObjectRendering: false, // Better mobile compatibility
+        removeContainer: true,
         ignoreElements: (el) => {
-          return el.classList.contains('animate-spin');
+          // Ignore loading spinners and animations
+          return el.classList.contains('animate-spin') || 
+                 el.classList.contains('transition-') ||
+                 el.getAttribute('data-ignore-screenshot') === 'true';
         }
       });
-      console.log('✅ Canvas created');
 
       // Convert to blob
-      console.log('🔄 Converting to blob...');
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((blob) => {
           if (blob) {
-            console.log('✅ Blob created, size:', blob.size);
             resolve(blob);
           } else {
             reject(new Error('Failed to create image blob'));
           }
-        }, 'image/png', 0.9);
+        }, 'image/png', 1.0);
       });
 
-      // Create download
-      console.log('🔗 Creating download...');
+      // Create download link
       const url = URL.createObjectURL(blob);
       const finalFilename = `${filename}-${new Date().toISOString().slice(0, 10)}.png`;
-      console.log('📁 Final filename:', finalFilename);
       
+      // Create and trigger download
       const link = document.createElement('a');
       link.href = url;
       link.download = finalFilename;
       link.style.display = 'none';
       
+      // Add to DOM and click
       document.body.appendChild(link);
-      console.log('🔗 Link added to DOM');
       
-      // Trigger download
-      link.click();
-      console.log('✅ Download triggered');
+      // For iOS, add a small delay and ensure the click happens properly
+      if (isIOS) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Create a user event to trigger download
+        const event = new MouseEvent('click', {
+          view: window,
+          bubbles: true,
+          cancelable: true
+        });
+        link.dispatchEvent(event);
+      } else {
+        link.click();
+      }
       
-      // Cleanup
+      // Clean up after a delay
       setTimeout(() => {
         if (document.body.contains(link)) {
           document.body.removeChild(link);
         }
         URL.revokeObjectURL(url);
-        console.log('🧹 Cleanup completed');
       }, 1000);
       
       return true;
     } catch (error) {
-      console.error('❌ Batch screenshot failed:', error);
+      console.error('Screenshot failed:', error);
       return false;
     }
   };
@@ -138,365 +140,19 @@ export function BatchScreenshotButton({ news, filterToday = true }: BatchScreens
     return filtered;
   };
 
-  const generateCardHTML = (newsItem: NewsItem, index: number) => {
-    // Extract category
-    const getCategory = () => {
-      if (typeof newsItem.content === 'object' && newsItem.content !== null) {
-        const content = newsItem.content as NewsContent;
-        const rawCategory = content.category || content.type || '';
-        return rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1).toLowerCase();
-      }
-      return '';
-    };
-
-    const category = getCategory();
-
-    // Extract author from content
-    const getAuthor = () => {
-      if (typeof newsItem.content === 'object' && newsItem.content !== null) {
-        const content = newsItem.content as NewsContent;
-        return content.author || 'Monitorul Oficial';
-      }
-      return 'Monitorul Oficial';
-    };
-
-    const author = getAuthor();
-
-    // Use exact same structure as InstagramPreview.tsx
-    return `
-      <div class="instagram-card" style="
-        position: relative;
-        width: 100%;
-        aspect-ratio: 1;
-        background-color: #0B132B;
-        border-radius: 16px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        overflow: hidden;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        text-rendering: optimizeLegibility;
-      ">
-        
-        <!-- Background Gradient - Same as InstagramPreview -->
-        <div class="background-gradient" style="
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(135deg, #0B132B 0%, #1C2541 50%, #3A506B 100%);
-          opacity: 0.95;
-        "></div>
-        
-        <!-- Content Container - Same as InstagramPreview -->
-        <div class="content-container" style="
-          position: relative;
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          padding: 24px 55px;
-        ">
-          
-          <!-- Header - Same as InstagramPreview -->
-          <div class="header" style="
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 0px;
-          ">
-            <!-- Logo Container - Same as InstagramPreview -->
-            <div class="logo-container" style="
-              display: inline-flex;
-              align-items: center;
-              gap: 6px;
-            ">
-              <div class="logo-wrapper" style="
-                width: 40px;
-                height: 40px;
-                background-color: #FFFFFF;
-                border-radius: 12px;
-                display: grid;
-                place-items: center;
-                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-                flex-shrink: 0;
-              ">
-                <span style="color: #0B132B; font-size: 16px; font-weight: bold;">📋</span>
-              </div>
-            </div>
-            
-            <!-- Category Badge - Same as InstagramPreview -->
-            ${category ? `
-              <div class="category-badge" style="
-                background-color: rgba(255, 255, 255, 0.25);
-                color: #FFFFFF;
-                font-size: 14px;
-                padding: 8px 16px;
-                border-radius: 20px;
-                font-weight: 600;
-                flex-shrink: 0;
-              ">${category}</div>
-            ` : ''}
-          </div>
-
-          <!-- Main Content - Same as InstagramPreview -->
-          <div class="main-content" style="
-            top: 10px;
-            position: relative;
-            flex: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-          ">
-            <!-- Title - Same as InstagramPreview -->
-            <h1 class="title" style="
-              color: #FFFFFF;
-              font-size: 20px;
-              font-weight: bold;
-              line-height: 1.2;
-              margin-bottom: 12px;
-              padding-bottom: 10px;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              display: block;
-              max-height: calc(1.3em * 4);
-              white-space: normal;
-            ">${newsItem.title}</h1>
-          </div>
-
-          <!-- Footer - Same as InstagramPreview -->
-          <div class="footer" style="
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid rgba(255, 255, 255, 0.25);
-          ">
-            <div class="footer-content" style="
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              color: rgba(255, 255, 255, 0.8);
-              font-size: 12px;
-            ">
-              <div class="footer-left" style="
-                display: flex;
-                align-items: center;
-                gap: 4px;
-              ">
-                <span class="footer-icon" style="font-size: 16px;">📋</span>
-                <span class="footer-text" style="font-weight: 500;">${author}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Decorative Elements - Same as InstagramPreview -->
-          <div class="decorative-element1" style="
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 48px;
-            height: 48px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-          "></div>
-          <div class="decorative-element2" style="
-            position: absolute;
-            bottom: 16px;
-            left: 8px;
-            width: 24px;
-            height: 24px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-          "></div>
-        </div>
-      </div>
-    `;
-  };
-
-  const generateAndDownloadCard = async (newsItem: NewsItem, index: number): Promise<boolean> => {
-    try {
-      console.log(`🎨 Generating card for news ${newsItem.id} (${index + 1})`);
-      
-      // Create a temporary container with proper dimensions - same as AutoScreenshot
-      const container = document.createElement('div');
-      container.style.position = 'fixed';
-      container.style.top = '-2000px';
-      container.style.left = '0';
-      container.style.zIndex = '-1';
-      container.style.width = '400px'; // Set a reasonable width
-      container.style.height = '400px'; // Set a reasonable height
-      
-      console.log('📦 Container created');
-      
-      // Add CSS styles to match InstagramPreview.module.css
-      const style = document.createElement('style');
-      style.textContent = `
-        .instagram-card {
-          position: relative;
-          width: 100%;
-          aspect-ratio: 1;
-          background-color: #0B132B;
-          border-radius: 16px;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-          overflow: hidden;
-        }
-        .background-gradient {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(135deg, #0B132B 0%, #1C2541 50%, #3A506B 100%);
-          opacity: 0.95;
-        }
-        .content-container {
-          position: relative;
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          padding: 24px 55px;
-        }
-        .header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 0px;
-        }
-        .logo-container {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-        }
-        .logo-wrapper {
-          width: 40px;
-          height: 40px;
-          background-color: #FFFFFF;
-          border-radius: 12px;
-          display: grid;
-          place-items: center;
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-          flex-shrink: 0;
-        }
-        .category-badge {
-          background-color: rgba(255, 255, 255, 0.25);
-          color: #FFFFFF;
-          font-size: 14px;
-          padding: 8px 16px;
-          border-radius: 20px;
-          font-weight: 600;
-          flex-shrink: 0;
-        }
-        .main-content {
-          top: 10px;
-          position: relative;
-          flex: 0;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-        }
-        .title {
-          color: #FFFFFF;
-          font-size: 20px;
-          font-weight: bold;
-          line-height: 1.2;
-          margin-bottom: 12px;
-          padding-bottom: 10px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          display: block;
-          max-height: calc(1.3em * 4);
-          white-space: normal;
-        }
-        .footer {
-          margin-top: 16px;
-          padding-top: 16px;
-          border-top: 1px solid rgba(255, 255, 255, 0.25);
-        }
-        .footer-content {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          color: rgba(255, 255, 255, 0.8);
-          font-size: 12px;
-        }
-        .footer-left {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-        .footer-icon {
-          font-size: 16px;
-        }
-        .footer-text {
-          font-weight: 500;
-        }
-        .decorative-element1 {
-          position: absolute;
-          top: 8px;
-          right: 8px;
-          width: 48px;
-          height: 48px;
-          background-color: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-        }
-        .decorative-element2 {
-          position: absolute;
-          bottom: 16px;
-          left: 8px;
-          width: 24px;
-          height: 24px;
-          background-color: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-        }
-      `;
-      document.head.appendChild(style);
-      
-      container.innerHTML = generateCardHTML(newsItem, index);
-      document.body.appendChild(container);
-      
-      // Wait for rendering - same as AutoScreenshot
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Get the card element and add data-screenshot-target attribute
-      const cardElement = container.firstElementChild as HTMLElement;
-      cardElement.setAttribute('data-screenshot-target', newsItem.id);
-      
-      console.log(`Card element created for ${newsItem.id}, dimensions:`, {
-        width: cardElement.offsetWidth,
-        height: cardElement.offsetHeight
-      });
-      
-      // Use the batch screenshot function for consistent behavior
-      const result = await captureAndDownloadBatch(cardElement, `instagram-${newsItem.id}`);
-      
-      console.log(`Screenshot result for ${newsItem.id}:`, result);
-      
-      // Cleanup
-      document.body.removeChild(container);
-      // Remove the added style element
-      if (document.head.contains(style)) {
-        document.head.removeChild(style);
-      }
-      
-      return result;
-    } catch (error) {
-      console.error(`Failed to generate card for news ${newsItem.id}:`, error);
-      return false;
-    }
-  };
-
   const handleBatchScreenshot = async () => {
-    console.log('🚀 handleBatchScreenshot called');
-    alert('🚀 handleBatchScreenshot called - check console for details');
-    
     try {
       const filteredNews = getFilteredNews();
-      console.log('📊 Filtered news:', filteredNews.length);
       
       if (filteredNews.length === 0) {
         alert('Nu există știri pentru ziua curentă!');
         return;
       }
 
-      if (!confirm(`Vrei să generezi ${filteredNews.length} imagini pentru știrile ${filterToday ? 'din ziua curentă' : 'selectate'}? Acest proces poate dura câteva minute.`)) {
-        console.log('❌ User cancelled');
+      if (!confirm(`Vrei să salvezi ${filteredNews.length} știri din ziua curentă? Acest proces poate dura câteva minute.`)) {
         return;
       }
 
-      console.log('✅ User confirmed, starting processing...');
       setIsProcessing(true);
       setCurrentIndex(0);
       setResults({ success: 0, failed: 0, total: filteredNews.length });
@@ -504,19 +160,33 @@ export function BatchScreenshotButton({ news, filterToday = true }: BatchScreens
       let successCount = 0;
       let failedCount = 0;
 
+      // Simulate clicking each individual "Salvează" button
+      // by finding the card element and using the same capture logic
       for (let i = 0; i < filteredNews.length; i++) {
         setCurrentIndex(i + 1);
         
-        console.log(`Processing news ${i + 1}/${filteredNews.length}: ${filteredNews[i].id}`);
+        const newsItem = filteredNews[i];
         
-        const success = await generateAndDownloadCard(filteredNews[i], i);
+        // Find the actual card element on the page (same as individual button does)
+        const cardElement = document.querySelector(`[data-screenshot-target="${newsItem.id}"]`) as HTMLElement;
+        
+        if (!cardElement) {
+          console.warn(`Card element not found for news ${newsItem.id}`);
+          failedCount++;
+          setResults(prev => ({
+            ...prev,
+            failed: failedCount
+          }));
+          continue;
+        }
+        
+        // Use the same capture logic as the individual "Salvează" button
+        const success = await captureAndDownload(cardElement, `instagram-${newsItem.id}`);
         
         if (success) {
           successCount++;
-          console.log(`✅ Success for news ${filteredNews[i].id}`);
         } else {
           failedCount++;
-          console.log(`❌ Failed for news ${filteredNews[i].id}`);
         }
         
         setResults(prev => ({
@@ -542,46 +212,15 @@ export function BatchScreenshotButton({ news, filterToday = true }: BatchScreens
   const todayCount = filteredNews.length;
 
   const handleAllScreenshots = async () => {
-    console.log('🚀 handleAllScreenshots called');
-    alert('🚀 handleAllScreenshots called - check console for details');
-    
-    console.log('📊 News length:', news.length);
     if (news.length === 0) {
-      console.log('❌ No news available, returning');
+      alert('Nu există știri disponibile!');
       return;
     }
     
-    console.log('❓ Showing confirm dialog...');
-    
-    // Try a more explicit confirmation approach
-    const message = `Vrei să generezi ${news.length} imagini pentru toate știrile? Acest proces poate dura câteva minute.`;
-    console.log('📝 Confirm message:', message);
-    
-    // Test if confirm is working properly
-    console.log('🔍 Testing confirm function...');
-    const testConfirm = window.confirm('Test dialog - apasă OK pentru a continua');
-    console.log('🧪 Test confirm result:', testConfirm);
-    
-    if (!testConfirm) {
-      console.log('❌ Test confirm failed, user cancelled test');
-      alert('Test confirm failed - user cancelled test dialog');
+    if (!confirm(`Vrei să salvezi toate ${news.length} știri? Acest proces poate dura câteva minute.`)) {
       return;
     }
-    
-    console.log('✅ Test confirm passed, showing main confirm...');
-    const confirmed = window.confirm(message);
-    console.log('✅ Confirm result:', confirmed);
-    console.log('✅ Confirm type:', typeof confirmed);
-    
-    if (!confirmed) {
-      console.log('❌ User cancelled, returning');
-      alert('Procesul a fost anulat de utilizator');
-      return;
-    }
-    
-    console.log('✅ User confirmed, proceeding...');
 
-    console.log('🔄 Setting processing state...');
     setIsProcessing(true);
     setCurrentIndex(0);
     setResults({ success: 0, failed: 0, total: news.length });
@@ -589,21 +228,33 @@ export function BatchScreenshotButton({ news, filterToday = true }: BatchScreens
     let successCount = 0;
     let failedCount = 0;
 
-    console.log(`🔄 Starting loop for ${news.length} news items...`);
+    // Simulate clicking each individual "Salvează" button
+    // by finding the card element and using the same capture logic
     for (let i = 0; i < news.length; i++) {
-      console.log(`🔄 Processing news ${i + 1}/${news.length}: ${news[i].id}`);
       setCurrentIndex(i + 1);
       
-      console.log(`🎨 Calling generateAndDownloadCard for news ${news[i].id}...`);
-      const success = await generateAndDownloadCard(news[i], i);
-      console.log(`📊 generateAndDownloadCard result for ${news[i].id}:`, success);
+      const newsItem = news[i];
+      
+      // Find the actual card element on the page (same as individual button does)
+      const cardElement = document.querySelector(`[data-screenshot-target="${newsItem.id}"]`) as HTMLElement;
+      
+      if (!cardElement) {
+        console.warn(`Card element not found for news ${newsItem.id}`);
+        failedCount++;
+        setResults(prev => ({
+          ...prev,
+          failed: failedCount
+        }));
+        continue;
+      }
+      
+      // Use the same capture logic as the individual "Salvează" button
+      const success = await captureAndDownload(cardElement, `instagram-${newsItem.id}`);
       
       if (success) {
         successCount++;
-        console.log(`✅ Success for news ${news[i].id}`);
       } else {
         failedCount++;
-        console.log(`❌ Failed for news ${news[i].id}`);
       }
       
       setResults(prev => ({
@@ -612,14 +263,11 @@ export function BatchScreenshotButton({ news, filterToday = true }: BatchScreens
         failed: failedCount
       }));
 
-      console.log(`⏳ Waiting 500ms before next item...`);
-      // Small delay between screenshots
+      // Small delay between screenshots to avoid overwhelming the browser
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    console.log('🏁 Loop completed, setting processing to false...');
     setIsProcessing(false);
-    console.log(`🏁 Final results - Success: ${successCount}, Failed: ${failedCount}`);
     alert(`Proces finalizat! Succes: ${successCount}, Eșuate: ${failedCount}`);
   };
 
