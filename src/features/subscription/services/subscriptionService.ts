@@ -1,5 +1,6 @@
 import { getGraphQLClient } from '@/lib/graphql/client';
 import { UserService } from '@/features/user/services/userService';
+import { supabase } from '@/lib/supabase/client';
 import {
   GET_SUBSCRIPTION_TIERS,
   GET_MY_SUBSCRIPTION,
@@ -32,7 +33,8 @@ import {
   RateLimitInfo,
   BillingAddress,
   EnhancedUser,
-  EnhancedProfile
+  EnhancedProfile,
+  BillingDetails
 } from '../types';
 
 export class SubscriptionService {
@@ -213,7 +215,40 @@ export class SubscriptionService {
   async getMyProfile(): Promise<EnhancedUser | null> {
     const client = this.getApiClient();
     const result = await client.request<{ me: EnhancedUser }>(GET_MY_ENHANCED_PROFILE);
+    
+    // Add user_metadata fallback if not in GraphQL response (depends on backend)
+    if (result.me) {
+       const { data: { user } } = await supabase.auth.getUser();
+       if (user) {
+         result.me.user_metadata = user.user_metadata;
+         // Inject billing details from metadata if present
+         if (user.user_metadata?.billingDetails) {
+            // Ensure it's an array for compatibility
+            const details = user.user_metadata.billingDetails;
+            result.me.profile.billingDetails = Array.isArray(details) ? details : [details];
+         } else {
+            result.me.profile.billingDetails = [];
+         }
+       }
+    }
+
     return result.me;
+  }
+
+  // Helper to update billing details in Supabase user_metadata
+  async updateBillingDetails(details: BillingDetails | BillingDetails[]): Promise<void> {
+    // Always store as array
+    const detailsArray = Array.isArray(details) ? details : [details];
+
+    const { error } = await supabase.auth.updateUser({
+      data: {
+        billingDetails: detailsArray
+      }
+    });
+
+    if (error) {
+      throw error;
+    }
   }
 
   // Obține doar informațiile despre abonamentul activ din profil

@@ -11,7 +11,7 @@ const nextConfig = {
   },
   // Performance optimizations
   experimental: {
-    optimizePackageImports: ['lucide-react', 'react-force-graph-2d', 'simple-datatables']
+    optimizePackageImports: ['lucide-react', 'cytoscape', 'simple-datatables']
   },
   // Bundle analyzer for debugging
   webpack: (config, { dev, isServer }) => {
@@ -27,9 +27,9 @@ const nextConfig = {
             chunks: 'all',
             priority: 10,
           },
-          forceGraph: {
-            name: 'force-graph',
-            test: /[\\/]node_modules[\\/]react-force-graph-2d[\\/]/,
+          cytoscape: {
+            name: 'cytoscape',
+            test: /[\\/]node_modules[\\/]cytoscape[\\/]/,
             chunks: 'all',
             priority: 10,
           },

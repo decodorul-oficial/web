@@ -186,3 +186,40 @@ export type GetDocumentConnectionsByNewsParams = {
   offset?: number;
 };
 
+// Types for Legislative Graph
+export type LegislativeGraphNode = {
+  id: string;
+  title: string;
+  shortTitle?: string;
+  actNumber?: string;
+  actType?: string;
+  publicationDate?: string;
+  type?: string;
+};
+
+export type LegislativeGraphLink = {
+  source: string;
+  target: string;
+  type: string;
+  typeLabel?: string;
+  confidence?: number;
+  confidenceLabel?: string;
+  confidenceLevel?: string;
+  description?: string;
+};
+
+export type LegislativeGraphResponse = {
+  getLegislativeGraph: {
+    nodes: LegislativeGraphNode[];
+    links: LegislativeGraphLink[];
+  };
+};
+
+export type LegislativeGraphParams = {
+  documentId: string;
+  depth?: number;
+  minConfidence?: number;
+  maxNodes?: number;
+  maxLinks?: number;
+};
+

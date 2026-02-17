@@ -37,6 +37,7 @@ export interface Order {
   currency: string;
   subscriptionId?: string;
   checkoutUrl?: string;
+  billingDetails?: BillingDetails;
   createdAt: string;
   updatedAt: string;
 }
@@ -235,6 +236,21 @@ export interface UserPreferences {
   updatedAt: string;
 }
 
+export interface BillingDetails {
+  id?: string; // Add ID for list management
+  type: 'personal' | 'company';
+  firstName: string;
+  lastName: string;
+  companyName?: string;
+  cui?: string; // CUI sau CNP
+  regCom?: string;
+  address: string;
+  city: string;
+  county: string;
+  country: string;
+  zipCode?: string;
+}
+
 export interface EnhancedProfile {
   id: string;
   subscriptionTier: string;
@@ -248,6 +264,7 @@ export interface EnhancedProfile {
   subscriptionUsage: ProfileSubscriptionUsage | null;
   paymentMethods: ProfilePaymentMethod[];
   subscriptionHistory: SubscriptionHistoryEntry[];
+  billingDetails?: BillingDetails[]; // Changed to array
   createdAt: string;
   updatedAt: string;
 }
@@ -256,4 +273,8 @@ export interface EnhancedUser {
   id: string;
   email: string;
   profile: EnhancedProfile;
+  user_metadata?: {
+    full_name?: string;
+    billingDetails?: BillingDetails[]; // Changed to array
+  };
 }

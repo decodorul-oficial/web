@@ -82,6 +82,18 @@ export const GET_ORDER = gql`
       amount
       currency
       subscriptionId
+      billingDetails {
+        firstName
+        lastName
+        companyName
+        cui
+        regCom
+        address
+        city
+        county
+        country
+        zipCode
+      }
       createdAt
       updatedAt
     }
@@ -96,6 +108,18 @@ export const GET_MY_ORDERS = gql`
       amount
       currency
       subscriptionId
+      billingDetails {
+        firstName
+        lastName
+        companyName
+        cui
+        regCom
+        address
+        city
+        county
+        country
+        zipCode
+      }
       createdAt
       updatedAt
     }

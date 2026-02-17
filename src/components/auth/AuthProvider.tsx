@@ -6,6 +6,7 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
 import { UserProfile, SignUpInput, SignInInput, AuthResponse, TrialStatus } from '@/features/user/types';
 import { UserService } from '@/features/user/services/userService';
+import { signOutAction } from '@/app/actions/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -120,6 +121,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      // Server-side sign out to clear HTTP-only cookies
+      await signOutAction();
+
       // Revoke refresh token on server and clear local session for safety
       try {
         // @supabase/supabase-js v2 supports scoping

@@ -5,6 +5,9 @@ export const GET_LEGISLATIVE_GRAPH = `
       nodes {
         id
         title
+        shortTitle
+        actNumber
+        actType
         publicationDate
         type
       }
@@ -12,7 +15,11 @@ export const GET_LEGISLATIVE_GRAPH = `
         source
         target
         type
+        typeLabel
         confidence
+        confidenceLabel
+        confidenceLevel
+        description
       }
     }
   }
@@ -33,6 +40,9 @@ export const GET_LEGISLATIVE_CONNECTION_STATS = `
 export interface LegislativeNode {
   id: string;
   title: string;
+  shortTitle?: string;
+  actNumber?: string;
+  actType?: string;
   publicationDate: string;
   type: string;
 }
@@ -41,7 +51,11 @@ export interface LegislativeLink {
   source: string;
   target: string;
   type: string;
+  typeLabel?: string;
   confidence: number;
+  confidenceLabel?: string;
+  confidenceLevel?: 'high' | 'medium' | 'low';
+  description?: string;
 }
 
 export interface LegislativeGraphData {

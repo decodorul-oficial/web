@@ -44,6 +44,11 @@ const DocumentConnectionsSection = dynamic(() => import('@/features/news/compone
   loading: () => <div className="animate-pulse h-24 bg-gray-200 rounded"></div>
 });
 
+const LegislativeGraph = dynamic(() => import('@/features/news/components/LegislativeGraph').then(mod => ({ default: mod.LegislativeGraph })), {
+  ssr: false,
+  loading: () => <div className="animate-pulse h-[600px] bg-gray-200 rounded"></div>
+});
+
 interface PageProps {
   params: { slug: string };
 }
@@ -556,8 +561,14 @@ export default async function NewsDetailPage(props: PageProps) {
           {/* Istoricul modificărilor legislative - premium gated */}
           <DocumentConnectionsSection newsId={news.id} relationType="modifică" limit={20} />
 
+          {/* Noua Componentă Harta Legislativă */}
+          <section className="mt-8 mb-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Vizualizare Relații Legislative</h2>
+            <LegislativeGraph documentId={news.id} />
+          </section>
+
           {/* Secțiunea Harta Conexiunilor Legislative */}
-          <AuthenticatedLegislativeNetworkSection documentId={news.id} />
+          {/*<AuthenticatedLegislativeNetworkSection documentId={news.id} />*/}
               
            {/* Share section at the end of the article */}
            <ArticleShareSection
