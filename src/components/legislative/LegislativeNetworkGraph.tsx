@@ -5,25 +5,12 @@ import React, {
   useMemo,
   useRef,
   useState,
-  useEffect,
-  useLayoutEffect
+  useLayoutEffect,
+  useEffect
 } from 'react';
-import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { X, Move, ZoomIn, ZoomOut, RotateCcw, Info, Eye } from 'lucide-react';
-import type { ForceGraphMethods } from 'react-force-graph-2d';
-
-const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
-  ssr: false,
-  loading: () => (
-    <div className="animate-pulse bg-gray-100 h-full rounded-lg flex items-center justify-center">
-      <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-4"></div>
-        <p className="text-gray-600 font-medium">Se încarcă graficul legislativ...</p>
-      </div>
-    </div>
-  )
-});
+import type { Core } from 'cytoscape';
 
 import { useGraphQL } from '@/hooks/useGraphQL';
 import {
@@ -38,44 +25,7 @@ interface LegislativeNetworkGraphProps {
   documentId: string;
 }
 
-interface GraphNode {
-  id: string;
-  title: string;
-  publicationDate: string;
-  type: string;
-  val: number;
-  color: string;
-  isCentral: boolean;
-  x?: number;
-  y?: number;
-  fx?: number;
-  fy?: number;
-  vx?: number;
-  vy?: number;
-}
-
-interface GraphLink {
-  source: string | GraphNode;
-  target: string | GraphNode;
-  type: string;
-  confidence: number;
-  color: string;
-  curvature?: number;
-  particleSpeed?: number;
-  particleWidth?: number;
-}
-
-interface LegendConfig {
-  documentTypes: Array<{ color: string; label: string; type?: string }>;
-  connectionTypes: Array<{ 
-    color: string; 
-    label: string; 
-    style: 'solid' | 'dashed' | 'dotted';
-    width: number;
-  }>;
-}
-
-// Configurație culori și stiluri
+// Culori pentru noduri
 const DOCUMENT_COLORS: Record<string, string> = {
   central: '#5bc0be',
   lege: '#059669',
@@ -88,60 +38,46 @@ const DOCUMENT_COLORS: Record<string, string> = {
   default: '#3a506b'
 };
 
-const CONNECTION_COLORS: Record<string, string> = {
-  'modifică': '#059669',
-  'modifica': '#059669',
-  'abrogă': '#DC2626',
-  'abroga': '#DC2626',
-  'face referire la': '#6B7280',
-  'referire': '#6B7280',
-  default: '#3a506b'
+// Culori pentru confidence level
+const CONFIDENCE_COLORS: Record<'high' | 'medium' | 'low', string> = {
+  high: '#059669',    // Verde
+  medium: '#F59E0B',  // Portocaliu/Galben
+  low: '#DC2626'      // Roșu
 };
 
-const LEGEND_CONFIG: LegendConfig = {
-  documentTypes: [
-    { color: DOCUMENT_COLORS.central, label: 'Document central' },
-    { color: DOCUMENT_COLORS.lege, label: 'Lege' },
-    { color: DOCUMENT_COLORS['ordonanta_urgenta'], label: 'Ordonanță de urgență' },
-    { color: DOCUMENT_COLORS['hotarare_guvern'], label: 'Hotărâre de guvern' },
-    { color: DOCUMENT_COLORS['ordin_ministru'], label: 'Ordin de ministru' }
-  ],
-  connectionTypes: [
-    { 
-      color: CONNECTION_COLORS['modifică'], 
-      label: 'Modifică', 
-      style: 'solid',
-      width: 3
-    },
-    { 
-      color: CONNECTION_COLORS['abrogă'], 
-      label: 'Abrogă', 
-      style: 'solid',
-      width: 3
-    },
-    { 
-      color: CONNECTION_COLORS['face referire la'], 
-      label: 'Conexiune dedusă', 
-      style: 'dashed',
-      width: 1
-    }
-  ]
-};
+let cytoscapePromise: Promise<any> | null = null;
 
-export const LegislativeNetworkGraph = React.forwardRef<
-  HTMLDivElement,
-  LegislativeNetworkGraphProps
->(({ documentId }) => {
+async function loadCytoscape() {
+  if (!cytoscapePromise) {
+    cytoscapePromise = (async () => {
+      const cytoscapeModule = await import('cytoscape');
+      const cytoscape = (cytoscapeModule as any).default || cytoscapeModule;
+      const coseBilkentModule = await import('cytoscape-cose-bilkent');
+      const colaModule = await import('cytoscape-cola');
+      const dagreModule = await import('cytoscape-dagre');
+
+      cytoscape.use((coseBilkentModule as any).default || coseBilkentModule);
+      cytoscape.use((colaModule as any).default || colaModule);
+      cytoscape.use((dagreModule as any).default || dagreModule);
+
+      return cytoscape;
+    })();
+  }
+
+  return cytoscapePromise;
+}
+
+export function LegislativeNetworkGraph({ documentId }: LegislativeNetworkGraphProps) {
   const router = useRouter();
-  const graphRef = useRef<ForceGraphMethods>();
+  const cyRef = useRef<Core | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const graphContainerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
+  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  const hoveredNodeRef = useRef<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [showLegend, setShowLegend] = useState(true);
-  const [highlightNodes, setHighlightNodes] = useState(new Set<string>());
-  const [highlightLinks, setHighlightLinks] = useState(new Set<string>());
-  const frameCount = useRef(0);
+  const [layoutName, setLayoutName] = useState<'concentric' | 'breadthfirst' | 'cose'>('concentric');
 
   // Responsive dimensions
   useLayoutEffect(() => {
@@ -153,26 +89,20 @@ export const LegislativeNetworkGraph = React.forwardRef<
         width: Math.max(width - 32, 100), 
         height: Math.max(height - 32, 100) 
       });
+      
+      // Resize cytoscape
+      if (cyRef.current) {
+        cyRef.current.resize();
+      }
     });
     
     resizeObserver.observe(containerRef.current);
     return () => resizeObserver.disconnect();
   }, []);
 
-  // Debug: Check graphRef state after component mounts
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      console.log('Component mounted, graphRef.current =', graphRef.current);
-      if (graphRef.current) {
-        console.log('graphRef.current methods:', Object.getOwnPropertyNames(graphRef.current));
-      }
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // GraphQL data
+  // GraphQL data - reduc depth pentru a evita 429 errors
   const stableVariables = useMemo(
-    () => ({ documentId, depth: 3 }),
+    () => ({ documentId, depth: 2 }),
     [documentId]
   );
 
@@ -182,16 +112,67 @@ export const LegislativeNetworkGraph = React.forwardRef<
     { skip: false }
   );
 
-  // Process graph data
+  // Process graph data for Cytoscape
   const graphData = useMemo(() => {
     const sourceData = data?.getLegislativeGraph;
-    if (!sourceData) return { nodes: [], links: [] };
+    if (!sourceData) return { nodes: [], edges: [] };
 
     const centralNodeId = documentId;
-    const nodeCount = sourceData.nodes.length;
+    const originalNodeCount = sourceData.nodes.length;
+    const originalLinkCount = sourceData.links.length;
     
-    // Process nodes
-    const nodes: GraphNode[] = sourceData.nodes.map((node: LegislativeNode, idx: number) => {
+    const isRareCase = originalNodeCount <= 2;
+    const isManyNodes = originalNodeCount > 50;
+    const isVeryCrowded = originalNodeCount > 100 || originalLinkCount > 200;
+    
+    // Filtrare agresivă pentru cazuri foarte aglomerate
+    let nodesToProcess = sourceData.nodes;
+    let linksToProcess = sourceData.links;
+    
+    if (isVeryCrowded) {
+      const MAX_NODES = 80;
+      const centralNode = nodesToProcess.find(n => n.id === centralNodeId);
+      const otherNodes = nodesToProcess.filter(n => n.id !== centralNodeId);
+      
+      const nodeConnectionCount = new Map<string, number>();
+      sourceData.links.forEach((link: LegislativeLink) => {
+        nodeConnectionCount.set(link.source, (nodeConnectionCount.get(link.source) || 0) + 1);
+        nodeConnectionCount.set(link.target, (nodeConnectionCount.get(link.target) || 0) + 1);
+      });
+      
+      const sortedOtherNodes = otherNodes.sort((a, b) => {
+        const countA = nodeConnectionCount.get(a.id) || 0;
+        const countB = nodeConnectionCount.get(b.id) || 0;
+        return countB - countA;
+      });
+      
+      nodesToProcess = centralNode 
+        ? [centralNode, ...sortedOtherNodes.slice(0, MAX_NODES - 1)]
+        : sortedOtherNodes.slice(0, MAX_NODES);
+      
+      const nodeIds = new Set(nodesToProcess.map(n => n.id));
+      linksToProcess = sourceData.links.filter((link: LegislativeLink) => 
+        nodeIds.has(link.source) && nodeIds.has(link.target)
+      );
+      
+      if (linksToProcess.length > 150) {
+        linksToProcess = linksToProcess
+          .filter((link: LegislativeLink) => {
+            const confidence = link.confidence || 0;
+            const level = link.confidenceLevel;
+            return level === 'high' || level === 'medium' || confidence >= 0.6;
+          })
+          .sort((a: LegislativeLink, b: LegislativeLink) => {
+            const confA = a.confidence || 0;
+            const confB = b.confidence || 0;
+            return confB - confA;
+          })
+          .slice(0, 150);
+      }
+    }
+    
+    // Convert to Cytoscape format
+    const nodes = nodesToProcess.map((node: LegislativeNode) => {
       const isCentral = node.id === centralNodeId;
       const typeKey = node.type?.toLowerCase() || 'default';
       
@@ -207,191 +188,304 @@ export const LegislativeNetworkGraph = React.forwardRef<
         }
       }
 
-      // Circular layout with better spacing
-      let x = 0, y = 0;
-      if (!isCentral) {
-        const angle = (idx * 2 * Math.PI) / (nodeCount - 1);
-        const radius = Math.min(200, Math.max(150, nodeCount * 15));
-        x = Math.cos(angle) * radius;
-        y = Math.sin(angle) * radius;
+      let nodeSize = isCentral ? 50 : 30;
+      if (isRareCase) {
+        nodeSize = isCentral ? 60 : 40;
+      } else if (isManyNodes) {
+        nodeSize = isCentral ? 40 : 20;
       }
 
       return {
-        ...node,
-        val: isCentral ? 40 : 20,
-        color,
-        isCentral,
-        x,
-        y,
-        fx: isCentral ? 0 : undefined,
-        fy: isCentral ? 0 : undefined
-      };
-    });
-
-    // Process links with proper styling
-    const links: GraphLink[] = sourceData.links.map((link: LegislativeLink) => {
-      const confidence = link.confidence || 0.5;
-      const typeKey = link.type?.toLowerCase() || 'default';
-      
-      let color = CONNECTION_COLORS.default;
-      for (const [key, value] of Object.entries(CONNECTION_COLORS)) {
-        if (typeKey.includes(key)) {
-          color = value;
-          break;
+        data: {
+          id: String(node.id),
+          label: node.shortTitle || node.title,
+          fullLabel: node.shortTitle || node.title,
+          actNumber: node.actNumber,
+          actType: node.actType || node.type,
+          publicationDate: node.publicationDate,
+          isCentral: String(isCentral),
+          nodeType: node.type,
+          color,
+          size: nodeSize,
+          fontSize: `${isCentral ? (isRareCase ? 16 : 14) : (isRareCase ? 14 : 12)}px`,
+          textMaxWidth: isRareCase ? '100px' : (nodeSize > 30 ? '80px' : '60px'),
+          borderWidth: isCentral ? 3 : 1,
+          fontWeight: isCentral ? 'bold' : 'normal'
         }
-      }
-
-      // Add curvature for multiple links between same nodes
-      const existingLinks = sourceData.links.filter((l: LegislativeLink) => 
-        (l.source === link.source && l.target === link.target) ||
-        (l.source === link.target && l.target === link.source)
-      );
-      
-      let curvature = 0;
-      if (existingLinks.length > 1) {
-        const linkIndex = existingLinks.findIndex((l: LegislativeLink) => l === link);
-        curvature = 0.3 * (linkIndex - (existingLinks.length - 1) / 2);
-      }
-
-      return {
-        ...link,
-        color,
-        confidence,
-        curvature,
-        particleSpeed: confidence >= 0.8 ? 0.01 : 0,
-        particleWidth: confidence >= 0.8 ? 4 : 2
       };
     });
 
-    return { nodes, links };
+    const edges = linksToProcess.map((link: LegislativeLink) => {
+      const confidence = link.confidence || 0.5;
+      const level = link.confidenceLevel || (confidence >= 0.8 ? 'high' : confidence >= 0.6 ? 'medium' : 'low');
+      
+      let color = CONFIDENCE_COLORS[level];
+      if (!color && link.confidenceLevel) {
+        color = CONFIDENCE_COLORS[link.confidenceLevel];
+      }
+
+      return {
+        data: {
+          id: `${link.source}-${link.target}`,
+          source: String(link.source),
+          target: String(link.target),
+          type: link.typeLabel || link.type,
+          confidence: String(confidence),
+          confidenceLevel: level,
+          confidenceLabel: link.confidenceLabel,
+          description: link.description,
+          color,
+          width: confidence >= 0.8 ? 3 : confidence >= 0.6 ? 2 : 1,
+          opacity: level === 'low' ? 0.4 : level === 'medium' ? 0.7 : 1,
+          lineStyle: level === 'low' ? 'dashed' : 'solid'
+        }
+      };
+    });
+
+    return { nodes, edges, filteredInfo: isVeryCrowded ? {
+      originalNodes: originalNodeCount,
+      displayedNodes: nodes.length,
+      originalLinks: originalLinkCount,
+      displayedLinks: edges.length
+    } : null };
   }, [data, documentId]);
 
-  // Handle node interactions
-  const handleNodeClick = useCallback(
-    (node: GraphNode) => {
-      if (node.id === documentId) {
-        setHighlightNodes(new Set());
-        setHighlightLinks(new Set());
-      } else {
-        router.push(`/stiri/${node.id}`);
+  // Cytoscape stylesheet
+  const stylesheet = useMemo(() => [
+    {
+      selector: 'node',
+      style: {
+        'width': 'data(size)',
+        'height': 'data(size)',
+        'background-color': 'data(color)',
+        'label': 'data(label)',
+        'font-size': 'data(fontSize)',
+        'text-wrap': 'wrap',
+        'text-max-width': 'data(textMaxWidth)',
+        'text-overflow-wrap': 'ellipsis',
+        'text-valign': 'center',
+        'text-halign': 'center',
+        'color': '#111827',
+        'font-family': 'Inter, system-ui, sans-serif',
+        'font-weight': 'data(fontWeight)',
+        'border-width': 'data(borderWidth)',
+        'border-color': '#fff',
+        'text-outline-color': '#fff',
+        'text-outline-width': 2
       }
     },
-    [router, documentId]
-  );
-
-  const handleNodeHover = useCallback((node: GraphNode | null) => {
-    setHoveredNode(node);
-    
-    if (node) {
-      const connectedNodes = new Set<string>();
-      const connectedLinks = new Set<string>();
-      
-      graphData.links.forEach(link => {
-        const source = typeof link.source === 'object' ? link.source.id : link.source;
-        const target = typeof link.target === 'object' ? link.target.id : link.target;
-        
-        if (source === node.id || target === node.id) {
-          connectedNodes.add(source);
-          connectedNodes.add(target);
-          connectedLinks.add(`${source}-${target}`);
-        }
-      });
-      
-      setHighlightNodes(connectedNodes);
-      setHighlightLinks(connectedLinks);
-    } else {
-      setHighlightNodes(new Set());
-      setHighlightLinks(new Set());
+    {
+      selector: 'node:selected',
+      style: {
+        'border-width': 4,
+        'border-color': '#3b82f6'
+      }
+    },
+    {
+      selector: 'edge',
+      style: {
+        'width': 'data(width)',
+        'line-color': 'data(color)',
+        'target-arrow-color': 'data(color)',
+        'target-arrow-shape': 'triangle',
+        'arrow-scale': 1.5,
+        'curve-style': 'bezier',
+        'opacity': 'data(opacity)',
+        'line-style': 'data(lineStyle)',
+        'line-dash-pattern': [5, 5]
+      }
+    },
+    {
+      selector: 'edge:selected',
+      style: {
+        'width': 4,
+        'opacity': 1
+      }
+    },
+    {
+      selector: '.faded',
+      style: {
+        'opacity': 0.1
+      }
+    },
+    {
+      selector: '.highlighted-node',
+      style: {
+        'border-width': 4,
+        'border-color': '#3b82f6',
+        'opacity': 1
+      }
+    },
+    {
+      selector: '.highlighted-edge',
+      style: {
+        'width': 4,
+        'opacity': 1
+      }
     }
-  }, [graphData.links]);
+  ], []);
 
-  // Update tooltip position
-  useEffect(() => {
-    if (!hoveredNode) return;
+  // Layout configuration
+  const layoutConfig = useMemo(() => {
+    const nodeCount = graphData.nodes.length;
     
-    const handleMouseMove = (e: MouseEvent) => {
-      setTooltipPosition({ x: e.clientX, y: e.clientY });
+    if (layoutName === 'concentric') {
+      return {
+        name: 'concentric',
+        concentric: (node: any) => node.data('isCentral') === 'true' ? 0 : 1,
+        levelWidth: () => 2,
+        minNodeSpacing: nodeCount <= 2 ? 200 : nodeCount <= 10 ? 150 : nodeCount > 50 ? 80 : 100,
+        spacingFactor: nodeCount <= 2 ? 3 : nodeCount > 50 ? 1.2 : 2,
+        animate: true,
+        animationDuration: 1000,
+        fit: true,
+        padding: 50
+      };
+    }
+    
+    if (layoutName === 'breadthfirst') {
+      // Find central node ID
+      const centralNode = graphData.nodes.find((n: any) => n.data.isCentral === 'true');
+      return {
+        name: 'breadthfirst',
+        roots: centralNode ? `#${centralNode.data.id}` : undefined,
+        spacingFactor: nodeCount <= 2 ? 2 : nodeCount > 50 ? 1 : 1.5,
+        animate: true,
+        animationDuration: 1000,
+        fit: true,
+        padding: 50
+      };
+    }
+    
+    // cose (force-directed)
+    return {
+      name: 'cose',
+      nodeRepulsion: nodeCount <= 2 ? 4000 : nodeCount > 50 ? 10000 : 6000,
+      idealEdgeLength: nodeCount <= 2 ? 200 : nodeCount > 50 ? 80 : 150,
+      animate: true,
+      animationDuration: 1000,
+      fit: true,
+      padding: 50
     };
-    
-    document.addEventListener('mousemove', handleMouseMove);
-    return () => document.removeEventListener('mousemove', handleMouseMove);
+  }, [layoutName, graphData.nodes.length]);
+
+  useEffect(() => {
+    hoveredNodeRef.current = hoveredNode;
   }, [hoveredNode]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const renderGraph = async () => {
+      if (!graphContainerRef.current) return;
+
+      const cytoscape = await loadCytoscape();
+      if (cancelled || !graphContainerRef.current) return;
+
+      let cy = cyRef.current;
+
+      if (!cy) {
+        const newCy = cytoscape({
+          container: graphContainerRef.current,
+          elements: [],
+          style: stylesheet,
+          layout: { name: 'preset' },
+          wheelSensitivity: 0.2,
+          boxSelectionEnabled: false
+        });
+        cyRef.current = newCy;
+        cy = newCy;
+
+        newCy.on('tap', 'node', (evt: any) => {
+          const nodeId = evt.target.id();
+          if (nodeId === documentId) {
+            newCy.elements().removeClass('faded highlighted-node highlighted-edge');
+            setHoveredNode(null);
+          } else {
+            router.push(`/stiri/${nodeId}`);
+          }
+        });
+
+        newCy.on('mouseover', 'node', (evt: any) => {
+          const node = evt.target;
+          setHoveredNode(node.id());
+          newCy.elements().addClass('faded');
+          node.removeClass('faded').addClass('highlighted-node');
+          node.connectedEdges().removeClass('faded').addClass('highlighted-edge');
+          node.connectedNodes().removeClass('faded').addClass('highlighted-node');
+        });
+
+        newCy.on('mouseout', 'node', () => {
+          setHoveredNode(null);
+          newCy.elements().removeClass('faded highlighted-node highlighted-edge');
+        });
+
+        newCy.on('mousemove', (evt: any) => {
+          if (hoveredNodeRef.current) {
+            setTooltipPosition({ x: evt.originalEvent.clientX, y: evt.originalEvent.clientY });
+          }
+        });
+      } else if (cy.container() !== graphContainerRef.current) {
+        cy.mount(graphContainerRef.current);
+      }
+
+      if (!cy) return;
+
+      cy.batch(() => {
+        cy.elements().remove();
+        cy.add([...graphData.nodes, ...graphData.edges]);
+        cy.style().fromJson(stylesheet as any);
+      });
+
+      cy.elements().removeClass('faded highlighted-node highlighted-edge');
+
+      cy.resize();
+
+      const layout = cy.layout({
+        ...layoutConfig,
+        animate: true,
+        animationDuration: 800
+      } as any);
+      layout.run();
+
+      cy.fit(undefined, 50);
+    };
+
+    renderGraph();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [graphData, stylesheet, layoutConfig, dimensions.width, dimensions.height, documentId, router]);
+
+  useEffect(() => {
+    return () => {
+      if (cyRef.current) {
+        cyRef.current.destroy();
+        cyRef.current = null;
+      }
+    };
+  }, []);
 
   // Zoom controls
   const handleZoomIn = useCallback(() => {
-    graphRef.current?.zoom(1.5, 300);
+    if (cyRef.current) {
+      cyRef.current.zoom(cyRef.current.zoom() * 1.2);
+    }
   }, []);
 
   const handleZoomOut = useCallback(() => {
-    graphRef.current?.zoom(0.67, 300);
+    if (cyRef.current) {
+      cyRef.current.zoom(cyRef.current.zoom() * 0.8);
+    }
   }, []);
 
   const handleResetView = useCallback(() => {
-    console.log('handleResetView called:', {
-      graphRefCurrent: graphRef.current,
-      graphRefType: typeof graphRef.current,
-      hasZoomToFit: graphRef.current?.zoomToFit ? 'yes' : 'no',
-      nodesLength: graphData.nodes.length
-    });
-    
-    if (graphRef.current && typeof graphRef.current.zoomToFit === 'function') {
-      try {
-        graphRef.current.zoomToFit(400, 50);
-        console.log('Reset view successful');
-      } catch (error) {
-        console.warn('Failed to reset view:', error);
-        // Fallback: try to center the view
-        if (graphRef.current.centerAt && typeof graphRef.current.centerAt === 'function') {
-          graphRef.current.centerAt(0, 0, 1000);
-        }
-      }
-    } else {
-      console.log('Reset view skipped - graphRef.current is not ready');
+    if (cyRef.current) {
+      cyRef.current.fit(undefined, 50);
+      cyRef.current.center();
     }
-  }, [graphData.nodes.length]);
-
-  // Initial zoom to fit
-  useEffect(() => {
-    if (!graphRef.current || graphData.nodes.length === 0) return;
-    
-    const timer = setTimeout(() => {
-      if (graphRef.current && typeof graphRef.current.zoomToFit === 'function') {
-        try {
-          graphRef.current.zoomToFit(400, 50);
-          console.log('Initial zoom successful');
-        } catch (error) {
-          console.warn('Failed to perform initial zoom:', error);
-        }
-      }
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [graphData.nodes.length]);
-
-  // Configure D3 forces
-  useEffect(() => {
-    if (!graphRef.current || graphData.nodes.length === 0) return;
-    
-    const fg = graphRef.current;
-    
-    try {
-      // Configure forces for better layout
-      fg.d3Force('link')
-        ?.distance((link: GraphLink) => {
-          const confidence = link.confidence || 0.5;
-          return 150 + (1 - confidence) * 100;
-        })
-        .strength(1);
-      
-      fg.d3Force('charge')?.strength(-500).distanceMax(300);
-      fg.d3Force('center')?.strength(0.1);
-      fg.d3Force('collision')?.radius(30);
-      
-      fg.d3ReheatSimulation();
-      console.log('D3 forces configured successfully');
-    } catch (error) {
-      console.warn('Failed to configure D3 forces:', error);
-    }
-  }, [graphData]);
+  }, []);
 
   // Error and loading states
   if (loading) {
@@ -406,11 +500,28 @@ export const LegislativeNetworkGraph = React.forwardRef<
   }
 
   if (error) {
+    // Check if it's a 429 error (rate limit)
+    const isRateLimit = error.message?.includes('429') || error.message?.includes('Too Many Requests');
+    
     return (
       <div className="h-[600px] flex items-center justify-center bg-red-50 rounded-lg">
-        <div className="text-center text-red-600">
+        <div className="text-center text-red-600 max-w-md px-4">
           <p className="font-semibold mb-2">Eroare la încărcarea graficului</p>
-          <p className="text-sm">{error.message}</p>
+          {isRateLimit ? (
+            <div className="space-y-2">
+              <p className="text-sm">
+                Prea multe cereri. Te rugăm să aștepți câteva momente și să reîmprospătezi pagina.
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+              >
+                Reîncarcă pagina
+              </button>
+            </div>
+          ) : (
+            <p className="text-sm">{error.message}</p>
+          )}
         </div>
       </div>
     );
@@ -423,6 +534,8 @@ export const LegislativeNetworkGraph = React.forwardRef<
       </div>
     );
   }
+
+  const filteredInfo = (graphData as any).filteredInfo;
 
   return (
     <div
@@ -449,50 +562,68 @@ export const LegislativeNetworkGraph = React.forwardRef<
               Tipuri de documente
             </h4>
             <div className="space-y-2">
-              {LEGEND_CONFIG.documentTypes.map((item, idx) => (
-                <div key={idx} className="flex items-center space-x-3 group">
+              {Object.entries(DOCUMENT_COLORS).filter(([key]) => key !== 'default').map(([key, color]) => (
+                <div key={key} className="flex items-center space-x-3 group">
                   <div 
                     className="w-4 h-4 rounded-full shadow-sm ring-2 ring-white"
-                    style={{ backgroundColor: item.color }}
+                    style={{ backgroundColor: color }}
                   />
                   <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors">
-                    {item.label}
+                    {key === 'central' ? 'Document central' : key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                   </span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Connection Types */}
+          {/* Confidence Levels */}
           <div className="mb-6">
             <h4 className="font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wider">
-              Tipuri de conexiuni
+              Niveluri de încredere
             </h4>
             <div className="space-y-2">
-              {LEGEND_CONFIG.connectionTypes.map((item, idx) => (
-                <div key={idx} className="flex items-center space-x-3 group">
+              {Object.entries(CONFIDENCE_COLORS).map(([level, color]) => (
+                <div key={level} className="flex items-center space-x-3 group">
                   <svg width="32" height="4" className="flex-shrink-0">
                     <line
                       x1="0"
                       y1="2"
                       x2="32"
                       y2="2"
-                      stroke={item.color}
-                      strokeWidth={item.width}
-                      strokeDasharray={item.style === 'dashed' ? '5,5' : item.style === 'dotted' ? '2,2' : '0'}
+                      stroke={color}
+                      strokeWidth={level === 'high' ? 3 : level === 'medium' ? 2 : 1}
+                      strokeDasharray={level === 'low' ? '5,5' : '0'}
                     />
                   </svg>
-                  <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors">
-                    {item.label}
+                  <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors capitalize">
+                    {level === 'high' ? 'Foarte probabil' : level === 'medium' ? 'Probabil' : 'Puțin probabil'}
                   </span>
                 </div>
               ))}
-              <div className="mt-2 pt-2 border-t border-gray-200">
-                <p className="text-xs text-gray-500">
-                  <span className="font-medium">Încredere:</span> Liniile solide indică conexiuni explicite (≥60%), 
-                  iar cele punctate conexiuni deduse (&lt;60%)
-                </p>
-              </div>
+            </div>
+          </div>
+
+          {/* Layout Selection */}
+          <div className="mb-6">
+            <h4 className="font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wider">
+              Layout
+            </h4>
+            <div className="space-y-2">
+              {(['concentric', 'breadthfirst', 'cose'] as const).map((layout) => (
+                <button
+                  key={layout}
+                  onClick={() => setLayoutName(layout)}
+                  className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                    layoutName === layout
+                      ? 'bg-blue-100 text-blue-900 font-medium'
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  {layout === 'concentric' ? 'Concentric (recomandat)' : 
+                   layout === 'breadthfirst' ? 'Ierarhic' : 
+                   'Force-directed'}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -558,195 +689,77 @@ export const LegislativeNetworkGraph = React.forwardRef<
         </button>
       )}
 
-      {/* Graph Container */}
-      <ForceGraph2D
-        ref={graphRef}
-        graphData={graphData}
-        width={dimensions.width}
-        height={dimensions.height}
-        onEngineStop={() => {
-          console.log('ForceGraph2D engine stopped, graphRef.current =', graphRef.current);
-          if (graphRef.current) {
-            console.log('Engine stopped, graphRef methods:', Object.getOwnPropertyNames(graphRef.current));
-          }
-        }}
-        nodeLabel={() => ''}
-        onNodeClick={(node) => handleNodeClick(node as GraphNode)}
-        onNodeHover={(node) => handleNodeHover(node as GraphNode | null)}
-        backgroundColor="transparent"
-        linkDirectionalParticles={(link) => {
-          const l = link as GraphLink;
-          return l.confidence >= 0.8 ? 2 : 0;
-        }}
-        linkDirectionalParticleSpeed={(link) => {
-          const l = link as GraphLink;
-          return l.particleSpeed || 0.005;
-        }}
-        linkDirectionalParticleWidth={(link) => {
-          const l = link as GraphLink;
-          return l.particleWidth || 2;
-        }}
-        linkDirectionalParticleColor={() => '#06b6d4'}
-        linkCurvature={(link) => (link as GraphLink).curvature || 0}
-        linkCanvasObjectMode={() => 'after'}
-        nodeCanvasObjectMode={() => 'after'}
-        onRenderFramePost={(_ctx: CanvasRenderingContext2D) => {
-          // Log first few frames to see when graph is ready
-          if (frameCount.current < 5) {
-            console.log(`Frame ${frameCount.current}: graphRef.current =`, graphRef.current);
-          }
-          frameCount.current++;
-        }}
-        linkCanvasObject={(link, ctx: CanvasRenderingContext2D, _globalScale: number) => {
-          const l = link as GraphLink;
-          const source = l.source as GraphNode;
-          const target = l.target as GraphNode;
-          
-          if (!source || !target || !source.x || !source.y || !target.x || !target.y) return;
-
-          const linkKey = `${source.id}-${target.id}`;
-          const isHighlighted = highlightLinks.has(linkKey) || highlightLinks.has(`${target.id}-${source.id}`);
-          
-          ctx.save();
-          
-          // Fade non-highlighted links when hovering
-          if (highlightNodes.size > 0 && !isHighlighted) {
-            ctx.globalAlpha = 0.1;
-          }
-          
-          // Draw link
-          ctx.beginPath();
-          
-          // Handle curvature
-          if (l.curvature) {
-            const mx = (source.x + target.x) / 2;
-            const my = (source.y + target.y) / 2;
-            const dx = target.x - source.x;
-            const dy = target.y - source.y;
-            const norm = Math.sqrt(dx * dx + dy * dy);
-            const unitX = -dy / norm;
-            const unitY = dx / norm;
-            const offset = l.curvature * norm * 0.5;
-            const cx = mx + offset * unitX;
-            const cy = my + offset * unitY;
-            
-            ctx.moveTo(source.x, source.y);
-            ctx.quadraticCurveTo(cx, cy, target.x, target.y);
-          } else {
-            ctx.moveTo(source.x, source.y);
-            ctx.lineTo(target.x, target.y);
-          }
-          
-          // Style based on confidence
-          ctx.strokeStyle = l.color;
-          ctx.lineWidth = isHighlighted ? 3 : (l.confidence >= 0.8 ? 2 : 1);
-          
-          if (l.confidence < 0.6) {
-            ctx.setLineDash([5, 5]);
-          } else {
-            ctx.setLineDash([]);
-          }
-          
-          ctx.stroke();
-          ctx.restore();
-        }}
-        nodeCanvasObject={(node, ctx: CanvasRenderingContext2D, _globalScale: number) => {
-          const n = node as GraphNode;
-          if (!n.x || !n.y) return;
-          
-          const isHighlighted = highlightNodes.has(n.id);
-          const label = n.title.length > 30 ? n.title.slice(0, 30) + '…' : n.title;
-          const fontSize = n.isCentral ? 14 / _globalScale : 12 / _globalScale;
-          
-          ctx.save();
-          
-          // Fade non-highlighted nodes when hovering
-          if (highlightNodes.size > 0 && !isHighlighted) {
-            ctx.globalAlpha = 0.1;
-          }
-          
-          // Draw node circle
-          ctx.beginPath();
-          ctx.arc(n.x, n.y, n.val, 0, 2 * Math.PI);
-          ctx.fillStyle = n.color;
-          ctx.fill();
-          
-          // Add border for central node or highlighted
-          if (n.isCentral || isHighlighted) {
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-          }
-          
-          // Draw label background
-          ctx.font = `${n.isCentral ? 'bold ' : ''}${fontSize}px Inter, system-ui, sans-serif`;
-          const textWidth = ctx.measureText(label).width;
-          const bckgDimensions = [textWidth + 10, fontSize + 10];
-          
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-          ctx.fillRect(
-            n.x - bckgDimensions[0] / 2,
-            n.y + n.val + 2,
-            bckgDimensions[0],
-            bckgDimensions[1]
-          );
-          
-          // Draw label text
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillStyle = n.isCentral ? n.color : '#111827';
-          ctx.fillText(label, n.x, n.y + n.val + 2 + bckgDimensions[1] / 2);
-          
-          ctx.restore();
-        }}
-        minZoom={0.5}
-        maxZoom={5}
-        enableNodeDrag={true}
-        enableZoomInteraction={true}
-        enablePanInteraction={true}
-        d3AlphaDecay={0.02}
-        d3VelocityDecay={0.3}
-        cooldownTicks={100}
-        warmupTicks={100}
-      />
-
-      {/* Tooltip */}
-      {hoveredNode && (
-        <div
-          className="fixed z-50 bg-white p-3 rounded-lg shadow-2xl border border-gray-200 text-sm pointer-events-none max-w-sm transform -translate-y-full"
-          style={{
-            left: `${tooltipPosition.x}px`,
-            top: `${tooltipPosition.y - 10}px`,
-          }}
-        >
-          <div className="font-semibold text-gray-900 mb-1 break-words">
-            {hoveredNode.title}
-          </div>
-          <div className="text-gray-600 text-xs space-y-1">
-            <div className="flex items-center space-x-2">
-              <span className="font-medium">Tip:</span>
-              <span className="capitalize">{hoveredNode.type?.replace('_', ' ')}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="font-medium">Publicat:</span>
+      {/* Filtering Info Banner */}
+      {filteredInfo && (
+        <div className="absolute bottom-4 left-4 right-4 z-20 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-xs text-blue-800 shadow-md">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Info className="h-4 w-4 flex-shrink-0" />
               <span>
-                {new Date(hoveredNode.publicationDate).toLocaleDateString('ro-RO', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
+                Graful este optimizat pentru claritate: afișăm {filteredInfo.displayedNodes} din {filteredInfo.originalNodes} noduri 
+                și {filteredInfo.displayedLinks} din {filteredInfo.originalLinks} conexiuni (prioritizate după importanță și încredere).
               </span>
             </div>
           </div>
-          {hoveredNode.id !== documentId && (
-            <div className="text-blue-600 text-xs mt-2 font-medium border-t border-gray-100 pt-2">
-              Click pentru a vizualiza documentul
-            </div>
-          )}
         </div>
+      )}
+
+      {/* Cytoscape Graph */}
+      <div ref={graphContainerRef} className="absolute inset-0" />
+
+      {/* Tooltip */}
+      {hoveredNode && cyRef.current && (
+        (() => {
+          const node = cyRef.current.$(`#${hoveredNode}`);
+          if (node.length === 0) return null;
+          const nodeData = node.data();
+          const nodeId = String(nodeData.id);
+          return (
+            <div
+              className="fixed z-50 bg-white p-3 rounded-lg shadow-2xl border border-gray-200 text-sm pointer-events-none max-w-sm transform -translate-y-full"
+              style={{
+                left: `${tooltipPosition.x}px`,
+                top: `${tooltipPosition.y - 10}px`,
+              }}
+            >
+              <div className="font-semibold text-gray-900 mb-1 break-words">
+                {nodeData.fullLabel || nodeData.label}
+              </div>
+              <div className="text-gray-600 text-xs space-y-1">
+                {nodeData.actNumber && (
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium">Număr:</span>
+                    <span>{nodeData.actNumber}</span>
+                  </div>
+                )}
+                {nodeData.actType && (
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium">Tip:</span>
+                    <span>{nodeData.actType}</span>
+                  </div>
+                )}
+                {nodeData.publicationDate && (
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium">Publicat:</span>
+                    <span>
+                      {new Date(nodeData.publicationDate).toLocaleDateString('ro-RO', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </span>
+                  </div>
+                )}
+              </div>
+              {nodeId !== documentId && (
+                <div className="text-blue-600 text-xs mt-2 font-medium border-t border-gray-100 pt-2">
+                  Click pentru a vizualiza documentul
+                </div>
+              )}
+            </div>
+          );
+        })()
       )}
     </div>
   );
-});
-
-LegislativeNetworkGraph.displayName = 'LegislativeNetworkGraph';
+}

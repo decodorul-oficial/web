@@ -1,19 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect, useCallback, type FC } from 'react';
+import { useState, useEffect, useCallback, useRef, type FC } from 'react';
 import { fetchRelatedStories } from '@/features/news/services/newsService';
 import { Gavel, Eye } from 'lucide-react';
-import type { LucideProps } from 'lucide-react';
+import type { LucideProps, LucideIcon } from 'lucide-react';
+import { getLucideIcon } from '@/lib/optimizations/lazyIcons';
 import { createNewsSlug } from '@/lib/utils/slugify';
 import { trackNewsClick } from '../../../lib/analytics';
 import type { RelatedStory, NewsItem, RelevanceReasons } from '@/features/news/types';
 import { stripHtml } from '@/lib/html/sanitize';
 import { SameDayNewsSection } from './SameDayNewsSection';
 import { TooltipProvider } from '@/components/ui/Tooltip';
-
-// Tip pentru componenta de iconiță Lucide
-type LucideIcon = FC<LucideProps>;
 
 // Interfață pentru structura conținutului unei știri
 interface NewsContent {
@@ -127,13 +125,35 @@ export function RelatedStoriesSection({ storyId, limit = 5, minScore = 1.0, fall
       .join('');
   }
 
-  function getLucideIconForContent(content: unknown, fallback: LucideIcon): LucideIcon {
+  // Hook pentru a gestiona încărcarea asincronă a icon-ului
+  function useLucideIcon(iconName: string | undefined, fallback: LucideIcon): LucideIcon {
+    const [icon, setIcon] = useState<LucideIcon>(fallback);
+    const fallbackRef = useRef(fallback);
+
+    // Actualizează referința la fallback când se schimbă
+    useEffect(() => {
+      fallbackRef.current = fallback;
+    }, [fallback]);
+
+    useEffect(() => {
+      if (typeof iconName === 'string' && iconName.trim().length > 0) {
+        void getLucideIcon(iconName, fallbackRef.current).then(loadedIcon => {
+          setIcon(loadedIcon);
+        });
+      } else {
+        setIcon(fallbackRef.current);
+      }
+    }, [iconName]);
+
+    return icon;
+  }
+
+  // Component wrapper pentru icon-ul din conținut
+  function ContentIcon({ content, fallback, className }: { content: unknown; fallback: LucideIcon; className?: string }) {
     const c = parseContent(content);
     const iconName = c.lucide_icon ?? c.lucideIcon;
-
-    // For now, just return the fallback icon
-    // The lazy loading can be implemented later if needed
-    return fallback;
+    const Icon = useLucideIcon(iconName, fallback);
+    return <Icon className={className} />;
   }
 
   const handleNewsClick = (news: RelatedStory, section: string): void => {
@@ -197,7 +217,6 @@ export function RelatedStoriesSection({ storyId, limit = 5, minScore = 1.0, fall
         </h3>
         <div className="space-y-3">
           {relatedStories.map((story) => {
-            const Icon = getLucideIconForContent(story.content, Gavel);
             const summary = extractSummary(story.content);
 
             return (
@@ -210,7 +229,7 @@ export function RelatedStoriesSection({ storyId, limit = 5, minScore = 1.0, fall
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0 text-center">
                       <div className="h-8 w-8 rounded bg-gradient-to-br from-brand-accent to-brand-info/60 flex items-center justify-center">
-                        <Icon className="h-4 w-4 text-white" />
+                        <ContentIcon content={story.content} fallback={Gavel} className="h-4 w-4 text-white" />
                       </div>
                       {/*<Tooltip>
                         <TooltipTrigger asChild>

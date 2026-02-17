@@ -114,4 +114,53 @@ export function getGraphQLClient(options?: GraphQLClientFactoryOptions): GraphQL
   return singletonClient;
 }
 
+/**
+ * Creează un client GraphQL nou (nu singleton) cu X-Internal-API-Key setat.
+ * Doar pentru server; folosit de rute care trebuie să trimită key-ul (ex. news-sitemap).
+ * Nu depinde de ordinea de creare a singleton-ului.
+ */
+export function getServerGraphQLClientWithInternalKey(): GraphQLClient | null {
+  if (typeof window !== 'undefined') return null;
+
+  const raw = process.env.INTERNAL_API_KEY;
+  const key = typeof raw === 'string' ? raw.trim() : '';
+  if (!key) {
+    if (process.env.DEBUG_INTERNAL_API_KEY === 'true') {
+      console.info('[GraphQL][InternalKey] getServerGraphQLClientWithInternalKey: INTERNAL_API_KEY missing or empty');
+    }
+    return null;
+  }
+
+  let endpoint = normalizeEndpoint();
+  if (!endpoint.startsWith('http')) {
+    const base = process.env.NEXT_PUBLIC_BASE_URL ?? process.env.VERCEL_URL ?? 'localhost:3000';
+    const origin = base.startsWith('http') ? base : `http://${base}`;
+    endpoint = new URL(endpoint, origin).toString();
+  }
+
+  if (process.env.DEBUG_INTERNAL_API_KEY === 'true') {
+    console.info('[GraphQL][InternalKey] getServerGraphQLClientWithInternalKey: using key (length=%d), endpoint=%s', key.length, endpoint.replace(/[?&#].*/, ''));
+  }
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'X-Internal-API-Key': key,
+  };
+
+  const client = new GraphQLClient(endpoint, { headers });
+
+  if (process.env.DEBUG_INTERNAL_API_KEY === 'true') {
+    const originalRequest = client.request.bind(client);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (client as any).request = async (query: string, variables?: Record<string, unknown>, requestHeaders?: HeadersInit) => {
+      const opMatch = typeof query === 'string' ? /\b(query|mutation)\s+(\w+)/.exec(query) : null;
+      console.info('[GraphQL][InternalKey] request: operation=%s, header X-Internal-API-Key present', opMatch?.[2] ?? 'unknown');
+      return originalRequest(query, variables, requestHeaders);
+    };
+  }
+
+  return client;
+}
+
 

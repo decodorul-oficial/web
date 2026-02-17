@@ -10,13 +10,14 @@ export async function GET() {
   const fortyEightHoursAgo = new Date(currentDate.getTime() - (48 * 60 * 60 * 1000));
   
   try {
-    // Fetch news from the last 48 hours
-    const { stiri } = await fetchLatestNews({ 
-      limit: 100, 
-      orderBy: 'publicationDate', 
-      orderDirection: 'desc' 
+    // Fetch news from the last 48 hours (limit 100 with internal key when API allows; fallback 10 handled in service)
+    const { stiri } = await fetchLatestNews({
+      limit: 100,
+      orderBy: 'publicationDate',
+      orderDirection: 'desc',
+      useInternalKey: true,
     });
-    
+
     // Filter news from the last 48 hours only
     const recentNews = stiri.filter((news) => {
       const publicationDate = new Date(news.publicationDate);

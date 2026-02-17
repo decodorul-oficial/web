@@ -78,6 +78,7 @@ export function AuthenticatedLegislativeNetworkSection({ documentId }: Authentic
   //return <LegislativeNetworkSection documentId={documentId} />;
   return (
     <section className="py-6 bg-gray-50">
+      <LegislativeNetworkSection documentId={documentId} />
       <div className="container mx-auto px-4">
         <h2 className="text-xl font-bold text-gray-900 mb-4">
           Harta Conexiunilor Legislative

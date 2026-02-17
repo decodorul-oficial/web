@@ -1,4 +1,4 @@
-import { getGraphQLClient } from '@/lib/graphql/client';
+import { getGraphQLClient, getServerGraphQLClientWithInternalKey } from '@/lib/graphql/client';
 import { requestWithEndpointFallback } from '@/lib/graphql/utils';
 import { UserService } from '@/features/user/services/userService'; // Import direct
 import {
@@ -11,7 +11,8 @@ import {
   GET_CATEGORIES,
   GET_STIRI_BY_CATEGORY_SLUG,
   GET_RELATED_STORIES,
-  GET_PERSONALIZED_FEED
+  GET_PERSONALIZED_FEED,
+  GET_LEGISLATIVE_GRAPH
 } from '../graphql/queries';
 import {
   GetStiriResponse,
@@ -32,7 +33,9 @@ import {
   GetPersonalizedFeedParams,
   GetDocumentConnectionsByNewsParams,
   GetDocumentConnectionsByNewsResponse,
-  DocumentConnectionView
+  DocumentConnectionView,
+  LegislativeGraphResponse,
+  LegislativeGraphParams
 } from '../types';
 import { ensureSessionCookie } from '@/lib/utils/sessionCookie';
 import { GET_DOCUMENT_CONNECTIONS_BY_NEWS } from '../graphql/queries';
@@ -53,24 +56,48 @@ export type FetchNewsParams = {
   offset?: number;
   orderBy?: string;
   orderDirection?: 'asc' | 'desc';
+  /** Pe server, folosește un client dedicat cu X-Internal-API-Key (ex. pentru sitemap). */
+  useInternalKey?: boolean;
 };
 
+function isUnauthenticatedLimitError(error: unknown): boolean {
+  if (!error || typeof error !== 'object' || !('response' in error)) return false;
+  const errors = (error as { response?: { errors?: Array<{ extensions?: { code?: string } }> } }).response?.errors;
+  return Array.isArray(errors) && errors.some((e) => e.extensions?.code === 'UNAUTHENTICATED');
+}
+
 export async function fetchLatestNews(params: FetchNewsParams = {}) {
-  const { limit = 10, offset = 0, orderBy = 'publicationDate', orderDirection = 'desc' } = params;
+  const { limit = 10, offset = 0, orderBy = 'publicationDate', orderDirection = 'desc', useInternalKey = false } = params;
   const limitClamped = Math.max(1, Math.min(100, limit));
   ensureSessionCookie();
 
-  try {
-    const client = getApiClient(); // Folosește clientul standard (poate fi autentificat sau nu)
+  const run = async (client: ReturnType<typeof getApiClient>, l: number, o: number) => {
     const data = await client.request<GetStiriResponse>(GET_STIRI, {
-      limit: limitClamped,
-      offset,
+      limit: l,
+      offset: o,
       orderBy,
       orderDirection
     });
     return data.getStiri;
-  } catch (error) {
-    console.error('Error fetching latest news:', error);
+  };
+
+  try {
+    const internalClient = useInternalKey && typeof window === 'undefined' ? getServerGraphQLClientWithInternalKey() : null;
+    const client = internalClient ?? getApiClient();
+    if (useInternalKey && typeof window === 'undefined' && process.env.DEBUG_INTERNAL_API_KEY === 'true') {
+      console.info('[newsService] fetchLatestNews(useInternalKey=true): client=%s', internalClient ? 'internal-key (X-Internal-API-Key sent)' : 'fallback (INTERNAL_API_KEY missing)');
+    }
+    return await run(client, limitClamped, offset);
+  } catch (firstError: unknown) {
+    if (useInternalKey && limitClamped > 10 && isUnauthenticatedLimitError(firstError)) {
+      try {
+        const client = getApiClient();
+        return await run(client, 10, 0);
+      } catch {
+        return { stiri: [], pagination: { totalCount: 0, currentPage: 1, totalPages: 1 } };
+      }
+    }
+    console.error('Error fetching latest news:', firstError);
     return {
       stiri: [],
       pagination: { totalCount: 0, currentPage: 1, totalPages: 1 }
@@ -301,6 +328,33 @@ export async function fetchDocumentConnectionsByNews(params: GetDocumentConnecti
     console.error('Error fetching document connections by news:', error);
     // If unauthorized or subscription required, return empty; UI will handle gating
     return [];
+  }
+}
+
+export async function fetchLegislativeGraph(params: LegislativeGraphParams) {
+  ensureSessionCookie();
+  try {
+    const client = getApiClient();
+    const data = await client.request<LegislativeGraphResponse>(
+      GET_LEGISLATIVE_GRAPH,
+      params
+    );
+    return data.getLegislativeGraph;
+  } catch (error: any) {
+    console.error('Error fetching legislative graph:', error);
+    // Check for authentication/subscription errors
+    if (error?.response?.errors) {
+      const authError = error.response.errors.find((e: any) => 
+        e.extensions?.code === 'UNAUTHENTICATED' || 
+        e.message.includes('Utilizator neautentificat') ||
+        e.message.includes('Active subscription or trial required')
+      );
+      
+      if (authError) {
+        throw new Error('UNAUTHENTICATED');
+      }
+    }
+    return null;
   }
 }
 

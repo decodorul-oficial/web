@@ -280,3 +280,30 @@ export const GET_DOCUMENT_CONNECTIONS_BY_NEWS = gql`
     }
   }
 `;
+
+// Query: getLegislativeGraph
+export const GET_LEGISLATIVE_GRAPH = gql`
+  query GetLegislativeGraph($documentId: ID!, $depth: Int, $minConfidence: Float, $maxNodes: Int, $maxLinks: Int) {
+    getLegislativeGraph(documentId: $documentId, depth: $depth, minConfidence: $minConfidence, maxNodes: $maxNodes, maxLinks: $maxLinks) {
+      nodes {
+        id
+        title
+        shortTitle
+        actNumber
+        actType
+        publicationDate
+        type
+      }
+      links {
+        source
+        target
+        type
+        typeLabel
+        confidence
+        confidenceLabel
+        confidenceLevel
+        description
+      }
+    }
+  }
+`;
