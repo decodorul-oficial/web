@@ -39,6 +39,7 @@ import {
 } from '../types';
 import { ensureSessionCookie } from '@/lib/utils/sessionCookie';
 import { GET_DOCUMENT_CONNECTIONS_BY_NEWS } from '../graphql/queries';
+import { getSitemapGraphQLClient } from '@/lib/sitemap/sitemapGraphqlClient';
 
 /**
  * Creează un client GraphQL care este automat autentificat
@@ -230,9 +231,15 @@ export async function getDailySynthesis(params: GetDailySynthesisParams): Promis
   }
 }
 
-export async function fetchCategories(limit: number = 100): Promise<CategoryCount[]> {
+export async function fetchCategories(
+  limit: number = 100,
+  options: { useInternalKey?: boolean } = {},
+): Promise<CategoryCount[]> {
   try {
-    const client = getApiClient();
+    const useInternalKey = options.useInternalKey ?? false;
+    const internalClient =
+      useInternalKey && typeof window === 'undefined' ? getSitemapGraphQLClient() : null;
+    const client = internalClient ?? getApiClient();
     const data = await client.request<GetCategoriesResponse>(GET_CATEGORIES, { limit });
     return data.getCategories;
   } catch (error) {

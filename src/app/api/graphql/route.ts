@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   try {
     // Use environment variables to determine the correct external API endpoint
     const browserEndpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || '/api/graphql';
-    const externalApiEndpoint = process.env.EXTERNAL_GRAPHQL_ENDPOINT || process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'https://decodorul-oficial-api.vercel.app/api/graphql';
+    const externalApiEndpoint = process.env.EXTERNAL_GRAPHQL_ENDPOINT || process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'https://decodorul-oficial-api.vercel.app/graphql';
         
     // Determine the final endpoint for the upstream request
     let endpoint: string;

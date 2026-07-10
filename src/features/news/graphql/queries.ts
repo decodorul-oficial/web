@@ -8,6 +8,7 @@ export const GET_STIRI = gql`
         id
         title
         publicationDate
+        category
         content
         filename
         viewCount
