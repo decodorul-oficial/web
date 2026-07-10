@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.decodoruloficial.ro';
-  
+
   return {
     rules: [
       {
@@ -16,7 +16,7 @@ export default function robots(): MetadataRoute.Robots {
           '/legal',
           '/privacy',
           '/cookies',
-          '/api/news-sitemap'
+          '/sitemaps/*',
         ],
         disallow: [
           '/api/graphql',
@@ -25,7 +25,7 @@ export default function robots(): MetadataRoute.Robots {
           '/admin/',
           '/login',
           '/test-news/',
-          '/*.json'
+          '/*.json',
         ],
         crawlDelay: 1,
       },
@@ -40,7 +40,7 @@ export default function robots(): MetadataRoute.Robots {
           '/legal',
           '/privacy',
           '/cookies',
-          '/api/news-sitemap'
+          '/sitemaps/*',
         ],
         disallow: [
           '/api/graphql',
@@ -49,7 +49,7 @@ export default function robots(): MetadataRoute.Robots {
           '/admin/',
           '/login',
           '/test-news/',
-          '/*.json'
+          '/*.json',
         ],
         crawlDelay: 0.5,
       },
@@ -64,7 +64,7 @@ export default function robots(): MetadataRoute.Robots {
           '/legal',
           '/privacy',
           '/cookies',
-          '/api/news-sitemap'
+          '/sitemaps/*',
         ],
         disallow: [
           '/api/graphql',
@@ -73,15 +73,12 @@ export default function robots(): MetadataRoute.Robots {
           '/admin/',
           '/login',
           '/test-news/',
-          '/*.json'
+          '/*.json',
         ],
         crawlDelay: 1,
       },
     ],
-    sitemap: [
-      `${baseUrl}/sitemap.xml`,
-      `${baseUrl}/api/news-sitemap`
-    ],
+    sitemap: `${baseUrl}/sitemap.xml`,
     host: baseUrl,
   };
 }

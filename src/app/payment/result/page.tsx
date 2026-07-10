@@ -31,7 +31,7 @@ function PaymentResultContent() {
         if (statusParam === 'success') {
           // Confirm payment with API
           try {
-            const order = await subscriptionService.confirmNetopiaPayment(orderIdParam);
+            const order = await subscriptionService.confirmPayment(orderIdParam);
             
             if (order.status === 'SUCCEEDED') {
               setStatus('success');

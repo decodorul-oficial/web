@@ -11,6 +11,7 @@ export const GET_SUBSCRIPTION_TIERS = gql`
       price
       currency
       interval
+      stripePriceId
       features
       isPopular
       trialDays
@@ -32,6 +33,7 @@ export const GET_MY_SUBSCRIPTION = gql`
         price
         currency
         interval
+        stripePriceId
         features
         isPopular
         trialDays
@@ -164,6 +166,7 @@ export const REACTIVATE_SUBSCRIPTION = gql`
         price
         currency
         interval
+        stripePriceId
         features
         isPopular
         trialDays
@@ -188,6 +191,15 @@ export const CANCEL_SUBSCRIPTION = gql`
       cancelAtPeriodEnd
       createdAt
       updatedAt
+    }
+  }
+`;
+
+/** Contract cu backend-ul: vezi docs/API_STRIPE_PORTAL_AND_CANCEL.md */
+export const CREATE_STRIPE_CUSTOMER_PORTAL_SESSION = gql`
+  mutation CreateStripeCustomerPortalSession($input: CreateStripeCustomerPortalSessionInput!) {
+    createStripeCustomerPortalSession(input: $input) {
+      url
     }
   }
 `;

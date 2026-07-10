@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Combobox } from '@headlessui/react';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { Control, Controller, UseFormSetValue, UseFormWatch } from 'react-hook-form';
@@ -12,15 +12,62 @@ interface LocationSelectorProps {
 
 interface GeoItem {
   nume: string;
-  simplu?: string;
-  orase: GeoItem[];
+  // listă de opțiuni pentru combobox-ul de oraș (pentru RO include și "Sector X")
+  orase: string[];
 }
 
-const ROMANIA_GEO_URL = 'https://raw.githubusercontent.com/virgil-av/romania-judete-orase/main/judete-orase.json';
+const ROMANIA_GEO_URLS = [
+  // (legacy) posibil să fi dispărut din upstream
+  'https://raw.githubusercontent.com/virgil-av/romania-judete-orase/main/judete-orase.json',
+  // (current) structură: { "judete": [ { "nume": "...", "localitati": [ { "nume": "..." } ] } ] }
+  'https://raw.githubusercontent.com/virgil-av/judet-oras-localitati-romania/master/judete.json',
+];
 
 const COMMON_COUNTRIES = [
   "Romania", "United Kingdom", "United States", "Germany", "France", "Italy", "Spain", "Moldova", "Hungary", "Bulgaria", "Ukraine", "Other"
 ];
+
+function normalizeForCompare(input: string) {
+  return input
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+}
+
+function normalizeRomaniaGeo(raw: any): GeoItem[] {
+  // legacy: array: [ { nume, orase: [ { nume } ] } ]
+  if (Array.isArray(raw)) {
+    return raw
+      .filter((c: any) => typeof c?.nume === 'string')
+      .map((c: any) => {
+        const orase: string[] = Array.isArray(c?.orase)
+          ? c.orase
+              .map((o: { nume?: unknown }) => o?.nume)
+              .filter((n: unknown): n is string => typeof n === 'string')
+          : [];
+        const unique = Array.from(new Set(orase));
+        return { nume: c.nume as string, orase: unique.sort() };
+      });
+  }
+
+  // current: { judete: [ { nume, localitati: [ { nume } ] } ] }
+  if (Array.isArray(raw?.judete)) {
+    return raw.judete
+      .filter((c: any) => typeof c?.nume === 'string')
+      .map((c: any) => {
+        const orase: string[] = Array.isArray(c?.localitati)
+          ? c.localitati
+              .map((o: { nume?: unknown }) => o?.nume)
+              .filter((n: unknown): n is string => typeof n === 'string')
+          : [];
+        const unique = Array.from(new Set(orase));
+        return { nume: c.nume as string, orase: unique.sort() };
+      });
+  }
+
+  return [];
+}
 
 function LocationCombobox({ 
   value, 
@@ -41,11 +88,17 @@ function LocationCombobox({
 }) {
   const [query, setQuery] = useState('');
 
-  const filteredOptions = query === ''
-    ? options
-    : options.filter((opt) =>
-        opt.toLowerCase().replace(/\s+/g, '').includes(query.toLowerCase().replace(/\s+/g, ''))
-      );
+  // Dacă nu filtrează nimeni, nu redăm mii de opțiuni (UI devine greoaie).
+  const MAX_OPTIONS_INITIAL = 200;
+  const filteredOptions =
+    query === ''
+      ? options.slice(0, MAX_OPTIONS_INITIAL)
+      : options.filter((opt) =>
+          opt
+            .toLowerCase()
+            .replace(/\s+/g, '')
+            .includes(query.toLowerCase().replace(/\s+/g, ''))
+        );
 
   return (
     <Combobox as="div" value={value} onChange={onChange} disabled={disabled}>
@@ -102,25 +155,35 @@ function LocationCombobox({
 }
 
 export function LocationSelector({ control, setValue, errors, watch }: LocationSelectorProps) {
-  const [romaniaData, setRomaniaData] = useState<any[]>([]);
+  const [romaniaData, setRomaniaData] = useState<GeoItem[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const selectedCountry = watch('country');
+  const selectedCountryRaw = watch('country');
+  const selectedCountry = typeof selectedCountryRaw === 'string' ? selectedCountryRaw : '';
+  const isRomania = ['romania', 'ro'].includes(normalizeForCompare(selectedCountry));
   const selectedCounty = watch('county');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const res = await fetch(ROMANIA_GEO_URL);
-        if (!res.ok) throw new Error('Failed to fetch');
-        const data = await res.json();
-        // Structure check: array of objects with { nume: string, orase: [{nume: string}] }
-        // Ensure "judet" matches how I access it.
-        // Usually file structure is: [ { "nume": "Alba", "orase": [ { "nume": "Abrud" }, ... ] }, ... ]
-        setRomaniaData(Array.isArray(data) ? data : []);
+        let lastError: unknown = null;
+        for (const url of ROMANIA_GEO_URLS) {
+          try {
+            const res = await fetch(url);
+            if (!res.ok) continue;
+            const data = await res.json();
+            const normalized = normalizeRomaniaGeo(data);
+            if (normalized.length === 0) continue;
+            setRomaniaData(normalized);
+            return;
+          } catch (e) {
+            lastError = e;
+          }
+        }
+        console.error('Failed to fetch Romania geo data', lastError);
+        setRomaniaData([]);
       } catch (e) {
-        console.error('Failed to fetch Romania geo data', e);
         setRomaniaData([]);
       } finally {
         setLoading(false);
@@ -129,22 +192,29 @@ export function LocationSelector({ control, setValue, errors, watch }: LocationS
     fetchData();
   }, []);
 
+  // Unele date vechi pot salva `country` ca "RO" în loc de "Romania".
+  useEffect(() => {
+    if (!selectedCountryRaw) return;
+    if (isRomania && selectedCountry !== 'Romania') {
+      setValue('country', 'Romania');
+    }
+  }, [isRomania, selectedCountry, selectedCountryRaw, setValue]);
+
   const counties = useMemo(() => {
-    if (selectedCountry !== 'Romania') return [];
+    if (!isRomania) return [];
     return romaniaData.map(c => c.nume).sort();
-  }, [romaniaData, selectedCountry]);
+  }, [romaniaData, isRomania]);
 
   const cities = useMemo(() => {
-    if (selectedCountry !== 'Romania' || !selectedCounty) return [];
-    
-    // Find county by name (case insensitive match just in case)
-    const county = romaniaData.find(c => 
-      c.nume.toLowerCase() === selectedCounty.toLowerCase()
-    );
-    
-    if (!county || !county.orase) return [];
-    return county.orase.map((o: any) => o.nume).sort();
-  }, [romaniaData, selectedCountry, selectedCounty]);
+    if (!isRomania || !selectedCounty) return [];
+
+    // Match tolerant la diacritice pentru că în datele existente (billingDetails)
+    // pot exista variante (ex: București vs Bucureşti).
+    const target = normalizeForCompare(String(selectedCounty));
+    const county = romaniaData.find(c => normalizeForCompare(c.nume) === target);
+    if (!county) return [];
+    return county.orase;
+  }, [romaniaData, isRomania, selectedCounty]);
 
   // Effect to clear city when county changes if current city not in new list
   // Actually, we clear city when county changes via the onChange handler in render, 
@@ -227,7 +297,7 @@ export function LocationSelector({ control, setValue, errors, watch }: LocationS
           name="county"
           control={control}
           render={({ field }) => (
-            selectedCountry === 'Romania' ? (
+            isRomania ? (
               <LocationCombobox
                 label="Județ / Sector"
                 value={field.value}
@@ -262,7 +332,7 @@ export function LocationSelector({ control, setValue, errors, watch }: LocationS
           name="city"
           control={control}
           render={({ field }) => (
-             selectedCountry === 'Romania' ? (
+             isRomania ? (
               <LocationCombobox
                 label="Oraș"
                 value={field.value}

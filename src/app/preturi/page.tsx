@@ -102,7 +102,7 @@ const faqData = [
   {
     id: "payment-methods",
     question: "Ce metode de plată acceptați?",
-    answer: "Acceptăm toate cardurile bancare principale (Visa, Mastercard). Toate tranzacțiile sunt securizate și procesate prin Netopia, partenerul nostru de încredere pentru plăți online."
+    answer: "Acceptăm toate cardurile bancare principale (Visa, Mastercard). Toate tranzacțiile sunt securizate și procesate prin Stripe."
   },
   {
     id: "free-trial",

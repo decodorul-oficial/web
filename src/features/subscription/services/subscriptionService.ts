@@ -1,4 +1,5 @@
 import { getGraphQLClient } from '@/lib/graphql/client';
+import { getStripeSuccessUrlForGraphQL } from '@/lib/payment/stripe/stripeGraphqlSuccessUrl';
 import { UserService } from '@/features/user/services/userService';
 import { supabase } from '@/lib/supabase/client';
 import {
@@ -12,6 +13,7 @@ import {
   CONFIRM_PAYMENT,
   REACTIVATE_SUBSCRIPTION,
   CANCEL_SUBSCRIPTION,
+  CREATE_STRIPE_CUSTOMER_PORTAL_SESSION,
   UPDATE_PAYMENT_METHOD,
   ADMIN_REFUND,
   ADMIN_CANCEL_SUBSCRIPTION
@@ -100,7 +102,12 @@ export class SubscriptionService {
     const client = this.getApiClient();
     const result = await client.request<{ startCheckout: CheckoutSession }>(
       START_CHECKOUT,
-      { input }
+      {
+        input: {
+          ...getStripeSuccessUrlForGraphQL(),
+          ...input
+        }
+      }
     );
     return result.startCheckout;
   }
@@ -130,6 +137,24 @@ export class SubscriptionService {
       { input }
     );
     return result.cancelSubscription;
+  }
+
+  /**
+   * Deschide Stripe Customer Portal: backend-ul creează `billingPortal.sessions.create` și returnează URL-ul.
+   * Folosit când `NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_SOURCE` este `api` sau în modul `auto` (încercare API apoi fallback).
+   */
+  async createStripeCustomerPortalSession(returnUrl?: string | null): Promise<{ url: string }> {
+    const client = this.getApiClient();
+    const trimmed = returnUrl?.trim();
+    const input = trimmed ? { returnUrl: trimmed } : {};
+    const result = await client.request<{
+      createStripeCustomerPortalSession: { url: string };
+    }>(CREATE_STRIPE_CUSTOMER_PORTAL_SESSION, { input });
+    const url = result.createStripeCustomerPortalSession?.url?.trim();
+    if (!url) {
+      throw new Error('API returned empty Stripe Customer Portal URL');
+    }
+    return { url };
   }
 
   async updatePaymentMethod(input: UpdatePaymentMethodInput): Promise<PaymentMethod> {
@@ -201,6 +226,7 @@ export class SubscriptionService {
           price
           currency
           interval
+          stripePriceId
           features
           isPopular
           trialDays
@@ -313,43 +339,6 @@ export class SubscriptionService {
     }
   }
 
-  // Începe procesul de checkout cu Netopia
-  async startNetopiaCheckout(tierId: string, customerEmail: string, billingAddress: BillingAddress): Promise<CheckoutSession> {
-    const client = this.getApiClient();
-    const result = await client.request<{ startCheckout: CheckoutSession }>(`
-      mutation StartCheckout($input: StartCheckoutInput!) {
-        startCheckout(input: $input) {
-          orderId
-          checkoutUrl
-          expiresAt
-        }
-      }
-    `, {
-      input: {
-        tierId,
-        customerEmail,
-        billingAddress
-      }
-    });
-    return result.startCheckout;
-  }
-
-  // Confirmă plata după returnarea de la Netopia
-  async confirmNetopiaPayment(orderId: string): Promise<Order> {
-    const client = this.getApiClient();
-    const result = await client.request<{ confirmPayment: Order }>(`
-      mutation ConfirmPayment($orderId: ID!) {
-        confirmPayment(orderId: $orderId) {
-          id
-          status
-          amount
-          currency
-          checkoutUrl
-        }
-      }
-    `, { orderId });
-    return result.confirmPayment;
-  }
 }
 
 export const subscriptionService = new SubscriptionService();

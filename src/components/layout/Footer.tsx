@@ -115,13 +115,7 @@ export function Footer() {
 
             {/* Payment Processor Info */}
             <div className="flex items-center gap-2 text-xs text-gray-500">
-              <span>Plăți securizate prin</span>
-              <iframe
-                src="https://mny.ro/npId.html?color=%23f9fafb&version=orizontal&secret=155391"
-                style={{ border: "none", width: "120px", height: "22px" }}
-                title="NETOPIA Payments"
-              ></iframe>
-              <span className="text-xs">Autorizat BNR</span>
+              <span>Plăți securizate prin Stripe</span>
             </div>
           </div>
         </div>

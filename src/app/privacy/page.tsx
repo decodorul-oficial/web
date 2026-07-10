@@ -139,7 +139,7 @@ export default function PrivacyPage() {
                   cu excepția următoarelor situații:
                 </p>
                 <ul className="list-disc pl-6 text-gray-700 mb-4">
-                  <li>Furnizorii de servicii (procesarea plăților prin Netopia, hosting, analiză)</li>
+                  <li>Furnizorii de servicii (procesarea plăților prin Stripe, hosting, analiză)</li>
                   <li>Parteneri de publicitate (Google AdSense) — doar dacă ai oferit consimțământul pentru cookie-uri non-esențiale; reclamele sunt afișate exclusiv utilizatorilor fără abonament activ sau trial.</li>
                   <li>Autoritățile competente (când este cerut prin lege)</li>
                   <li>Consimțământul explicit al utilizatorului</li>
@@ -151,13 +151,13 @@ export default function PrivacyPage() {
                   5. Procesarea plăților
                 </h2>
                 <p className="text-gray-700 mb-4">
-                  Pentru procesarea plăților, folosim serviciile Netopia Payments, 
-                  un procesator de plăți autorizat de Banca Națională a României. 
+                  Pentru procesarea plăților, folosim serviciile Stripe,
+                  un procesator de plăți recunoscut la nivel internațional.
                   Datele de plată sunt procesate în conformitate cu standardele PCI DSS.
                 </p>
                 <p className="text-gray-700 mb-4">
-                  Nu stocăm datele cardurilor de credit. Toate tranzacțiile sunt 
-                  procesate securizat prin Netopia Payments.
+                  Nu stocăm datele cardurilor de credit. Toate tranzacțiile sunt
+                  procesate securizat prin Stripe.
                 </p>
               </section>
 

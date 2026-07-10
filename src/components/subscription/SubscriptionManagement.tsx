@@ -46,7 +46,8 @@ export function SubscriptionManagement() {
   }, []);
 
   const handleCancelSubscription = async () => {
-    if (!subscription) return;
+    const activeSub = subscription || enhancedProfile?.profile?.activeSubscription;
+    if (!activeSub?.id) return;
 
     if (!confirm('Ești sigur că vrei să anulezi abonamentul? Vei păstra accesul până la sfârșitul perioadei curente.')) {
       return;
@@ -56,7 +57,7 @@ export function SubscriptionManagement() {
       setCancelling(true);
       
       await subscriptionService.cancelSubscription({
-        subscriptionId: subscription.id,
+        subscriptionId: activeSub.id,
         immediate: false,
         refund: false,
         reason: 'Utilizator a solicitat anularea'
@@ -64,9 +65,12 @@ export function SubscriptionManagement() {
 
       toast.success('Abonamentul a fost anulat cu succes');
       
-      // Reload subscription data
-      const updatedSubscription = await subscriptionService.getMySubscription();
+      const [updatedSubscription, profileData] = await Promise.all([
+        subscriptionService.getMySubscription(),
+        subscriptionService.getMyProfile()
+      ]);
       setSubscription(updatedSubscription);
+      setEnhancedProfile(profileData);
     } catch (error) {
       console.error('Error cancelling subscription:', error);
       toast.error('Eroare la anularea abonamentului');
@@ -114,6 +118,8 @@ export function SubscriptionManagement() {
       day: 'numeric'
     });
   };
+
+  const activeSubForActions = subscription ?? enhancedProfile?.profile?.activeSubscription ?? null;
 
   if (loading) {
     return (
@@ -363,7 +369,7 @@ export function SubscriptionManagement() {
               Vezi Istoric Facturi
             </button>
 
-            {subscription?.status === 'ACTIVE' && !subscription?.cancelAtPeriodEnd && (
+            {activeSubForActions?.status === 'ACTIVE' && !activeSubForActions?.cancelAtPeriodEnd && (
               <button
                 onClick={handleCancelSubscription}
                 disabled={cancelling}
@@ -380,7 +386,7 @@ export function SubscriptionManagement() {
               </button>
             )}
             
-            {subscription?.cancelAtPeriodEnd && (
+            {activeSubForActions?.cancelAtPeriodEnd && (
               <div className="inline-flex items-center px-4 py-2 text-sm font-medium text-orange-700 bg-orange-50 border border-orange-200 rounded-lg">
                 <AlertCircle className="w-4 h-4 mr-2" />
                 Se va anula la sfârșitul perioadei

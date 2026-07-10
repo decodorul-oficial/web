@@ -4,9 +4,28 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import Link from 'next/link';
 import PricingSection from '@/components/subscription/PricingSection';
 import { TrialStatusBanner } from '@/components/ui/TrialStatusBanner';
+import { paymentProcessor } from '@/features/subscription/services/paymentProcessor';
+import { arePaymentsEnabledClient, PAYMENTS_DISABLED_MESSAGE } from '@/lib/payment/paymentsEnabled';
 
 export function PricingPageClient() {
-  const { isAuthenticated, trialStatus, hasPremiumAccess } = useAuth();
+  const { isAuthenticated, trialStatus, hasPremiumAccess, user } = useAuth();
+
+  const handleManageSubscription = async () => {
+    if (!arePaymentsEnabledClient()) {
+      alert(PAYMENTS_DISABLED_MESSAGE);
+      return;
+    }
+    try {
+      const result = await paymentProcessor.getCustomerPortalUrl({
+        returnUrl: `${window.location.origin}/profile`
+      });
+
+      window.location.href = result.portal_url;
+    } catch (e) {
+      console.error(e);
+      alert('Eroare la deschiderea Gestionării Abonamentului.');
+    }
+  };
 
   return (
     <>
@@ -41,12 +60,13 @@ export function PricingPageClient() {
                 Upgrade la Pro
               </Link>
             ) : (
-              <Link
-                href="/profile"
+              <button
+                type="button"
+                onClick={handleManageSubscription}
                 className="inline-flex items-center justify-center px-6 py-2.5 bg-white text-brand-accent rounded-lg text-base font-semibold hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white transition-colors"
               >
-                Gestionează abonamentul
-              </Link>
+                Gestionare Abonament
+              </button>
             )}
             <Link
               href="/contact"

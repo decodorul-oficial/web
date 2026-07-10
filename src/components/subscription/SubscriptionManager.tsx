@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { subscriptionService } from '@/features/subscription/services/subscriptionService';
+import { paymentProcessor } from '@/features/subscription/services/paymentProcessor';
 import { Subscription, SubscriptionTier, Order, BillingDetails } from '@/features/subscription/types';
 import { AlertCircle, CheckCircle, Clock, Loader2, Check, Download, FileText, CreditCard, History, XCircle, ChevronRight, Edit2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -10,9 +12,14 @@ import jsPDF from 'jspdf';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/Tooltip';
 import { BillingDetailsForm } from './BillingDetailsForm';
 import { ROBOTO_REGULAR_URL } from '@/lib/fonts';
+import { buildStripeSuccessUrlForGraphQL } from '@/lib/payment/stripe/stripeClientCheckoutUrls';
+import { arePaymentsEnabledClient, PAYMENTS_DISABLED_MESSAGE } from '@/lib/payment/paymentsEnabled';
 
-export function SubscriptionManager() {
+function SubscriptionManagerInner() {
   const { user, hasPremiumAccess } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [tiers, setTiers] = useState<SubscriptionTier[]>([]);
   const [enhancedProfile, setEnhancedProfile] = useState<any>(null);
@@ -20,6 +27,7 @@ export function SubscriptionManager() {
   const [cancelling, setCancelling] = useState(false);
   const [selectedInterval, setSelectedInterval] = useState<'MONTHLY' | 'YEARLY'>('MONTHLY');
   const [planLoading, setPlanLoading] = useState<string | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
   const [activeSection, setActiveSection] = useState<'subscription' | 'billing' | 'billing_details'>('subscription');
   const [subscriptionSectionLoading, setSubscriptionSectionLoading] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -33,6 +41,8 @@ export function SubscriptionManager() {
   // Checkout/Billing Confirmation State
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [selectedTierForCheckout, setSelectedTierForCheckout] = useState<SubscriptionTier | null>(null);
+  const checkoutSuccessToastRef = useRef(false);
+  const paymentsEnabled = arePaymentsEnabledClient();
 
   const loadData = async () => {
     try {
@@ -70,6 +80,21 @@ export function SubscriptionManager() {
   }, []);
 
   useEffect(() => {
+    if (searchParams.get('checkout') !== 'success') {
+      checkoutSuccessToastRef.current = false;
+      return;
+    }
+    if (checkoutSuccessToastRef.current) return;
+    checkoutSuccessToastRef.current = true;
+    toast.success('Abonamentul tău este activ. Am actualizat datele din cont.');
+    void loadData();
+    const sp = new URLSearchParams(searchParams.toString());
+    sp.delete('checkout');
+    const qs = sp.toString();
+    router.replace(`${pathname}${qs ? `?${qs}` : ''}`);
+  }, [searchParams, pathname, router]);
+
+  useEffect(() => {
     if (activeSection === 'billing') {
       loadOrders();
     }
@@ -93,28 +118,49 @@ export function SubscriptionManager() {
   };
 
   const handleConfirmCancel = async () => {
-    if (!subscription) return;
+    const activeSub = subscription || enhancedProfile?.profile?.activeSubscription;
+    if (!activeSub?.id) return;
 
     try {
       setCancelling(true);
       setShowCancelModal(false);
       
       await subscriptionService.cancelSubscription({
-        subscriptionId: subscription.id,
+        subscriptionId: activeSub.id,
         immediate: false,
         refund: false,
         reason: cancelReason || 'Utilizator a solicitat anularea'
       });
 
       toast.success('Abonamentul a fost anulat cu succes');
-      const updatedSubscription = await subscriptionService.getMySubscription();
-      setSubscription(updatedSubscription);
+      await loadData();
     } catch (error) {
       console.error('Error cancelling subscription:', error);
       toast.error('Eroare la anularea abonamentului');
     } finally {
       setCancelling(false);
       setCancelReason('');
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    if (!paymentsEnabled) {
+      toast.error(PAYMENTS_DISABLED_MESSAGE);
+      return;
+    }
+
+    try {
+      setPortalLoading(true);
+      const result = await paymentProcessor.getCustomerPortalUrl({
+        returnUrl: `${window.location.origin}/profile`
+      });
+
+      window.location.href = result.portal_url;
+    } catch (error) {
+      console.error('Error opening Customer Portal:', error);
+      toast.error('Eroare la deschiderea Gestionării Abonamentului.');
+    } finally {
+      setPortalLoading(false);
     }
   };
 
@@ -126,8 +172,12 @@ export function SubscriptionManager() {
   };
 
   const handleInitiateCheckout = (tier: SubscriptionTier) => {
-      setSelectedTierForCheckout(tier);
-      setShowCheckoutModal(true);
+    if (!paymentsEnabled) {
+      toast.error(PAYMENTS_DISABLED_MESSAGE);
+      return;
+    }
+    setSelectedTierForCheckout(tier);
+    setShowCheckoutModal(true);
   };
 
   const getPrimaryBillingDetails = (): BillingDetails | undefined => {
@@ -149,29 +199,38 @@ export function SubscriptionManager() {
 
     try {
       setPlanLoading(selectedTierForCheckout.id);
-      setShowCheckoutModal(false); 
-      
-      const billingAddress = {
-        firstName: billingDetails.firstName,
-        lastName: billingDetails.lastName,
-        address: billingDetails.address,
-        city: billingDetails.city,
-        country: billingDetails.country || 'RO',
-        zipCode: billingDetails.zipCode || '000000'
-      };
+      setShowCheckoutModal(false);
 
-      const checkoutSession = await subscriptionService.startNetopiaCheckout(
-        selectedTierForCheckout.id,
-        user.email || '',
-        billingAddress
-      );
+      const origin = window.location.origin;
+      const stripeSuccessUrl = buildStripeSuccessUrlForGraphQL(origin);
 
-      window.location.href = checkoutSession.checkoutUrl;
+      const result = await paymentProcessor.startCheckout({
+        tierId: selectedTierForCheckout.id,
+        customerEmail: user.email || '',
+        billingDetails: {
+          type: billingDetails.type,
+          firstName: billingDetails.firstName,
+          lastName: billingDetails.lastName,
+          companyName: billingDetails.companyName,
+          cui: billingDetails.cui,
+          regCom: billingDetails.regCom,
+          address: billingDetails.address,
+          city: billingDetails.city,
+          county: billingDetails.county,
+          country: billingDetails.country || 'Romania',
+          zipCode: billingDetails.zipCode || '000000'
+        },
+        stripePriceId: selectedTierForCheckout.stripePriceId,
+        stripeSuccessUrl
+      });
+
+      window.location.href = result.checkout_url;
     } catch (error) {
       console.error('Error starting checkout:', error);
       toast.error('Eroare la inițierea procesului de plată.');
+    } finally {
       setPlanLoading(null);
-    } 
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -595,14 +654,46 @@ export function SubscriptionManager() {
   };
 
   const primaryBillingDetails = getPrimaryBillingDetails();
+  const activeSubscription = subscription || enhancedProfile?.profile?.activeSubscription;
+  const activeTier = activeSubscription?.tier;
+
+  const resolvePlanDisplayName = () => {
+    const normalizedDisplayName = activeTier?.displayName?.trim();
+    if (normalizedDisplayName) return normalizedDisplayName;
+
+    const tierIdOrName = (activeTier?.id || activeTier?.name || '').toString();
+    const normalizedTierIdOrName = tierIdOrName.toLowerCase();
+    const matchingTier = tiers.find((tier) =>
+      [tier.id, tier.name, tier.displayName, tier.stripePriceId]
+        .filter(Boolean)
+        .some((value) => value?.toString().toLowerCase() === normalizedTierIdOrName)
+    );
+    if (matchingTier?.displayName) return matchingTier.displayName;
+
+    const intervalLabel =
+      activeTier?.interval === 'YEARLY' || /year|annual|anual/.test(normalizedTierIdOrName)
+        ? 'Anual'
+        : activeTier?.interval === 'MONTHLY' || /month|lunar/.test(normalizedTierIdOrName)
+          ? 'Lunar'
+          : '';
+
+    if (normalizedTierIdOrName.includes('pro')) {
+      return intervalLabel ? `Pro ${intervalLabel}` : 'Pro';
+    }
+
+    if (normalizedTierIdOrName.includes('trial') || enhancedProfile?.profile?.trialStatus?.isTrial) {
+      return 'Trial Gratuit';
+    }
+
+    if (enhancedProfile?.profile?.subscriptionTier === 'pro') {
+      return intervalLabel ? `Pro ${intervalLabel}` : 'Pro';
+    }
+
+    return 'Plan Gratuit';
+  };
 
   return (
     <div className="space-y-8">
-      {/* ... rest of the component remains exactly the same ... */}
-      {/* For brevity, I'm not repeating the full render block if it wasn't changed, 
-          but the tool expects the FULL file content.
-          I will paste the full content again to ensure integrity. 
-      */}
       {/* Subscription Header */}
       <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -611,80 +702,98 @@ export function SubscriptionManager() {
                 <p className="text-gray-600">
                 În prezent beneficiezi de planul{' '}
                 <span className="font-semibold bg-gradient-to-r from-brand-info to-brand-accent text-white px-2 py-1 rounded-lg text-sm">
-                    {subscription?.tier?.displayName || 
-                    enhancedProfile?.profile?.activeSubscription?.tier?.displayName || 
-                    (enhancedProfile?.profile?.subscriptionTier === 'pro' ? 'Pro' : 'Trial Gratuit')}
+                    {resolvePlanDisplayName()}
                 </span>
                 <span className="font-semibold text-sm ml-1">
-                    {subscription?.status === 'ACTIVE' || enhancedProfile?.profile?.activeSubscription?.status === 'ACTIVE' ? '(Activ)' : 
+                    {activeSubscription?.status === 'ACTIVE' ? '(Activ)' : 
                     enhancedProfile?.profile?.trialStatus?.isTrial ? '(Trial)' : 
                     hasPremiumAccess ? '(Pro)' : '(Trial)'}
                 </span>
-                {subscription?.currentPeriodEnd && (
+                {activeSubscription?.currentPeriodEnd && (
                     <span className="text-sm ml-1 text-gray-500">
-                     • Valabil până la {formatDate(subscription.currentPeriodEnd)}
+                     • Valabil până la {formatDate(activeSubscription.currentPeriodEnd)}
                     </span>
                 )}
                 </p>
             </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div
+          className="grid gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,11.5rem),1fr))]"
+          role="toolbar"
+          aria-label="Acțiuni abonament"
+        >
           <button
             onClick={handleSubscriptionManagementClick}
             disabled={subscriptionSectionLoading}
-            className={`flex items-center justify-center px-4 py-3 rounded-xl border transition-all duration-200 group ${
+            className={`flex min-h-[3rem] w-full items-center justify-center gap-2 px-3 py-3 text-center rounded-xl border transition-all duration-200 group sm:px-4 ${
               activeSection === 'subscription'
                 ? 'bg-brand-info text-white border-brand-info shadow-md'
                 : 'bg-white text-gray-700 border-gray-200 hover:border-brand-info hover:shadow-sm'
             }`}
           >
-             <CreditCard className={`w-5 h-5 mr-3 ${activeSection === 'subscription' ? 'text-white' : 'text-brand-info group-hover:scale-110 transition-transform'}`} />
-             <span className="font-medium">Planuri & Tarife</span>
+             <CreditCard className={`h-5 w-5 shrink-0 ${activeSection === 'subscription' ? 'text-white' : 'text-brand-info group-hover:scale-110 transition-transform'}`} />
+             <span className="font-medium leading-tight">Planuri & Tarife</span>
           </button>
 
            <button
             onClick={() => setActiveSection('billing_details')}
-            className={`flex items-center justify-center px-4 py-3 rounded-xl border transition-all duration-200 group ${
+            className={`flex min-h-[3rem] w-full items-center justify-center gap-2 px-3 py-3 text-center rounded-xl border transition-all duration-200 group sm:px-4 ${
               activeSection === 'billing_details'
                 ? 'bg-brand-info text-white border-brand-info shadow-md'
                 : 'bg-white text-gray-700 border-gray-200 hover:border-brand-info hover:shadow-sm'
             }`}
           >
-            <FileText className={`w-5 h-5 mr-3 ${activeSection === 'billing_details' ? 'text-white' : 'text-brand-info group-hover:scale-110 transition-transform'}`} />
-            <span className="font-medium">Date Facturare</span>
+            <FileText className={`h-5 w-5 shrink-0 ${activeSection === 'billing_details' ? 'text-white' : 'text-brand-info group-hover:scale-110 transition-transform'}`} />
+            <span className="font-medium leading-tight">Date Facturare</span>
           </button>
           
           <button
             onClick={() => setActiveSection('billing')}
-            className={`flex items-center justify-center px-4 py-3 rounded-xl border transition-all duration-200 group ${
+            className={`flex min-h-[3rem] w-full items-center justify-center gap-2 px-3 py-3 text-center rounded-xl border transition-all duration-200 group sm:px-4 ${
               activeSection === 'billing'
                 ? 'bg-brand-info text-white border-brand-info shadow-md'
                 : 'bg-white text-gray-700 border-gray-200 hover:border-brand-info hover:shadow-sm'
             }`}
           >
-            <History className={`w-5 h-5 mr-3 ${activeSection === 'billing' ? 'text-white' : 'text-brand-info group-hover:scale-110 transition-transform'}`} />
-            <span className="font-medium">Istoric Plăți</span>
+            <History className={`h-5 w-5 shrink-0 ${activeSection === 'billing' ? 'text-white' : 'text-brand-info group-hover:scale-110 transition-transform'}`} />
+            <span className="font-medium leading-tight">Istoric Plăți</span>
           </button>
 
-          {subscription?.status === 'ACTIVE' && !subscription?.cancelAtPeriodEnd ? (
+          {activeSubscription?.status === 'ACTIVE' && (
             <button
-              onClick={handleCancelClick}
-              disabled={cancelling}
-              className="flex items-center justify-center px-4 py-3 rounded-xl border border-gray-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-200 transition-all duration-200 group"
+              onClick={handleManageSubscription}
+              disabled={portalLoading || !paymentsEnabled}
+              title={!paymentsEnabled ? PAYMENTS_DISABLED_MESSAGE : undefined}
+              className="flex min-h-[3rem] w-full items-center justify-center gap-2 px-3 py-3 text-center rounded-xl border border-gray-200 bg-white text-brand-info hover:bg-brand-info/5 transition-all duration-200 group sm:px-4"
             >
-              {cancelling ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+              {portalLoading ? (
+                <Loader2 className="h-5 w-5 shrink-0 animate-spin text-brand-info" />
               ) : (
                 <>
-                  <XCircle className="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" />
-                  <span className="font-medium">Anulează</span>
+                  <CreditCard className="h-5 w-5 shrink-0" />
+                  <span className="font-medium leading-tight">Gestionare Abonament</span>
                 </>
               )}
             </button>
-          ) : (
-             <div className="hidden md:block"></div> 
           )}
+
+          {activeSubscription?.status === 'ACTIVE' && !activeSubscription?.cancelAtPeriodEnd ? (
+            <button
+              onClick={handleCancelClick}
+              disabled={cancelling}
+              className="flex min-h-[3rem] w-full items-center justify-center gap-2 px-3 py-3 text-center rounded-xl border border-gray-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-200 transition-all duration-200 group sm:px-4"
+            >
+              {cancelling ? (
+                <Loader2 className="h-5 w-5 shrink-0 animate-spin" />
+              ) : (
+                <>
+                  <XCircle className="h-5 w-5 shrink-0 group-hover:scale-110 transition-transform" />
+                  <span className="font-medium leading-tight">Anulează</span>
+                </>
+              )}
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -1176,5 +1285,19 @@ export function SubscriptionManager() {
         </div>
       )}
     </div>
+  );
+}
+
+export function SubscriptionManager() {
+  return (
+    <Suspense
+      fallback={
+        <div className="rounded-lg border border-gray-100 bg-gray-50 p-8 text-center text-gray-500">
+          Se încarcă abonamentul…
+        </div>
+      }
+    >
+      <SubscriptionManagerInner />
+    </Suspense>
   );
 }
