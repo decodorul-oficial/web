@@ -126,7 +126,7 @@ export default function LegalPage() {
                 <ul className="list-disc pl-6 text-gray-700 mb-4">
                   <li>Date de identificare (nume, adresă de e-mail)</li>
                   <li>Date de utilizare (preferințe, istoricul de navigare)</li>
-                  <li>Date de plată (procesate securizat prin Netopia Payments)</li>
+                  <li>Date de plată (procesate securizat prin Stripe)</li>
                   <li>Date tehnice (adresă IP, tip de browser, cookie-uri)</li>
                 </ul>
                 <p className="text-gray-700 mb-4">
@@ -152,8 +152,8 @@ export default function LegalPage() {
                   4.2 Procesarea plăților
                 </h3>
                 <p className="text-gray-700 mb-4">
-                  Plățile sunt procesate prin Netopia Payments, un procesator de plăți 
-                  autorizat de Banca Națională a României. Toate tranzacțiile sunt securizate 
+                  Plățile sunt procesate prin Stripe, un procesator de plăți
+                  recunoscut la nivel internațional. Toate tranzacțiile sunt securizate
                   conform standardelor PCI DSS.
                 </p>
 
@@ -335,12 +335,11 @@ export default function LegalPage() {
                   12. Informații despre procesatorul de plăți
                 </h2>
                 <p className="text-gray-700 mb-4">
-                  Pentru procesarea plăților, folosim serviciile Netopia Payments, 
-                  un procesator de plăți autorizat de Banca Națională a României.
+                  Pentru procesarea plăților, folosim serviciile Stripe,
+                  un procesator de plăți recunoscut la nivel internațional.
                 </p>
                 <ul className="list-none text-gray-700 mb-4">
-                  <li>Website: <a href="https://www.netopia-payments.ro" target="_blank" rel="noopener noreferrer" className="text-brand-info hover:text-brand-highlight">www.netopia-payments.ro</a></li>
-                  <li>Licență: Autorizat de BNR</li>
+                  <li>Website: <a href="https://stripe.com" target="_blank" rel="noopener noreferrer" className="text-brand-info hover:text-brand-highlight">stripe.com</a></li>
                   <li>Securitate: PCI DSS compliant</li>
                 </ul>
               </section>

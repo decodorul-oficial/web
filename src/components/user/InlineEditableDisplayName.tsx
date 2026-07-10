@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Check, X, Edit3 } from 'lucide-react';
+import { Check, X, Edit3, Info } from 'lucide-react';
 
 interface InlineEditableDisplayNameProps {
   value: string;
@@ -20,7 +20,10 @@ export function InlineEditableDisplayName({
   const [editValue, setEditValue] = useState(value);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showMissingNameHint, setShowMissingNameHint] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const trimmedValue = value.trim();
+  const isMissingName = trimmedValue.length === 0;
 
   useEffect(() => {
     setEditValue(value);
@@ -33,9 +36,24 @@ export function InlineEditableDisplayName({
     }
   }, [isEditing]);
 
+  useEffect(() => {
+    if (!isMissingName || isEditing) {
+      setShowMissingNameHint(false);
+      return;
+    }
+
+    setShowMissingNameHint(true);
+    const timeoutId = window.setTimeout(() => {
+      setShowMissingNameHint(false);
+    }, 7000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isMissingName, isEditing]);
+
   const handleStartEdit = () => {
     setIsEditing(true);
     setError(null);
+    setShowMissingNameHint(false);
   };
 
   const handleCancel = () => {
@@ -130,9 +148,25 @@ export function InlineEditableDisplayName({
 
   return (
     <div className={`flex items-center space-x-2 group ${className}`}>
-      <span className="text-gray-900 flex-1">
-        {value || 'Nu este specificat'}
-      </span>
+      <div className="relative flex-1">
+        <span className="text-gray-900">
+          {trimmedValue || 'Nu este specificat'}
+        </span>
+        {showMissingNameHint && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="absolute top-full left-0 mt-2 max-w-xs rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 shadow-sm"
+          >
+            <div className="flex items-start gap-2">
+              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-700" />
+              <p>
+                Poți completa numele tău aici ca să apară corect pe facturi, comentarii și alte acțiuni viitoare.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
       <button
         onClick={handleStartEdit}
         className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-md transition-colors"

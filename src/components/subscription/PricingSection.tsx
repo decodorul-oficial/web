@@ -4,9 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { subscriptionService } from '@/features/subscription/services/subscriptionService';
+import { paymentProcessor } from '@/features/subscription/services/paymentProcessor';
+import { arePaymentsEnabledClient, PAYMENTS_DISABLED_MESSAGE } from '@/lib/payment/paymentsEnabled';
 import { Zap, Check, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { SubscriptionTier } from '@/features/subscription/types';
+import { buildStripeSuccessUrlForGraphQL } from '@/lib/payment/stripe/stripeClientCheckoutUrls';
 
 function PricingSection() {
   const { user } = useAuth();
@@ -16,15 +19,14 @@ function PricingSection() {
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
   const [selectedInterval, setSelectedInterval] = useState<'MONTHLY' | 'YEARLY'>('MONTHLY');
+  const paymentsEnabled = arePaymentsEnabledClient();
 
   useEffect(() => {
     const fetchTiers = async () => {
       try {
-        console.log('Fetching subscription tiers...');
         setTiersLoading(true);
         setError(null);
         const data = await subscriptionService.getSubscriptionTiers();
-        console.log('Fetched tiers:', data);
         setTiers(data);
       } catch (err) {
         console.error('Error fetching tiers:', err);
@@ -44,27 +46,39 @@ function PricingSection() {
       return;
     }
 
+    if (!paymentsEnabled) {
+      toast.error(PAYMENTS_DISABLED_MESSAGE);
+      return;
+    }
+
     try {
       setLoading(tierId);
       
-      // Get user profile for billing address
-      const billingAddress = {
+      // Fallback minimal billing details (user should complete actual billing details in /profile).
+      const billingDetails = {
+        type: 'personal' as const,
         firstName: user.user_metadata?.full_name?.split(' ')[0] || 'Utilizator',
         lastName: user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || 'PRO',
         address: 'Adresa de facturare',
         city: 'București',
-        country: 'RO',
+        county: 'București',
+        country: 'Romania',
         zipCode: '010001'
       };
 
-      const checkoutSession = await subscriptionService.startNetopiaCheckout(
-        tierId,
-        user.email || '',
-        billingAddress
-      );
+      const tier = tiers.find((t) => t.id === tierId);
+      const origin = window.location.origin;
+      const stripeSuccessUrl = buildStripeSuccessUrlForGraphQL(origin);
 
-      // Redirect to Netopia checkout
-      window.location.href = checkoutSession.checkoutUrl;
+      const result = await paymentProcessor.startCheckout({
+        tierId,
+        customerEmail: user.email || '',
+        billingDetails,
+        stripePriceId: tier?.stripePriceId,
+        stripeSuccessUrl
+      });
+
+      window.location.href = result.checkout_url;
     } catch (error) {
       console.error('Error starting checkout:', error);
       toast.error('Eroare la inițierea procesului de plată. Te rugăm să încerci din nou.');
@@ -219,7 +233,8 @@ function PricingSection() {
               <div className="mt-auto">
                 <button
                   onClick={() => handleSelectPlan(plan.id, plan.interval)}
-                  disabled={loading === plan.id}
+                  disabled={loading === plan.id || !paymentsEnabled}
+                  title={!paymentsEnabled ? PAYMENTS_DISABLED_MESSAGE : undefined}
                   className={`w-full inline-flex items-center justify-center px-6 py-3 rounded-lg text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-info transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                     plan.isPopular
                       ? 'bg-gradient-to-r from-brand-info to-brand-accent text-white hover:from-brand-info/90 hover:to-brand-accent/90'
@@ -244,6 +259,11 @@ function PricingSection() {
 
         {/* Legal Notice */}
         <div className="mt-8 text-center">
+          {!paymentsEnabled && (
+            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-4 max-w-2xl mx-auto">
+              {PAYMENTS_DISABLED_MESSAGE}
+            </p>
+          )}
           <p className="text-sm text-gray-500">
             Prin continuare, confirmi că ai citit și ești de acord cu{' '}
             <a href="/legal" className="text-brand-info hover:text-brand-accent underline">

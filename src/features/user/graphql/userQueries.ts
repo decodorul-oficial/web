@@ -104,9 +104,11 @@ export const GET_MY_ENHANCED_PROFILE = gql`
         activeSubscription {
           id
           status
+          cancelAtPeriodEnd
           currentPeriodStart
           currentPeriodEnd
           tier {
+            id
             name
             displayName
             price

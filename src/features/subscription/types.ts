@@ -1,3 +1,5 @@
+export type PaymentProcessorId = 'stripe';
+
 export interface SubscriptionTier {
   id: string;
   name: string;
@@ -6,6 +8,8 @@ export interface SubscriptionTier {
   price: number;
   currency: string;
   interval: 'MONTHLY' | 'YEARLY' | 'LIFETIME';
+  /** ID-ul Price din Stripe (din API) – folosit la checkout Stripe și la identificarea pachetului. */
+  stripePriceId?: string | null;
   features: string[];
   isPopular?: boolean;
   trialDays?: number;
@@ -66,13 +70,22 @@ export interface SubscriptionUsage {
 export interface StartCheckoutInput {
   tierId: string;
   customerEmail: string;
-  billingAddress: {
+  /** ID Price Stripe pentru pachetul ales (din getSubscriptionTiers.stripePriceId). */
+  stripePriceId?: string | null;
+  /** Redirect după plată reușită — din env server `STRIPE_SUCCESS_URL` (sau public pentru client). */
+  stripeSuccessUrl?: string | null;
+  billingDetails: {
+    type: 'personal' | 'company';
     firstName: string;
     lastName: string;
+    companyName?: string;
+    cui?: string;
+    regCom?: string;
     address: string;
     city: string;
+    county: string;
     country: string;
-    zipCode: string;
+    zipCode?: string;
   };
 }
 
@@ -148,8 +161,9 @@ export interface ActiveSubscription {
     updatedAt: string;
   };
   status: 'ACTIVE' | 'PENDING' | 'FAILED' | 'EXPIRED' | 'CANCELLED' | 'TRIAL';
-  netopiaOrderId: string;
-  netopiaToken: string;
+  paymentProviderReference?: string | null;
+  paymentMethodToken?: string | null;
+  stripeSubscriptionId?: string | null;
   currentPeriodStart: string;
   currentPeriodEnd: string;
   cancelAtPeriodEnd: boolean;
@@ -174,7 +188,7 @@ export interface ProfileSubscriptionUsage {
 export interface ProfilePaymentMethod {
   id: string;
   userId: string;
-  netopiaToken: string;
+  paymentMethodToken?: string | null;
   last4: string;
   brand: string;
   expMonth: number;
@@ -203,8 +217,9 @@ export interface SubscriptionHistoryEntry {
     updatedAt: string;
   };
   status: string;
-  netopiaOrderId: string;
-  netopiaToken: string;
+  paymentProviderReference?: string | null;
+  paymentMethodToken?: string | null;
+  stripeSubscriptionId?: string | null;
   currentPeriodStart: string;
   currentPeriodEnd: string;
   cancelAtPeriodEnd: boolean;
