@@ -11,7 +11,7 @@ import { NewsViewStats } from '@/features/news/components/NewsViewStats';
 import { RelatedStoriesSection } from '@/features/news/components/RelatedStoriesSection';
 import { extractIdFromSlug, isValidNewsSlug, createNewsSlug } from '@/lib/utils/slugify';
 import { Rss } from 'lucide-react';
-import { notFound, redirect } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { SessionCookieInitializer } from '@/components/session/SessionCookieInitializer';
 import { NewsViewTrackingWrapper } from '@/features/news/components/NewsViewTrackingWrapper';
 import { extractParteaFromFilename, generateMonitorulOficialUrl } from '@/lib/utils/monitorulOficial';
@@ -70,7 +70,8 @@ interface NewsContent {
   [key: string]: unknown;
 }
 
-export const dynamicParams = false;
+// Allow on-demand rendering for new article URLs not known at build time.
+export const dynamicParams = true;
 
 function extractField<T = string>(content: unknown, key: string): T | undefined {
   if (!content || typeof content !== 'object') return undefined;
@@ -152,8 +153,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: title,
       description: summary,
       type: 'article',
-      publishedTime: news.publicationDate,
-      modifiedTime: news.updatedAt || news.publicationDate,
+      url: `/stiri/${createNewsSlug(news.title, news.id)}`,
+      publishedTime: news.createdAt || news.publicationDate,
+      modifiedTime: news.updatedAt || news.createdAt || news.publicationDate,
       authors: [extractField<string>(news.content, 'author') || 'Decodorul Oficial'],
       section: extractField<string>(news.content, 'category') || 'Legislație',
       tags: Array.isArray(extractField<string[]>(news.content, 'keywords')) 
@@ -189,8 +191,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       },
     },
     other: {
-      'article:published_time': news.publicationDate,
-      'article:modified_time': news.updatedAt || news.publicationDate,
+      'article:published_time': news.createdAt || news.publicationDate,
+      'article:modified_time': news.updatedAt || news.createdAt || news.publicationDate,
       'article:author': extractField<string>(news.content, 'author') || 'Decodorul Oficial',
       'article:section': extractField<string>(news.content, 'category') || 'Legislație',
       'article:tag': Array.isArray(extractField<string[]>(news.content, 'keywords')) 
@@ -216,9 +218,9 @@ export default async function NewsDetailPage(props: PageProps) {
       notFound();
     }
     
-    // Redirect to new slug format
+    // Permanent redirect to canonical slug format (301)
     const newSlug = createNewsSlug(news.title, id);
-    redirect(`/stiri/${newSlug}`);
+    permanentRedirect(`/stiri/${newSlug}`);
   }
   
   // New format: /stiri/title-slug-98
@@ -242,8 +244,8 @@ export default async function NewsDetailPage(props: PageProps) {
   // Check if the current slug matches the expected slug for this news
   const expectedSlug = createNewsSlug(news.title, id);
   if (slug !== expectedSlug) {
-    // Redirect to the correct slug
-    redirect(`/stiri/${expectedSlug}`);
+    // Permanent redirect to the correct slug (301)
+    permanentRedirect(`/stiri/${expectedSlug}`);
   }
 
   // Obținem știrile din aceeași zi - optimizat pentru a fi mai rapid
@@ -296,8 +298,8 @@ export default async function NewsDetailPage(props: PageProps) {
                 "height": 630,
                 "alt": `Logo ${process.env.NEXT_PUBLIC_SITE_NAME || 'Decodorul Oficial'} - ${news.title}`
               },
-              "datePublished": news.publicationDate,
-              "dateModified": news.updatedAt || news.publicationDate,
+              "datePublished": news.createdAt || news.publicationDate,
+              "dateModified": news.updatedAt || news.createdAt || news.publicationDate,
               "author": {
                 "@type": "Organization",
                 "name": author || process.env.NEXT_PUBLIC_SITE_NAME || "Decodorul Oficial",

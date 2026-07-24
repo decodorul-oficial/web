@@ -4,7 +4,8 @@ import { buildNewsUrlsetXml, sitemapXmlResponse } from '@/lib/sitemap/xml';
 export async function GET() {
   try {
     const entries = await buildRecentNewsSitemapEntries();
-    const cacheMaxAge = entries.length === 0 ? 300 : 3600;
+    // Short cache so Google News sees new articles quickly (≤10 min).
+    const cacheMaxAge = entries.length === 0 ? 300 : 600;
     return sitemapXmlResponse(buildNewsUrlsetXml(entries), cacheMaxAge);
   } catch (error) {
     console.error('[sitemap news/recent] Error:', error);
