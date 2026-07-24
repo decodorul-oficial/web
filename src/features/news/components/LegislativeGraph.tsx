@@ -197,7 +197,7 @@ interface LegislativeGraphProps {
   height?: string;
 }
 
-export function LegislativeGraph({ documentId, height = '600px' }: LegislativeGraphProps) {
+export function LegislativeGraph({ documentId, height }: LegislativeGraphProps) {
   const graphContainerRef = useRef<HTMLDivElement>(null);
   const { loading: authLoading, isAuthenticated } = useAuth();
 
@@ -484,9 +484,21 @@ export function LegislativeGraph({ documentId, height = '600px' }: LegislativeGr
   })();
 
 
+  const graphHeightClass = height
+    ? undefined
+    : 'h-[min(65vh,440px)] sm:h-[600px]';
+  const graphHeightStyle = isFullscreen
+    ? { height: '100vh' }
+    : height
+      ? { height }
+      : undefined;
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200" style={{ height }}>
+      <div
+        className={`flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200 ${graphHeightClass ?? ''}`}
+        style={height ? { height } : undefined}
+      >
         <div className="flex flex-col items-center gap-2">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-info"></div>
           <span className="text-sm text-gray-500">Se încarcă rețeaua legislativă...</span>
@@ -497,7 +509,10 @@ export function LegislativeGraph({ documentId, height = '600px' }: LegislativeGr
 
   if (error === 'UNAUTHENTICATED') {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6" style={{ height }}>
+      <div
+        className={`bg-white rounded-lg border border-gray-200 p-6 ${graphHeightClass ?? ''}`}
+        style={height ? { height } : undefined}
+      >
         <div className="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto">
           <div className="w-16 h-16 mb-4 rounded-full bg-gradient-to-r from-brand-info/10 to-brand-accent/10 flex items-center justify-center">
             <svg className="w-8 h-8 text-brand-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -510,16 +525,16 @@ export function LegislativeGraph({ documentId, height = '600px' }: LegislativeGr
           <p className="text-gray-600 mb-6">
             Harta Conexiunilor Legislative este disponibilă exclusiv pentru abonați. Vizualizează relațiile complexe dintre actele normative într-un format interactiv.
           </p>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
             <a
               href="/login"
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-brand hover:bg-brand-highlight border border-transparent rounded-md transition-colors"
+              className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-brand hover:bg-brand-highlight border border-transparent rounded-md transition-colors"
             >
               Autentificare
             </a>
             <a 
               href="/preturi" 
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-brand bg-white border border-brand rounded-md hover:bg-gray-50 transition-colors"
+              className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-brand bg-white border border-brand rounded-md hover:bg-gray-50 transition-colors"
             >
               Vezi Abonamentele
             </a>
@@ -536,12 +551,12 @@ export function LegislativeGraph({ documentId, height = '600px' }: LegislativeGr
   return (
     <div 
       ref={graphContainerRef}
-      className={`relative w-full bg-gray-50 rounded-lg border border-gray-200 overflow-hidden group ${isFullscreen ? 'bg-white' : ''}`} 
-      style={{ height: isFullscreen ? '100vh' : height }}
+      className={`relative w-full bg-gray-50 rounded-lg border border-gray-200 overflow-hidden group ${isFullscreen ? 'bg-white' : ''} ${!isFullscreen && !height ? graphHeightClass ?? '' : ''}`} 
+      style={graphHeightStyle}
     >
       
       {/* Collapsible Controls Panel */}
-      <div className={`absolute top-4 left-4 z-10 flex flex-col gap-2 transition-all duration-300 ${controlsCollapsed ? 'w-10' : 'w-64'}`}>
+      <div className={`absolute top-3 left-3 sm:top-4 sm:left-4 z-10 flex flex-col gap-2 transition-all duration-300 ${controlsCollapsed ? 'w-10' : 'w-[min(16rem,calc(100%-1.5rem))]'}`}>
         
         <button 
           onClick={() => setControlsCollapsed(!controlsCollapsed)}
@@ -568,7 +583,7 @@ export function LegislativeGraph({ documentId, height = '600px' }: LegislativeGr
             </div>
 
             {/* Filters Legend */}
-            <div className="bg-white/90 backdrop-blur border border-gray-200 rounded-md p-3 shadow-sm text-xs animate-fadeIn max-h-[min(70vh,520px)] overflow-y-auto">
+            <div className="bg-white/90 backdrop-blur border border-gray-200 rounded-md p-3 shadow-sm text-xs animate-fadeIn max-h-[min(42vh,300px)] sm:max-h-[min(70vh,520px)] overflow-y-auto overscroll-contain">
               
               {/* Complexity Controls */}
               <div className="mb-4">
@@ -697,7 +712,7 @@ export function LegislativeGraph({ documentId, height = '600px' }: LegislativeGr
 
       {/* Side Drawer */}
       <div
-        className={`absolute top-0 right-0 h-full w-80 md:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-20 border-l border-gray-200 flex flex-col ${
+        className={`absolute top-0 right-0 h-full w-full sm:w-80 md:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-20 border-l border-gray-200 flex flex-col ${
           selectedNode ? 'translate-x-0' : 'translate-x-full'
         }`}
       >

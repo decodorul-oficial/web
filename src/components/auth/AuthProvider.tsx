@@ -35,6 +35,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
+    // Drop stale auth cookies from other Supabase projects — large Cookie headers
+    // cause intermittent HTTP 431 on /api/graphql during local multi-project testing.
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      if (!supabaseUrl) return;
+      const projectRef = new URL(supabaseUrl).hostname.split('.')[0];
+      document.cookie.split(';').forEach((part) => {
+        const name = part.trim().split('=')[0];
+        if (
+          name.startsWith('sb-') &&
+          name.includes('auth-token') &&
+          !name.includes(projectRef)
+        ) {
+          document.cookie = `${name}=; Max-Age=0; path=/`;
+          document.cookie = `${name}=; Max-Age=0; path=/; domain=localhost`;
+        }
+      });
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
     let isMounted = true;
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {

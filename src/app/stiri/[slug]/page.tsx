@@ -421,12 +421,12 @@ export default async function NewsDetailPage(props: PageProps) {
             )}
 
             {/* Share buttons and favorite button after title and metadata */}
-            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-              <div className="text-sm text-gray-500">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-4 border-t border-gray-200">
+              <div className="text-sm text-gray-500 shrink-0">
                 <span className="hidden sm:inline">Distribuie această știre:</span>
                 <span className="sm:hidden">Distribuie:</span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <FavoriteButton
                   newsId={news.id}
                   newsTitle={news.title}
@@ -479,9 +479,9 @@ export default async function NewsDetailPage(props: PageProps) {
                 {/* Link către documentul oficial */}
                 {(citationFields.sourceUrl || generateMonitorulOficialUrl(news.filename)) && (
                   <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <svg className="h-4 w-4 text-brand-accent" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <svg className="h-4 w-4 shrink-0 text-brand-accent" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-4.5A1.125 1.125 0 0 1 10.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H6A2.25 2.25 0 0 0 3.75 4.5v12.75A2.25 2.25 0 0 0 6 19.5h12.75A2.25 2.25 0 0 0 21 17.25V16.5m-7.5-9-3 3m0 0 3 3m-3-3H15" />
                         </svg>
                         <span className="text-sm font-medium text-gray-700">Document Oficial:</span>

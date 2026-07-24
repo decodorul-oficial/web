@@ -57,7 +57,7 @@ export function ScrollToTop() {
     <button
       aria-label="Scroll to top"
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      className={`fixed right-6 z-50 w-11 h-11 rounded-full bg-brand-info text-white shadow-lg transition-all duration-500 ease-in-out hover:opacity-90 hover:scale-110 hover:shadow-xl active:scale-95 flex items-center justify-center`}
+      className={`fixed right-3 sm:right-6 z-50 w-11 h-11 rounded-full bg-brand-info text-white shadow-lg transition-all duration-500 ease-in-out hover:opacity-90 hover:scale-110 hover:shadow-xl active:scale-95 flex items-center justify-center`}
       style={{ bottom: `${bottomOffset}px` }}
     >
       <svg 

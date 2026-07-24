@@ -212,7 +212,7 @@ export function FontSizeControl() {
   return (
     <div 
       ref={containerRef} 
-      className={`fixed left-6 z-50 transition-all duration-500 ease-in-out`}
+      className={`fixed left-3 sm:left-6 z-50 transition-all duration-500 ease-in-out`}
       style={{ bottom: `${bottomOffset}px` }}
     >
       {/* Trial Status Banner - deasupra butonului de font */}

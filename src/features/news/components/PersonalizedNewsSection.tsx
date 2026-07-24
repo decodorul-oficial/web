@@ -636,8 +636,8 @@ function PersonalizedFeedContent() {
             )}
           </div>
           
-          <div className={`flex items-center gap-3 ${isFiltered ? 'w-full md:w-auto' : ''}`}>
-            <div className={`relative ${isFiltered ? 'flex-1 md:flex-initial' : ''}`}>
+          <div className={`flex flex-col sm:flex-row sm:items-center gap-3 ${isFiltered ? 'w-full md:w-auto' : 'w-full sm:w-auto'}`}>
+            <div className={`relative ${isFiltered ? 'w-full sm:flex-1 md:flex-initial' : 'w-full sm:w-auto'}`}>
               <BusinessDayDatePicker
                 value={selectedDate}
                 onChange={handleDateChangeFlow}
@@ -657,14 +657,17 @@ function PersonalizedFeedContent() {
             
             {/* Items per page dropdown - doar pentru utilizatorii cu subscripție activă */}
             {isAuthenticated && hasPremiumAccess && (
-              <div className="relative">
+              <div className="relative shrink-0">
                 <button
                   onClick={() => setShowItemsPerPageDropdown(!showItemsPerPageDropdown)}
-                  className="flex items-center gap-2 px-3 py-2 h-10 text-sm border border-brand-accent/30 rounded-md bg-white hover:bg-brand-accent/5 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition-colors"
+                  className="flex w-full sm:w-auto items-center justify-center gap-2 px-3 py-2 h-10 text-sm border border-brand-accent/30 rounded-md bg-white hover:bg-brand-accent/5 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition-colors"
                   aria-label="Selectează numărul de items per pagină"
                 >
                   <BookOpen className="h-4 w-4 text-brand-accent" />
-                  <span className="text-gray-700">{itemsPerPage} știri pe pagină</span>
+                  <span className="text-gray-700">
+                    <span className="sm:hidden">{itemsPerPage}/pagină</span>
+                    <span className="hidden sm:inline">{itemsPerPage} știri pe pagină</span>
+                  </span>
                   <ChevronDown className="h-4 w-4 text-brand-accent" />
                 </button>
                 

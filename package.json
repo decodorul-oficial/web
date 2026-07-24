@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "description": "Decodorul Oficial - știri și sumarizări oficiale",
   "scripts": {
-    "dev": "next dev",
+    "dev": "NODE_OPTIONS='--max-http-header-size=65536' next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "NODE_OPTIONS='--max-http-header-size=65536' next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "jest",

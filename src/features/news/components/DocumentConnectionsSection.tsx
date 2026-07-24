@@ -59,12 +59,12 @@ export function DocumentConnectionsSection({ newsId, relationType, limit = 20 }:
   if (!isAuthenticated || !hasPremiumAccess) {
     return (
       <div className="mt-8 p-4 bg-gray-50 border border-gray-200 rounded">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <h3 className="text-base font-semibold text-gray-900 mb-1">Istoricul modificărilor legislative</h3>
             <p className="text-sm text-gray-600">Disponibil pentru utilizatori autentificați cu abonament activ sau în perioada de trial.</p>
           </div>
-          <Link href="/preturi" className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-brand-info rounded hover:bg-brand-highlight">
+          <Link href="/preturi" className="inline-flex shrink-0 items-center justify-center px-3 py-2 text-sm font-medium text-white bg-brand-info rounded hover:bg-brand-highlight">
             Activează Pro
           </Link>
         </div>
@@ -74,10 +74,10 @@ export function DocumentConnectionsSection({ newsId, relationType, limit = 20 }:
 
   return (
     <section className="mt-8">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg font-semibold text-gray-900">Istoricul modificărilor legislative</h2>
         {relationType && (
-          <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">Filtru: {relationType}</span>
+          <span className="self-start text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">Filtru: {relationType}</span>
         )}
       </div>
 
@@ -98,9 +98,9 @@ export function DocumentConnectionsSection({ newsId, relationType, limit = 20 }:
             const targetTitle = c.cheieDocumentTinta || 'Document necunoscut';
             const hasTargetLink = !!c.idStireTinta;
             return (
-              <li key={c.idConexiune} className="p-3 flex items-center justify-between">
+              <li key={c.idConexiune} className="p-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
                       {relation}
                     </span>
