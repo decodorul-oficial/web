@@ -379,10 +379,10 @@ export default async function NewsDetailPage(props: PageProps) {
           {/* Track news view */}
           <NewsViewTrackingWrapper news={news} />
           
-          <header className="space-y-4">
-            <h1 className="text-2xl sm:text-3xl font-bold leading-tight text-gray-900" itemProp="headline">{news.title}</h1>
+          <header className="article-lede space-y-4">
+            <h1 className="font-bold leading-tight text-gray-900" itemProp="headline">{news.title}</h1>
             
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+            <div className="article-lede-meta flex flex-wrap items-center gap-4 text-gray-600">
               <time dateTime={news.publicationDate} itemProp="datePublished">
                 <span className="font-medium text-gray-400">Data publicării:</span>{' '}
                 <span className="text-gray-900">{formattedDate}</span>
@@ -406,13 +406,13 @@ export default async function NewsDetailPage(props: PageProps) {
             </div>
 
             {Array.isArray(keywords) && keywords.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                <span className="text-sm font-medium text-gray-400">Cuvinte Cheie:</span>
+              <div className="flex flex-wrap gap-2 items-center">
+                <span className="article-lede-keywords-label font-medium text-gray-400">Cuvinte Cheie:</span>
                 {keywords.map((keyword) => (
                   <Link
                     key={keyword}
                     href={`/stiri?keywords=${encodeURIComponent(keyword)}`}
-                    className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-900 hover:bg-gray-200 hover:text-brand-info transition-colors cursor-pointer"
+                    className="article-lede-keyword rounded bg-gray-100 px-2 py-1 text-gray-900 hover:bg-gray-200 hover:text-brand-info transition-colors cursor-pointer"
                   >
                     {keyword.charAt(0).toUpperCase() + keyword.slice(1).toLowerCase()}
                   </Link>
@@ -422,7 +422,7 @@ export default async function NewsDetailPage(props: PageProps) {
 
             {/* Share buttons and favorite button after title and metadata */}
             <div className="flex flex-wrap items-center justify-between gap-2 pt-4 border-t border-gray-200">
-              <div className="text-sm text-gray-500 shrink-0">
+              <div className="article-lede-share-label text-gray-500 shrink-0">
                 <span className="hidden sm:inline">Distribuie această știre:</span>
                 <span className="sm:hidden">Distribuie:</span>
               </div>

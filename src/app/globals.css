@@ -31,14 +31,47 @@
   @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
 }
 
-/* Stiluri pentru conținutul articolelor cu dimensiuni proporționale */
+/* Scalare accesibilitate: em pe copii → respectă --content-font-size de pe părinte */
+.article-lede,
 .article-content {
   font-size: calc(1rem * var(--content-font-size, 1));
   line-height: 1.6;
 }
 
+/* prose-lg setează 1.125rem — păstrăm baza, dar scalăm cu accesibilitatea */
+.article-content.prose-lg,
+.prose.prose-lg {
+  font-size: calc(1.125rem * var(--content-font-size, 1));
+}
+
+/* Titlu + meta până la imaginea block pe pagina de știre */
+.article-lede h1 {
+  font-size: 1.5em;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+@media (min-width: 640px) {
+  .article-lede h1 {
+    font-size: 1.875em;
+  }
+}
+
+.article-lede .article-lede-meta,
+.article-lede .article-lede-share-label {
+  font-size: 0.875em;
+}
+
+.article-lede .article-lede-keywords-label {
+  font-size: 0.875em;
+}
+
+.article-lede .article-lede-keyword {
+  font-size: 0.75em;
+}
+
 .article-content h1 {
-  font-size: 1.75rem;
+  font-size: 1.75em;
   line-height: 1.2;
   font-weight: 700;
   margin-bottom: 1rem;
@@ -46,7 +79,7 @@
 }
 
 .article-content h2 {
-  font-size: 1.5rem;
+  font-size: 1.5em;
   line-height: 1.3;
   font-weight: 600;
   margin-bottom: 0.75rem;
@@ -54,7 +87,7 @@
 }
 
 .article-content h3 {
-  font-size: 1.25rem;
+  font-size: 1.25em;
   line-height: 1.4;
   font-weight: 600;
   margin-bottom: 0.5rem;
@@ -62,7 +95,7 @@
 }
 
 .article-content h4 {
-  font-size: 1.125rem;
+  font-size: 1.125em;
   line-height: 1.4;
   font-weight: 600;
   margin-bottom: 0.5rem;
@@ -70,7 +103,7 @@
 }
 
 .article-content h5 {
-  font-size: 1rem;
+  font-size: 1em;
   line-height: 1.5;
   font-weight: 600;
   margin-bottom: 0.5rem;
@@ -78,7 +111,7 @@
 }
 
 .article-content h6 {
-  font-size: 0.875rem;
+  font-size: 0.875em;
   line-height: 1.5;
   font-weight: 600;
   margin-bottom: 0.5rem;
@@ -86,13 +119,13 @@
 }
 
 .article-content p {
-  font-size: 1rem;
+  font-size: 1em;
   line-height: 1.6;
   margin-bottom: 1rem;
 }
 
 .article-content ul, .article-content ol {
-  font-size: 1rem;
+  font-size: 1em;
   line-height: 1.6;
   margin-bottom: 1rem;
   padding-left: 1.5rem;
@@ -103,7 +136,7 @@
 }
 
 .article-content blockquote {
-  font-size: 1rem;
+  font-size: 1em;
   line-height: 1.6;
   border-left: 4px solid #e5e7eb;
   padding-left: 1rem;
@@ -135,7 +168,7 @@
 }
 
 .prose h1 {
-  font-size: 1.75rem;
+  font-size: 1.75em;
   line-height: 1.2;
   font-weight: 700;
   margin-bottom: 1rem;
@@ -143,7 +176,7 @@
 }
 
 .prose h2 {
-  font-size: 1.5rem;
+  font-size: 1.5em;
   line-height: 1.3;
   font-weight: 600;
   margin-bottom: 0.75rem;
@@ -151,7 +184,7 @@
 }
 
 .prose h3 {
-  font-size: 1.25rem;
+  font-size: 1.25em;
   line-height: 1.4;
   font-weight: 600;
   margin-bottom: 0.5rem;
@@ -159,7 +192,7 @@
 }
 
 .prose h4 {
-  font-size: 1.125rem;
+  font-size: 1.125em;
   line-height: 1.4;
   font-weight: 600;
   margin-bottom: 0.5rem;
@@ -167,7 +200,7 @@
 }
 
 .prose h5 {
-  font-size: 1rem;
+  font-size: 1em;
   line-height: 1.5;
   font-weight: 600;
   margin-bottom: 0.5rem;
@@ -175,7 +208,7 @@
 }
 
 .prose h6 {
-  font-size: 0.875rem;
+  font-size: 0.875em;
   line-height: 1.5;
   font-weight: 600;
   margin-bottom: 0.5rem;
@@ -183,13 +216,13 @@
 }
 
 .prose p {
-  font-size: 1rem;
+  font-size: 1em;
   line-height: 1.6;
   margin-bottom: 1rem;
 }
 
 .prose ul, .prose ol {
-  font-size: 1rem;
+  font-size: 1em;
   line-height: 1.6;
   margin-bottom: 1rem;
   padding-left: 1.5rem;
@@ -200,7 +233,7 @@
 }
 
 .prose blockquote {
-  font-size: 1rem;
+  font-size: 1em;
   line-height: 1.6;
   border-left: 4px solid #e5e7eb;
   padding-left: 1rem;
@@ -246,21 +279,21 @@
   animation: slide-in-from-bottom-2 0.3s ease-out;
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments — em păstrează scala de accesibilitate */
 @media (max-width: 768px) {
   .article-content h1,
   .prose h1 {
-    font-size: 1.5rem;
+    font-size: 1.5em;
   }
   
   .article-content h2,
   .prose h2 {
-    font-size: 1.25rem;
+    font-size: 1.25em;
   }
   
   .article-content h3,
   .prose h3 {
-    font-size: 1.125rem;
+    font-size: 1.125em;
   }
 }
 
