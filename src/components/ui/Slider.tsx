@@ -38,16 +38,11 @@ export function Slider({
       onMouseUp={handleCommit}
       onTouchEnd={handleCommit}
       className={cn(
-        "w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-info/50",
-        "[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:bg-brand-info [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:hover:bg-brand-highlight",
-        "[&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:bg-brand-info [&::-moz-range-thumb]:border-none [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:hover:bg-brand-highlight",
+        'legislative-slider w-full h-2 cursor-pointer appearance-none rounded-full bg-gray-200',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-info/50',
         className
       )}
       {...props}
     />
   );
 }
-
-
-
-

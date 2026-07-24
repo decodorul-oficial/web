@@ -56,6 +56,8 @@ const getIconForType = (type?: string) => {
     case 'Decizie': return <Scale size={16} className="text-blue-600" />;
     case 'Ordin': return <FileText size={16} className="text-green-600" />;
     case 'Lege': return <Scroll size={16} className="text-indigo-600" />;
+    case 'Hub': return <Network size={16} className="text-amber-700" />;
+    case 'Extern': return <ExternalLink size={16} className="text-slate-600" />;
     default: return <FileText size={16} className="text-gray-500" />;
   }
 };
@@ -67,6 +69,8 @@ const CustomNode = ({ data }: NodeProps) => {
     if (data.highlighted) return 'border-brand-accent ring-2 ring-brand-accent ring-offset-2';
     if (data.isFiltered || data.isDimmed) return 'border-gray-200 opacity-40 grayscale';
     
+    if (data.type === 'program_comun' || data.actType === 'Hub') return 'border-amber-600';
+    if (data.type === 'external' || data.actType === 'Extern') return 'border-slate-500 border-dashed';
     if (data.actType === 'OUG') return 'border-red-500';
     if (data.actType === 'Decizie') return 'border-blue-500';
     if (data.actType === 'Ordin') return 'border-green-500';
@@ -77,6 +81,8 @@ const CustomNode = ({ data }: NodeProps) => {
   const getBgColor = () => {
      if (data.isFiltered || data.isDimmed) return 'bg-gray-50';
      if (data.isCurrentNews) return 'bg-brand-highlight/10'; // Subtle background for current news
+     if (data.type === 'program_comun' || data.actType === 'Hub') return 'bg-amber-50';
+     if (data.type === 'external' || data.actType === 'Extern') return 'bg-slate-50';
      if (data.actType === 'OUG') return 'bg-red-50';
      if (data.actType === 'Decizie') return 'bg-blue-50';
      if (data.actType === 'Ordin') return 'bg-green-50';
@@ -116,7 +122,11 @@ const CustomNode = ({ data }: NodeProps) => {
           <div className="flex-1 min-w-0">
              <div className="flex justify-between items-center mb-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                  {data.actType || 'Act'}
+                  {data.type === 'program_comun' || data.actType === 'Hub'
+                    ? 'Hub tematic'
+                    : data.type === 'external'
+                      ? 'Act extern'
+                      : (data.actType || 'Act')}
                 </span>
                 {data.publicationDate && (
                   <span className="text-[9px] text-gray-400">{data.publicationDate}</span>
@@ -124,7 +134,11 @@ const CustomNode = ({ data }: NodeProps) => {
              </div>
              
              <div className="font-semibold text-gray-800 text-xs leading-tight line-clamp-2">
-               {data.actNumber ? `${data.actType || 'Act'} nr. ${data.actNumber}` : (data.shortTitle || data.title)}
+               {data.type === 'program_comun' || data.actType === 'Hub'
+                 ? (data.shortTitle || data.title)
+                 : data.actNumber
+                   ? `${data.actType || 'Act'} nr. ${data.actNumber}`
+                   : (data.shortTitle || data.title)}
              </div>
           </div>
         </div>
@@ -216,6 +230,8 @@ export function LegislativeGraph({ documentId, height = '600px' }: LegislativeGr
     'Decizie': true,
     'Ordin': true,
     'Lege': true,
+    'Hub': true,
+    'Extern': true,
     'Other': true
   });
 
@@ -251,18 +267,29 @@ export function LegislativeGraph({ documentId, height = '600px' }: LegislativeGr
           // No label by default to prevent white boxes
           label: link.typeLabel, 
           type: 'default', 
-          animated: link.type === 'modifică',
+          animated: link.type === 'modifică' || link.type === 'program_comun',
           style: { 
-            stroke: link.type === 'modifică' ? '#ef4444' : '#9ca3af', 
+            stroke: link.type === 'modifică'
+              ? '#ef4444'
+              : link.type === 'program_comun'
+                ? '#b45309'
+                : link.type === 'face referire la (extern)'
+                  ? '#64748b'
+                  : '#9ca3af', 
             strokeWidth: 1.5,
-            opacity: 0.4 
+            opacity: 0.4,
+            strokeDasharray: link.type === 'face referire la (extern)' ? '5 4' : undefined,
           },
           // Label hidden initially via style
           labelStyle: { fill: '#6b7280', fontWeight: 500, fontSize: 10, opacity: 0 },
           labelBgStyle: { fillOpacity: 0 }, // Transparent bg for label to avoid white box
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            color: link.type === 'modifică' ? '#ef4444' : '#9ca3af',
+            color: link.type === 'modifică'
+              ? '#ef4444'
+              : link.type === 'program_comun'
+                ? '#b45309'
+                : '#9ca3af',
             width: 20,
             height: 20,
           },
@@ -313,14 +340,20 @@ export function LegislativeGraph({ documentId, height = '600px' }: LegislativeGr
 
     setNodes((nds) => nds.map((node) => {
       const nodeData = node.data as LegislativeGraphNode;
-      const typeKey = ['OUG', 'Decizie', 'Ordin', 'Lege'].includes(nodeData.actType || '') 
-        ? nodeData.actType! 
-        : 'Other';
+      let typeKey = 'Other';
+      if (nodeData.type === 'program_comun' || nodeData.actType === 'Hub') {
+        typeKey = 'Hub';
+      } else if (nodeData.type === 'external' || nodeData.actType === 'Extern') {
+        typeKey = 'Extern';
+      } else if (['OUG', 'Decizie', 'Ordin', 'Lege'].includes(nodeData.actType || '')) {
+        typeKey = nodeData.actType!;
+      }
       
       const isTypeVisible = visibleTypes[typeKey];
       const matchesSearch = searchTerm === '' || 
         (nodeData.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-         nodeData.actNumber?.includes(searchTerm));
+         nodeData.actNumber?.includes(searchTerm) ||
+         nodeData.shortTitle?.toLowerCase().includes(searchTerm.toLowerCase()));
 
       const isHidden = !isTypeVisible;
       const isHighlighted = hoveredNodeId ? isConnected(node.id) : (searchTerm !== '' && matchesSearch);
@@ -535,7 +568,7 @@ export function LegislativeGraph({ documentId, height = '600px' }: LegislativeGr
             </div>
 
             {/* Filters Legend */}
-            <div className="bg-white/90 backdrop-blur border border-gray-200 rounded-md p-3 shadow-sm text-xs animate-fadeIn">
+            <div className="bg-white/90 backdrop-blur border border-gray-200 rounded-md p-3 shadow-sm text-xs animate-fadeIn max-h-[min(70vh,520px)] overflow-y-auto">
               
               {/* Complexity Controls */}
               <div className="mb-4">
@@ -612,6 +645,8 @@ export function LegislativeGraph({ documentId, height = '600px' }: LegislativeGr
                   { id: 'Decizie', label: 'Decizie', color: 'text-blue-600', bg: 'bg-blue-500' },
                   { id: 'Ordin', label: 'Ordin', color: 'text-green-600', bg: 'bg-green-500' },
                   { id: 'Lege', label: 'Lege', color: 'text-indigo-600', bg: 'bg-indigo-500' },
+                  { id: 'Hub', label: 'Hub tematic', color: 'text-amber-700', bg: 'bg-amber-600' },
+                  { id: 'Extern', label: 'Act extern', color: 'text-slate-600', bg: 'bg-slate-500' },
                 ].map((type) => (
                   <label key={type.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors">
                     <input 
@@ -648,11 +683,11 @@ export function LegislativeGraph({ documentId, height = '600px' }: LegislativeGr
       >
         <Background color="#e5e7eb" gap={20} size={1} />
         
-        {/* Custom Floating Controls */}
+        {/* Custom Floating Controls — mută în dreapta când panoul de filtre e deschis */}
         <Controls 
-          position="bottom-left" 
+          position={controlsCollapsed ? 'bottom-left' : 'bottom-right'}
           showInteractive={false} 
-          className="!m-4 !shadow-md !border !border-gray-100 !rounded-lg !bg-white overflow-hidden flex flex-col"
+          className="!m-4 !shadow-md !border !border-gray-100 !rounded-lg !bg-white overflow-hidden flex flex-col z-20"
         >
           <ControlButton onClick={toggleFullScreen} title="Fullscreen">
              {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
@@ -775,13 +810,27 @@ export function LegislativeGraph({ documentId, height = '600px' }: LegislativeGr
 
             {/* Drawer Sticky Footer */}
             <div className="p-4 border-t border-gray-200 bg-white">
-              <a 
-                href={`/stiri/${createNewsSlug(selectedNode.title, selectedNode.id)}`} 
-                className="flex items-center justify-center gap-2 w-full bg-brand text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow text-sm hover:bg-brand-highlight"
-              >
-                Vezi știrea
-                <ExternalLink size={16} />
-              </a>
+              {selectedNode.type !== 'program_comun'
+                && selectedNode.type !== 'external'
+                && selectedNode.actType !== 'Hub'
+                && !String(selectedNode.id).startsWith('ext:')
+                && !String(selectedNode.id).startsWith('hub:')
+                && !String(selectedNode.id).startsWith('ext-')
+                && !String(selectedNode.id).startsWith('hub-') ? (
+                <a 
+                  href={`/stiri/${createNewsSlug(selectedNode.title, selectedNode.id)}`} 
+                  className="flex items-center justify-center gap-2 w-full bg-brand text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow text-sm hover:bg-brand-highlight"
+                >
+                  Vezi știrea
+                  <ExternalLink size={16} />
+                </a>
+              ) : (
+                <div className="text-center text-xs text-gray-500 py-2">
+                  {selectedNode.type === 'program_comun' || selectedNode.actType === 'Hub'
+                    ? 'Hub tematic — nu este o știre individuală'
+                    : 'Referință externă — actul nu e în corpus'}
+                </div>
+              )}
             </div>
           </>
         )}

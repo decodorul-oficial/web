@@ -347,4 +347,52 @@ input, textarea, select {
   -webkit-line-clamp: 5;
 }
 
+/* Range slider thumbs — always visible (not only on hover) */
+.legislative-slider {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.legislative-slider::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 9999px;
+  background: #e5e7eb;
+}
+
+.legislative-slider::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin-top: -4px;
+  border-radius: 9999px !important;
+  background: #38a8a5 !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.35) !important;
+  opacity: 1 !important;
+  cursor: pointer;
+}
+
+.legislative-slider::-moz-range-thumb {
+  width: 16px !important;
+  height: 16px !important;
+  border-radius: 9999px !important;
+  background: #38a8a5 !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.35) !important;
+  opacity: 1 !important;
+  cursor: pointer;
+}
+
+.legislative-slider::-webkit-slider-thumb:hover,
+.legislative-slider::-moz-range-thumb:hover {
+  background: #3a506b !important;
+}
+
+.legislative-slider::-moz-range-track {
+  height: 8px;
+  border-radius: 9999px;
+  background: #e5e7eb;
+}
+
 
